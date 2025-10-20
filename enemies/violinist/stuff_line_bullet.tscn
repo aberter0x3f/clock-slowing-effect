@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3 uid="uid://dm5xk7cw2rst7"]
+
+[ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_iob30"]
+[ext_resource type="Texture2D" uid="uid://cq88bh1gv3qbf" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Free Part 3B.png" id="2_f1l2l"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_da45y"]
+size = Vector2(14, 3)
+
+[node name="EnemyBullet" type="Area2D"]
+script = ExtResource("1_iob30")
+InitialSpeed = 0.0
+MaxLifetime = 3.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_f1l2l")
+region_enabled = true
+region_rect = Rect2(144, 216, 24, 24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_da45y")
+
+[connection signal="body_entered" from="." to="." method="OnBodyEntered"]

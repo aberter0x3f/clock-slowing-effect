@@ -1,3 +1,4 @@
+using Bullet;
 using Godot;
 
 public partial class Player : CharacterBody2D {
@@ -8,8 +9,7 @@ public partial class Player : CharacterBody2D {
 
   private AnimationState _currentState = AnimationState.Idle;
   private AnimationState _lastState = AnimationState.Idle;
-  private double _health = 60.0;
-  private Area2D _aimingArea;
+  private float _health;
   private AnimatedSprite2D _sprite;
   private Node2D _currentTarget = null;
   private Area2D _grazeArea; // 擦弹区域的引用
@@ -17,70 +17,59 @@ public partial class Player : CharacterBody2D {
   private bool _timeSlowPressed = false;
   private RandomNumberGenerator _rnd = new RandomNumberGenerator();
 
+  [ExportGroup("Movement")]
   [Export]
   public float Speed { get; set; } = 450.0f;
-
   [Export]
   public float SlowSpeedScale { get; set; } = 0.45f;
 
+  [ExportGroup("Health")]
   [Export]
-  public double MaxHealth { get; set; } = 60.0;
-
-  [Export]
-  public double Health {
+  public float MaxHealth { get; set; } = 60.0f;
+  public float Health {
     get => _health;
     set {
+      GD.Print($"Health changed to {value}");
       if (value <= 0) {
         _health = 0; // 确保不会变成负数
-        GameOver();
+        Die();
       } else {
-        _health = double.Min(value, MaxHealth);
+        _health = float.Min(value, MaxHealth);
       }
     }
   }
 
+  [ExportGroup("Shoot")]
   [Export]
   public PackedScene Bullet { get; set; }
-
   [Export]
-  public float ShootCooldown { get; set; } = 0.05f;
-
+  public float ShootCooldown { get; set; } = 0.02f;
   public float ShootTimer { get; set; } = 0.0f;
-
   [Export]
   public float BulletSpreadNormal { get; set; } = float.Pi / 24.0f;
-
   [Export]
-  public float BulletSpreadSlow { get; set; } = float.Pi / 48.0f;
-
+  public float BulletSpreadSlow { get; set; } = float.Pi / 60.0f;
   [Export]
-  public double GrazeTimeBonus { get; set; } = 0.2;
-
+  public float BulletDamage { get; set; } = 1.0f;   // 单发子弹伤害
   [Export]
   public int MaxAmmo { get; set; } = 20;
-
   public int CurrentAmmo { get; set; }
-
-  // 单发子弹伤害
-  [Export]
-  public float BulletDamage { get; set; } = 0.5f;
-
-  public bool IsReloading { get; private set; } = false;
-
-  // 换弹时间
   [Export]
   public float ReloadTime { get; set; } = 3.0f;
+  public bool IsReloading { get; private set; } = false;
+  public float TimeToReloaded { get; set; } // 当前还有多长时间换完子弹
 
-  // 当前还有多长时间换完子弹
-  public float ReloadTimer { get; set; }
+  [ExportGroup("Graze")]
+  [Export]
+  public float GrazeTimeBonus { get; set; } = 0.5f;
 
   public override void _Ready() {
-    _aimingArea = GetNode<Area2D>("AimingArea");
     _sprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
     _grazeArea = GetNode<Area2D>("GrazeArea");
     _hitPointSprite = GetNode<AnimatedSprite2D>("HitPointSprite");
 
     CurrentAmmo = MaxAmmo; // 初始化弹药
+    _health = MaxHealth;
 
     _sprite.Play();
     _hitPointSprite.Play();
@@ -90,8 +79,8 @@ public partial class Player : CharacterBody2D {
     _currentState = AnimationState.Idle;
 
     if (IsReloading) {
-      ReloadTimer -= (float) delta; // 换弹时间不受时间缩放影响
-      if (ReloadTimer <= 0.0f) {
+      TimeToReloaded -= (float) delta; // 换弹时间不受时间缩放影响
+      if (TimeToReloaded <= 0.0f) {
         FinishReload();
       }
     }
@@ -122,19 +111,19 @@ public partial class Player : CharacterBody2D {
   private void StartReload() {
     if (IsReloading) return;
     IsReloading = true;
-    ReloadTimer = ReloadTime;
+    TimeToReloaded = ReloadTime;
     GD.Print("Reloading...");
   }
 
   private void FinishReload() {
     IsReloading = false;
     CurrentAmmo = MaxAmmo;
-    ReloadTimer = 0.0f;
+    TimeToReloaded = 0.0f;
     GD.Print("Reload finished!");
   }
 
   private void OnGrazeAreaBodyEntered(Node2D body) {
-    if (body is Bullet bullet) {
+    if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
       bullet.OnGrazeEnter();
       if (bullet.WasGrazed) return;
@@ -145,30 +134,28 @@ public partial class Player : CharacterBody2D {
   }
 
   private void OnGrazeAreaBodyExited(Node2D body) {
-    if (body is Bullet bullet) {
+    if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
       bullet.OnGrazeExit();
     }
   }
 
   private void OnHitAreaBodyEntered(Node2D body) {
-    if (body is Bullet bullet) {
+    if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
-      GameOver();
+      Die();
     }
   }
 
   private void FindAndAimTarget() {
     _currentTarget = null;
     float closestDistance = float.MaxValue;
-    var bodies = _aimingArea.GetOverlappingBodies();
-    foreach (var body in bodies) {
-      if (body.IsInGroup("enemies")) {
-        float distance = GlobalPosition.DistanceSquaredTo(body.GlobalPosition);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          _currentTarget = body;
-        }
+    var enemies = GetTree().GetNodesInGroup("enemies");
+    foreach (Node2D enemy in enemies) {
+      float distance = GlobalPosition.DistanceSquaredTo(enemy.GlobalPosition);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        _currentTarget = enemy;
       }
     }
   }
@@ -179,17 +166,26 @@ public partial class Player : CharacterBody2D {
     ShootTimer = ShootCooldown;
     --CurrentAmmo;
 
-    Bullet bullet = Bullet.Instantiate<Bullet>();
+    // 实例化 SimpleBullet
+    var bullet = Bullet.Instantiate<SimpleBullet>();
+    bullet.IsPlayerBullet = true; // 明确设置这是玩家子弹
     bullet.Damage = BulletDamage;
     bullet.GlobalPosition = GlobalPosition;
+
     var randomRotationSigma = _timeSlowPressed ? BulletSpreadSlow : BulletSpreadNormal;
     var randomRotation = _rnd.Randfn(0, randomRotationSigma);
+
+    Vector2 direction;
     if (_currentTarget != null) {
-      bullet.Direction = (_currentTarget.GlobalPosition - GlobalPosition).Normalized().Rotated(randomRotation);
+      direction = (_currentTarget.GlobalPosition - GlobalPosition).Normalized().Rotated(randomRotation);
     } else {
-      bullet.Direction = Vector2.Right.Rotated(_sprite.GlobalRotation).Rotated(randomRotation);
+      direction = Vector2.Right.Rotated(_sprite.GlobalRotation).Rotated(randomRotation);
     }
-    bullet.GlobalRotation = bullet.Direction.Angle();
+
+    // 设置初始速度和旋转
+    bullet.Velocity = direction * bullet.InitialSpeed;
+    bullet.GlobalRotation = direction.Angle();
+
     GetTree().Root.AddChild(bullet);
   }
 
@@ -215,10 +211,10 @@ public partial class Player : CharacterBody2D {
 
   public void TakeDamage(double amount) {
     GD.Print($"Player took {amount} damage, remaining TimeHP: {Health}");
-    Health -= amount;
+    Health -= (float) amount;
   }
 
-  public void GameOver() {
+  public void Die() {
     GD.Print("Game Over!");
     GetTree().Quit();
   }

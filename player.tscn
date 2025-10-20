@@ -1,12 +1,9 @@
-[gd_scene load_steps=29 format=3 uid="uid://clq42dr4qhnpb"]
+[gd_scene load_steps=28 format=3 uid="uid://clq42dr4qhnpb"]
 
 [ext_resource type="Script" uid="uid://b6t3j7axqr3pk" path="res://scripts/Player.cs" id="1_onrkg"]
 [ext_resource type="PackedScene" uid="uid://clk8144n4xb8u" path="res://player_bullet.tscn" id="2_hqtel"]
 [ext_resource type="Texture2D" uid="uid://coki8tuub8mds" path="res://images/ROBO_WITHOUT_HANDS.png" id="3_i3pqv"]
 [ext_resource type="Texture2D" uid="uid://dqjwje0ye4apm" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 9C Free.png" id="4_hqtel"]
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_i3pqv"]
-radius = 256.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hqtel"]
 atlas = ExtResource("3_i3pqv")
@@ -171,17 +168,10 @@ radius = 3.0
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_onrkg")
 Bullet = ExtResource("2_hqtel")
-ShootCooldown = 0.1
 
 [node name="Camera2D" type="Camera2D" parent="."]
 limit_enabled = false
 position_smoothing_enabled = true
-
-[node name="AimingArea" type="Area2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AimingArea"]
-shape = SubResource("CircleShape2D_i3pqv")
-debug_color = Color(0.52284825, 0.41733828, 1, 0.41960785)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -22)

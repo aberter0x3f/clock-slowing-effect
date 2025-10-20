@@ -16,7 +16,7 @@ public partial class GameRoot : Node2D {
     if (_player != null && _uiLabel != null) {
       string ammoText;
       if (_player.IsReloading) {
-        ammoText = $"Reloading: {_player.ReloadTimer:F1}s";
+        ammoText = $"Reloading: {_player.TimeToReloaded:F1}s";
       } else {
         ammoText = $"Ammo: {_player.CurrentAmmo} / {_player.MaxAmmo}";
       }
@@ -27,7 +27,7 @@ public partial class GameRoot : Node2D {
     var enemies = GetTree().GetNodesInGroup("enemies");
 
     if (enemies.Count > 0) {
-      _player.Health -= delta;
+      _player.Health -= (float) delta;
     }
 
     foreach (BaseEnemy enemy in enemies) {

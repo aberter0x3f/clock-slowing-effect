@@ -1,15 +1,14 @@
 [gd_scene load_steps=4 format=3 uid="uid://clk8144n4xb8u"]
 
-[ext_resource type="Script" uid="uid://bnr8rlu5vmojq" path="res://scripts/Bullet.cs" id="1_oxuh6"]
 [ext_resource type="Texture2D" uid="uid://gknyll1u0n53" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Free Part 2A.png" id="2_oxuh6"]
+[ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="3_nnlih"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_oxuh6"]
 size = Vector2(20, 8)
 
 [node name="PlayerBullet" type="Area2D"]
-script = ExtResource("1_oxuh6")
-Speed = 1000.0
-IsPlayerBullet = true
+script = ExtResource("3_nnlih")
+InitialSpeed = 1024.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 self_modulate = Color(1, 1, 1, 0.49803922)

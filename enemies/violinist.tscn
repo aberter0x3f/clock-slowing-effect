@@ -1,19 +1,21 @@
-[gd_scene load_steps=5 format=3 uid="uid://cyest5jveonbm"]
+[gd_scene load_steps=6 format=3 uid="uid://cp1ncmsmewuqr"]
 
-[ext_resource type="Script" uid="uid://c0s2gabecbebj" path="res://scripts/Enemy/SimpleEnemy1.cs" id="1_vy8cc"]
-[ext_resource type="PackedScene" uid="uid://dnq7l1cld0uqv" path="res://enemy_bullet.tscn" id="2_iifgy"]
-[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="2_qi2p4"]
+[ext_resource type="Script" uid="uid://c3ctfqvvorxe1" path="res://scripts/Enemy/Violinist.cs" id="1_n4fa3"]
+[ext_resource type="PackedScene" uid="uid://dm5xk7cw2rst7" path="res://enemies/violinist/stuff_line_bullet.tscn" id="2_x3cys"]
+[ext_resource type="PackedScene" uid="uid://d2qceuhiw775d" path="res://enemies/violinist/note_bullet.tscn" id="3_5e0yb"]
+[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="3_yei7r"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
 
 [node name="Enemy" type="CharacterBody2D" groups=["enemies"]]
-script = ExtResource("1_vy8cc")
-Bullet = ExtResource("2_iifgy")
+script = ExtResource("1_n4fa3")
+StaffLineBulletScene = ExtResource("2_x3cys")
+NoteBulletScene = ExtResource("3_5e0yb")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.3, 0.3)
-texture = ExtResource("2_qi2p4")
+texture = ExtResource("3_yei7r")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_qi2p4")
