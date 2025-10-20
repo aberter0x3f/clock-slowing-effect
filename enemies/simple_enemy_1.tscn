@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://cyest5jveonbm"]
+
+[ext_resource type="Script" uid="uid://c0s2gabecbebj" path="res://scripts/Enemy/SimpleEnemy1.cs" id="1_vy8cc"]
+[ext_resource type="PackedScene" uid="uid://dnq7l1cld0uqv" path="res://enemy_bullet.tscn" id="2_iifgy"]
+[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="2_qi2p4"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
+size = Vector2(40, 40)
+
+[node name="Enemy" type="CharacterBody2D" groups=["enemies"]]
+script = ExtResource("1_vy8cc")
+Bullet = ExtResource("2_iifgy")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("2_qi2p4")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_qi2p4")
+
+[node name="ShootTimer" type="Timer" parent="."]
+wait_time = 0.3
+autostart = true
+
+[node name="HitTimer" type="Timer" parent="."]
+wait_time = 0.1
+
+[connection signal="timeout" from="ShootTimer" to="." method="OnShootTimerTimeout"]
+[connection signal="timeout" from="HitTimer" to="." method="OnHitTimerTimeout"]
