@@ -1,21 +1,22 @@
-[gd_scene load_steps=6 format=3 uid="uid://cyest5jveonbm"]
+[gd_scene load_steps=6 format=3 uid="uid://n2m71jbbwpgs"]
 
-[ext_resource type="Script" uid="uid://c0s2gabecbebj" path="res://scripts/Enemy/SimpleEnemy1.cs" id="1_vy8cc"]
-[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="2_qi2p4"]
-[ext_resource type="PackedScene" uid="uid://bg6yui6j6kvip" path="res://enemies/simple_enemy_1/bullet.tscn" id="2_s87yl"]
-[ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_s87yl"]
+[ext_resource type="Script" uid="uid://b8ka5w4yb7rqh" path="res://scripts/Enemy/Drummer.cs" id="1_b4nag"]
+[ext_resource type="PackedScene" uid="uid://dsgioeubjysas" path="res://enemies/drummer/small_bullet.tscn" id="2_esscc"]
+[ext_resource type="PackedScene" uid="uid://b4e1560im0c5m" path="res://enemies/drummer/large_bullet.tscn" id="3_sl46g"]
+[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="4_tvxum"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
 
-[node name="Enemy" type="CharacterBody2D" groups=["enemies"]]
-script = ExtResource("1_vy8cc")
-Bullet = ExtResource("2_s87yl")
-KillBonus = 10.0
+[node name="Drummer" type="CharacterBody2D" groups=["enemies"]]
+script = ExtResource("1_b4nag")
+SmallBulletScene = ExtResource("2_esscc")
+LargeBulletScene = ExtResource("3_sl46g")
+MaxHealth = 50.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.3, 0.3)
-texture = ExtResource("2_qi2p4")
+texture = ExtResource("4_tvxum")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_qi2p4")
@@ -42,10 +43,6 @@ grow_vertical = 0
 text = "Health"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="RandomWalkComponent" type="Node" parent="."]
-script = ExtResource("4_s87yl")
-metadata/_custom_type_script = "uid://b7y3ayqdya65s"
 
 [connection signal="timeout" from="ShootTimer" to="." method="OnShootTimerTimeout"]
 [connection signal="timeout" from="HitTimer" to="." method="OnHitTimerTimeout"]

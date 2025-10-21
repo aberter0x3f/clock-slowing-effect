@@ -12,7 +12,7 @@ public partial class SimpleEnemy1 : BaseEnemy {
   public PackedScene Bullet { get; set; }
 
   public override void _Process(double delta) {
-
+    base._Process(delta);
     _shootTimer -= TimeManager.Instance.TimeScale * (float) delta;
     if (_shootTimer <= 0) {
       Shoot();

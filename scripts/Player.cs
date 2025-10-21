@@ -19,7 +19,7 @@ public partial class Player : CharacterBody2D {
 
   [ExportGroup("Movement")]
   [Export]
-  public float Speed { get; set; } = 450.0f;
+  public float Speed { get; set; } = 400.0f;
   [Export]
   public float SlowSpeedScale { get; set; } = 0.45f;
 
@@ -43,14 +43,14 @@ public partial class Player : CharacterBody2D {
   [Export]
   public PackedScene Bullet { get; set; }
   [Export]
-  public float ShootCooldown { get; set; } = 0.02f;
+  public float ShootCooldown { get; set; } = 0.03f;
   public float ShootTimer { get; set; } = 0.0f;
   [Export]
   public float BulletSpreadNormal { get; set; } = float.Pi / 24.0f;
   [Export]
   public float BulletSpreadSlow { get; set; } = float.Pi / 60.0f;
   [Export]
-  public float BulletDamage { get; set; } = 1.0f;   // 单发子弹伤害
+  public float BulletDamage { get; set; } = 0.5f;   // 单发子弹伤害
   [Export]
   public int MaxAmmo { get; set; } = 20;
   public int CurrentAmmo { get; set; }
@@ -79,7 +79,7 @@ public partial class Player : CharacterBody2D {
     _currentState = AnimationState.Idle;
 
     if (IsReloading) {
-      TimeToReloaded -= (float) delta; // 换弹时间不受时间缩放影响
+      TimeToReloaded -= (float) delta * TimeManager.Instance.TimeScale; // 换弹时间不受时间缩放影响
       if (TimeToReloaded <= 0.0f) {
         FinishReload();
       }
@@ -141,9 +141,14 @@ public partial class Player : CharacterBody2D {
   }
 
   private void OnHitAreaBodyEntered(Node2D body) {
+    if (body.IsInGroup("enemies")) {
+      Die();
+      return;
+    }
     if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
       Die();
+      return;
     }
   }
 
@@ -209,13 +214,9 @@ public partial class Player : CharacterBody2D {
     MoveAndSlide();
   }
 
-  public void TakeDamage(double amount) {
-    GD.Print($"Player took {amount} damage, remaining TimeHP: {Health}");
-    Health -= (float) amount;
-  }
-
   public void Die() {
     GD.Print("Game Over!");
+    // 测试阶段限不死
     GetTree().Quit();
   }
 

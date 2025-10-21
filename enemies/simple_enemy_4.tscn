@@ -1,23 +1,20 @@
-[gd_scene load_steps=7 format=3 uid="uid://cp1ncmsmewuqr"]
+[gd_scene load_steps=6 format=3 uid="uid://blffjnooibwjd"]
 
-[ext_resource type="Script" uid="uid://c3ctfqvvorxe1" path="res://scripts/Enemy/Violinist.cs" id="1_n4fa3"]
-[ext_resource type="PackedScene" uid="uid://dm5xk7cw2rst7" path="res://enemies/violinist/stuff_line_bullet.tscn" id="2_x3cys"]
-[ext_resource type="PackedScene" uid="uid://d2qceuhiw775d" path="res://enemies/violinist/note_bullet.tscn" id="3_5e0yb"]
-[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="3_yei7r"]
-[ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="5_yei7r"]
+[ext_resource type="Script" uid="uid://c48f8ly0g7ws2" path="res://scripts/Enemy/SimpleEnemy4.cs" id="1_ld2h3"]
+[ext_resource type="PackedScene" uid="uid://dsua1687ld817" path="res://enemies/simple_enemy_4/bullet.tscn" id="2_0dqih"]
+[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="3_46c1e"]
+[ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_djkac"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
 
-[node name="Violinist" type="CharacterBody2D" groups=["enemies"]]
-script = ExtResource("1_n4fa3")
-StaffLineBulletScene = ExtResource("2_x3cys")
-NoteBulletScene = ExtResource("3_5e0yb")
-MaxHealth = 50.0
+[node name="Enemy" type="CharacterBody2D" groups=["enemies"]]
+script = ExtResource("1_ld2h3")
+Bullet = ExtResource("2_0dqih")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.3, 0.3)
-texture = ExtResource("3_yei7r")
+texture = ExtResource("3_46c1e")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_qi2p4")
@@ -46,7 +43,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="RandomWalkComponent" type="Node" parent="."]
-script = ExtResource("5_yei7r")
+script = ExtResource("4_djkac")
 metadata/_custom_type_script = "uid://b7y3ayqdya65s"
 
 [connection signal="timeout" from="ShootTimer" to="." method="OnShootTimerTimeout"]

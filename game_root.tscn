@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://rqvlf8vet6o0" path="res://scripts/GameRoot.cs" id="1_bxsma"]
 [ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="1_xj5yv"]
 [ext_resource type="Texture2D" uid="uid://c6g31txukssrv" path="res://images/tileset-space-station.png" id="2_lkrbl"]
-[ext_resource type="PackedScene" uid="uid://cp1ncmsmewuqr" path="res://enemies/violinist.tscn" id="4_lkrbl"]
+[ext_resource type="PackedScene" uid="uid://n2m71jbbwpgs" path="res://enemies/drummer.tscn" id="7_ledqy"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wd1uf"]
 texture = ExtResource("2_lkrbl")
@@ -118,13 +118,25 @@ tile_map_data = PackedByteArray("AAABAAEAAAAAAAAAAAABAAIAAAAAAAEAAAABAAMAAAAAAAE
 tile_set = SubResource("TileSet_bxsma")
 
 [node name="Player" parent="." instance=ExtResource("1_xj5yv")]
-position = Vector2(100, 101)
-
-[node name="Enemy" parent="." instance=ExtResource("4_lkrbl")]
-position = Vector2(838, 409)
+position = Vector2(92, 101)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="Label" type="Label" parent="CanvasLayer"]
 offset_right = 40.0
 offset_bottom = 23.0
+
+[node name="Drummer" parent="." instance=ExtResource("7_ledqy")]
+position = Vector2(316, 558)
+
+[node name="Drummer2" parent="." instance=ExtResource("7_ledqy")]
+position = Vector2(531, 80)
+
+[node name="Drummer3" parent="." instance=ExtResource("7_ledqy")]
+position = Vector2(844, 221)
+
+[node name="Drummer4" parent="." instance=ExtResource("7_ledqy")]
+position = Vector2(670, 504)
+
+[node name="Drummer5" parent="." instance=ExtResource("7_ledqy")]
+position = Vector2(448, 317)

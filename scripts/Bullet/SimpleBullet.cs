@@ -5,7 +5,7 @@ namespace Bullet;
 public partial class SimpleBullet : BaseBullet {
   [ExportGroup("Movement")]
   [Export]
-  public float InitialSpeed { get; set; } = 400.0f;
+  public float InitialSpeed { get; set; } = 300.0f;
   [Export]
   public float MaxSpeed { get; set; } = -1.0f; // 负数表示无限制
   [Export]
@@ -29,35 +29,35 @@ public partial class SimpleBullet : BaseBullet {
   private float _timeAlive = 0.0f;
 
   public override void _Ready() {
-	base._Ready();
-	// 基于初始方向和速度设置初始速度向量
-	Velocity = Vector2.Right.Rotated(Rotation) * InitialSpeed;
+    base._Ready();
+    // 基于初始方向和速度设置初始速度向量
+    Velocity = Vector2.Right.Rotated(Rotation) * InitialSpeed;
   }
 
   public override void _Process(double delta) {
-	var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
+    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
-	// --- Lifetime Check ---
-	_timeAlive += scaledDelta;
-	if (_timeAlive > MaxLifetime) {
-	  QueueFree();
-	  return;
-	}
+    // --- Lifetime Check ---
+    _timeAlive += scaledDelta;
+    if (_timeAlive > MaxLifetime) {
+      QueueFree();
+      return;
+    }
 
-	// --- Update Velocity & Position ---
-	Velocity += Acceleration * scaledDelta;
-	Velocity = Velocity.Lerp(Vector2.Zero, Damping * scaledDelta); // 应用阻尼
-	if (MaxSpeed > 0) {
-	  var length = Velocity.Length();
-	  if (length > MaxSpeed) {
-		Velocity = Velocity * (MaxSpeed / length);
-	  }
-	}
-	Position += Velocity * scaledDelta;
+    // --- Update Velocity & Position ---
+    Velocity += Acceleration * scaledDelta;
+    Velocity = Velocity.Lerp(Vector2.Zero, Damping * scaledDelta); // 应用阻尼
+    if (MaxSpeed > 0) {
+      var length = Velocity.Length();
+      if (length > MaxSpeed) {
+        Velocity = Velocity * (MaxSpeed / length);
+      }
+    }
+    Position += Velocity * scaledDelta;
 
-	// --- Update Angular Velocity & Rotation ---
-	AngularVelocity += AngularAcceleration * scaledDelta;
-	AngularVelocity = Mathf.Lerp(AngularVelocity, 0, AngularDamping * scaledDelta); // 应用角阻尼
-	Rotation += AngularVelocity * scaledDelta;
+    // --- Update Angular Velocity & Rotation ---
+    AngularVelocity += AngularAcceleration * scaledDelta;
+    AngularVelocity = Mathf.Lerp(AngularVelocity, 0, AngularDamping * scaledDelta); // 应用角阻尼
+    Rotation += AngularVelocity * scaledDelta;
   }
 }
