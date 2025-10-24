@@ -9,12 +9,18 @@ public abstract partial class BaseEnemy : CharacterBody2D {
   protected Timer _hitTimer;
   protected Color _originalColor;
   protected float _health;
-  protected Label _healthLabel;
+  protected Label3D _healthLabel;
+  protected Node3D _visualizer;
+  protected SpriteBase3D _sprite;
+  private bool _isDead = false;
 
   [Export]
   public float MaxHealth { get; set; } = 20.0f;
   [Export]
   public float KillBonus { get; set; } = 0.0f;
+
+  [Signal]
+  public delegate void DiedEventHandler(float difficulty);
 
   public float Health {
     get => _health;
@@ -29,8 +35,15 @@ public abstract partial class BaseEnemy : CharacterBody2D {
     }
   }
 
+  public float Difficulty;
+
   public virtual void Die() {
-    _player.Health += KillBonus;
+    if (_isDead) return;
+    _isDead = true;
+    if (_player != null) {
+      _player.Health += KillBonus;
+    }
+    EmitSignal(SignalName.Died, Difficulty); // 发射信号
     QueueFree();
   }
 
@@ -38,25 +51,37 @@ public abstract partial class BaseEnemy : CharacterBody2D {
     _health = MaxHealth;
     _player = GetTree().Root.GetNode<Player>("GameRoot/Player");
     _hitTimer = GetNode<Timer>("HitTimer");
-    _originalColor = Modulate;
-    _healthLabel = GetNode<Label>("HealthLabel");
+    _visualizer = GetNode<Node3D>("Visualizer");
+    _sprite = _visualizer.GetNode<SpriteBase3D>("Sprite");
+    _healthLabel = _visualizer.GetNode<Label3D>("HealthLabel");
+    _originalColor = _sprite.Modulate;
 
     UpdateHealthLabel();
+    UpdateVisualizer();
+  }
+
+  public override void _Process(double delta) {
+    Health -= (float) delta * TimeManager.Instance.TimeScale;
+    UpdateVisualizer();
   }
 
   public void TakeDamage(float damage) {
     Health -= damage;
-    Modulate = HIT_COLOR;
+    _sprite.Modulate = HIT_COLOR;
     _hitTimer.Start();
   }
 
   private void OnHitTimerTimeout() {
-    Modulate = _originalColor;
+    _sprite.Modulate = _originalColor;
   }
 
   private void UpdateHealthLabel() {
     if (_healthLabel != null) {
       _healthLabel.Text = Mathf.Ceil(Health).ToString();
     }
+  }
+
+  protected void UpdateVisualizer() {
+    _visualizer.GlobalPosition = new Vector3(GlobalPosition.X * 0.01f, 0.3f, GlobalPosition.Y * 0.01f);
   }
 }

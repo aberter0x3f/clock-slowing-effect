@@ -9,12 +9,17 @@
 size = Vector2(40, 40)
 
 [node name="Drummer" type="CharacterBody2D" groups=["enemies"]]
+z_index = 2
+collision_layer = 8
+collision_mask = 21
 script = ExtResource("1_b4nag")
 SmallBulletScene = ExtResource("2_esscc")
 LargeBulletScene = ExtResource("3_sl46g")
 MaxHealth = 50.0
+KillBonus = 20.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+visible = false
 scale = Vector2(0.3, 0.3)
 texture = ExtResource("4_tvxum")
 
@@ -28,21 +33,35 @@ autostart = true
 [node name="HitTimer" type="Timer" parent="."]
 wait_time = 0.1
 
-[node name="HealthLabel" type="Label" parent="."]
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="Sprite" type="Sprite3D" parent="Visualizer"]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)
+sorting_offset = 70.0
+texture_filter = 0
+texture = ExtResource("4_tvxum")
+
+[node name="HealthLabel1" type="Label" parent="Visualizer"]
+visible = false
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -26.0
-offset_top = -43.0
-offset_right = 26.0
-offset_bottom = -20.0
+offset_left = -426.0
+offset_top = -643.0
+offset_right = -374.0
+offset_bottom = -620.0
 grow_horizontal = 2
 grow_vertical = 0
 text = "Health"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="HealthLabel" type="Label3D" parent="Visualizer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+billboard = 2
+text = "Health"
 
 [connection signal="timeout" from="ShootTimer" to="." method="OnShootTimerTimeout"]
 [connection signal="timeout" from="HitTimer" to="." method="OnHitTimerTimeout"]

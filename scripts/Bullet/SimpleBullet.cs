@@ -9,6 +9,8 @@ public partial class SimpleBullet : BaseBullet {
   [Export]
   public float MaxSpeed { get; set; } = -1.0f; // 负数表示无限制
   [Export]
+  public float SameDirectionAcceleration { get; set; } = 0.0f;
+  [Export]
   public Vector2 Acceleration { get; set; } = Vector2.Zero;
   [Export(PropertyHint.Range, "0.0, 1.0")]
   public float Damping { get; set; } = 0.0f; // 线性阻尼，模拟摩擦力
@@ -23,18 +25,57 @@ public partial class SimpleBullet : BaseBullet {
 
   [ExportGroup("Lifetime")]
   [Export]
-  public float MaxLifetime { get; set; } = 20.0f;
+  public float MaxLifetime { get; set; } = 10.0f;
 
   public Vector2 Velocity { get; set; }
   private float _timeAlive = 0.0f;
+
+  // 用于边界检查的变量
+  private Rect2 _despawnBounds;
+  private bool _boundsInitialized = false;
 
   public override void _Ready() {
     base._Ready();
     // 基于初始方向和速度设置初始速度向量
     Velocity = Vector2.Right.Rotated(Rotation) * InitialSpeed;
+    // 初始化销毁边界
+    InitializeDespawnBounds();
+  }
+
+  /// <summary>
+  /// 获取 MapGenerator 并计算销毁边界。
+  /// </summary>
+  private void InitializeDespawnBounds() {
+    // 尝试从场景树中获取 MapGenerator 节点
+    var mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    if (mapGenerator != null) {
+      float worldWidth = mapGenerator.MapWidth * mapGenerator.TileSize.X;
+      float worldHeight = mapGenerator.MapHeight * mapGenerator.TileSize.Y;
+
+      // 地图中心是 (0,0)，所以边界是半宽/半高
+      float halfWidth = worldWidth / 2.0f;
+      float halfHeight = worldHeight / 2.0f;
+
+      // 创建一个比地图大 1.5 倍的销毁矩形区域
+      float despawnHalfWidth = halfWidth * 1.5f;
+      float despawnHalfHeight = halfHeight * 1.5f;
+
+      _despawnBounds = new Rect2(
+          -despawnHalfWidth,
+          -despawnHalfHeight,
+          despawnHalfWidth * 2,
+          despawnHalfHeight * 2
+      );
+      _boundsInitialized = true;
+    } else {
+      // 如果找不到 MapGenerator，打印一个错误，但不影响游戏运行
+      GD.PrintErr("SimpleBullet: MapGenerator not found at 'GameRoot/MapGenerator'. Off-screen despawn check will be disabled.");
+    }
   }
 
   public override void _Process(double delta) {
+    base._Process(delta);
+
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
     // --- Lifetime Check ---
@@ -46,6 +87,9 @@ public partial class SimpleBullet : BaseBullet {
 
     // --- Update Velocity & Position ---
     Velocity += Acceleration * scaledDelta;
+    if (!Velocity.IsZeroApprox()) {
+      Velocity += Velocity.Normalized() * SameDirectionAcceleration * scaledDelta;
+    }
     Velocity = Velocity.Lerp(Vector2.Zero, Damping * scaledDelta); // 应用阻尼
     if (MaxSpeed > 0) {
       var length = Velocity.Length();
@@ -59,5 +103,13 @@ public partial class SimpleBullet : BaseBullet {
     AngularVelocity += AngularAcceleration * scaledDelta;
     AngularVelocity = Mathf.Lerp(AngularVelocity, 0, AngularDamping * scaledDelta); // 应用角阻尼
     Rotation += AngularVelocity * scaledDelta;
+
+    // -边界检查
+    // 如果边界已初始化，并且子弹的全局位置不在边界矩形内
+    if (_boundsInitialized && !_despawnBounds.HasPoint(GlobalPosition)) {
+      QueueFree();
+      // 释放后立即返回，避免后续代码对已释放节点进行操作
+      return;
+    }
   }
 }

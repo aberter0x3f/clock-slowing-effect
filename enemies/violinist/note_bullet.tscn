@@ -7,14 +7,27 @@
 radius = 3.5
 
 [node name="EnemyBullet" type="Area2D"]
+z_index = 3
+collision_layer = 16
+collision_mask = 4
 script = ExtResource("1_dk2uy")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+visible = false
 texture = ExtResource("2_dk2uy")
 region_enabled = true
 region_rect = Rect2(390, 342, 12, 12)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_fkmd6")
+
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="Sprite" type="Sprite3D" parent="Visualizer"]
+sorting_offset = 80.0
+texture_filter = 0
+texture = ExtResource("2_dk2uy")
+region_enabled = true
+region_rect = Rect2(390, 342, 12, 12)
 
 [connection signal="body_entered" from="." to="." method="OnBodyEntered"]

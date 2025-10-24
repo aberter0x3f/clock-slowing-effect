@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3 uid="uid://buj1ymolwiapl"]
+
+[ext_resource type="PackedScene" uid="uid://cp1ncmsmewuqr" path="res://enemies/violinist.tscn" id="1_fygcf"]
+[ext_resource type="Script" uid="uid://ds26fqpa05cng" path="res://scripts/Enemy/EnemyData.cs" id="2_ho1b5"]
+
+[resource]
+script = ExtResource("2_ho1b5")
+Scene = ExtResource("1_fygcf")
+Difficulty = 15.0
+metadata/_custom_type_script = "uid://ds26fqpa05cng"

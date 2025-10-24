@@ -13,6 +13,7 @@ public partial class Drummer : BaseEnemy {
   private float _attackCooldown;
   private Vector2 _retreatDirection;
   private float _retreatTimer;
+  private Tween _activeLungeTween;
 
   [ExportGroup("Attack Configuration")]
   [Export]
@@ -46,6 +47,11 @@ public partial class Drummer : BaseEnemy {
 
   public override void _PhysicsProcess(double delta) {
     base._PhysicsProcess(delta);
+
+    // 每一帧都动态更新 Tween 的播放速度，以响应 TimeScale 的变化
+    if (_activeLungeTween != null && IsInstanceValid(_activeLungeTween)) {
+      _activeLungeTween.SetSpeedScale(TimeManager.Instance.TimeScale);
+    }
 
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
@@ -89,7 +95,7 @@ public partial class Drummer : BaseEnemy {
     _currentState = State.Attacking;
 
     // --- 1. 准备阶段 ---
-    // 挑选一个朝向玩家的方向。这个方向在三次突进中保持不变。
+    // 挑选一个朝向玩家的方向．这个方向在三次突进中保持不变．
     Vector2 attackDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
 
     // --- 2. 执行三次突进和攻击 ---
@@ -104,12 +110,17 @@ public partial class Drummer : BaseEnemy {
       // 如果我们已经太近，就不再向前突进
       if (actualLungeDistance > 0) {
         Vector2 finalTargetPos = startPos + attackDirection * actualLungeDistance;
+
         float duration = actualLungeDistance / LungeSpeed;
 
         // 使用 Tween 来平滑地移动到目标位置
-        var tween = CreateTween().SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.Out);
-        tween.TweenProperty(this, "global_position", finalTargetPos, duration);
-        await ToSignal(tween, Tween.SignalName.Finished);
+        _activeLungeTween = CreateTween().SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.Out);
+        _activeLungeTween.TweenProperty(this, "global_position", finalTargetPos, duration);
+
+        // 等待 Tween 完成
+        await ToSignal(_activeLungeTween, Tween.SignalName.Finished);
+
+        _activeLungeTween = null;
       }
 
       // --- 敲鼓 (发射子弹) ---

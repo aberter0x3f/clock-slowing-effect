@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3 uid="uid://p2ewkufe1nn"]
+
+[ext_resource type="PackedScene" uid="uid://bd6s603e1jdfj" path="res://enemies/simple_enemy_5.tscn" id="1_53xvi"]
+[ext_resource type="Script" uid="uid://ds26fqpa05cng" path="res://scripts/Enemy/EnemyData.cs" id="2_pjyrs"]
+
+[resource]
+script = ExtResource("2_pjyrs")
+Scene = ExtResource("1_53xvi")
+Difficulty = 9.0
+metadata/_custom_type_script = "uid://ds26fqpa05cng"

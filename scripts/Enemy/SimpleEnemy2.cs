@@ -43,10 +43,6 @@ public partial class SimpleEnemy2 : BaseEnemy {
     Velocity = _randomWalkComponent.TargetVelocity * TimeManager.Instance.TimeScale;
 
     MoveAndSlide();
-
-    if (IsOnWall()) {
-      _randomWalkComponent.PickNewMovement();
-    }
   }
 
   private void Shoot() {

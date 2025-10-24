@@ -6,10 +6,16 @@ namespace Enemy;
 public partial class SimpleEnemy1 : BaseEnemy {
   private const float SHOOT_INTERVAL = 1.0f;
 
-  private float _shootTimer = SHOOT_INTERVAL;
-
   [Export]
   public PackedScene Bullet { get; set; }
+
+  private float _shootTimer = SHOOT_INTERVAL;
+  private RandomWalkComponent _randomWalkComponent;
+
+  public override void _Ready() {
+    base._Ready();
+    _randomWalkComponent = GetNode<RandomWalkComponent>("RandomWalkComponent");
+  }
 
   public override void _Process(double delta) {
     base._Process(delta);
@@ -18,6 +24,15 @@ public partial class SimpleEnemy1 : BaseEnemy {
       Shoot();
       _shootTimer = SHOOT_INTERVAL;
     }
+  }
+
+  public override void _PhysicsProcess(double delta) {
+    base._PhysicsProcess(delta);
+
+    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
+    Velocity = _randomWalkComponent.TargetVelocity * TimeManager.Instance.TimeScale;
+
+    MoveAndSlide();
   }
 
   private void Shoot() {

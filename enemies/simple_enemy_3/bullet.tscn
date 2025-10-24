@@ -7,15 +7,28 @@
 size = Vector2(14, 4)
 
 [node name="EnemyBullet" type="Area2D"]
+z_index = 3
+collision_layer = 16
+collision_mask = 4
 script = ExtResource("1_76wvu")
 InitialSpeed = 200.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+visible = false
 texture = ExtResource("2_76wvu")
 region_enabled = true
 region_rect = Rect2(2, 105, 20, 7)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_efijb")
+
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="Sprite" type="Sprite3D" parent="Visualizer"]
+sorting_offset = 80.0
+texture_filter = 0
+texture = ExtResource("2_76wvu")
+region_enabled = true
+region_rect = Rect2(2, 105, 20, 7)
 
 [connection signal="body_entered" from="." to="." method="OnBodyEntered"]

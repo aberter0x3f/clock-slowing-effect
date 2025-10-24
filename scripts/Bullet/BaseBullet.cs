@@ -9,24 +9,30 @@ public abstract partial class BaseBullet : Area2D {
   [Export]
   public bool IsPlayerBullet { get; set; } = false;
 
-  // 是否被擦弹
-  public bool WasGrazed { get; set; } = false;
-
-  private Color _originalColor; // 用于存储子弹的原始颜色
 
   [Export]
   public float Damage { get; set; } = 0f;
 
+  // 是否被擦弹
+  public bool WasGrazed { get; set; } = false;
+
+  private Color _originalColor; // 用于存储子弹的原始颜色
+  protected Node3D _visualizer;
+  protected SpriteBase3D _sprite;
+
   public override void _Ready() {
-    _originalColor = Modulate;
+    _visualizer = GetNodeOrNull<Node3D>("Visualizer");
+    _sprite = _visualizer.GetNode<SpriteBase3D>("Sprite");
+    _originalColor = _sprite.Modulate;
+    UpdateVisualizer();
   }
 
   public void OnGrazeEnter() {
-    Modulate = GRAZE_COLOR;
+    _sprite.Modulate = GRAZE_COLOR;
   }
 
   public void OnGrazeExit() {
-    Modulate = _originalColor;
+    _sprite.Modulate = _originalColor;
   }
 
   private void OnBodyEntered(Node2D body) {
@@ -34,5 +40,16 @@ public abstract partial class BaseBullet : Area2D {
     var enemy = body as BaseEnemy;
     enemy.TakeDamage(Damage);
     QueueFree();
+  }
+
+  public override void _Process(double delta) {
+    UpdateVisualizer();
+  }
+
+  protected virtual void UpdateVisualizer() {
+    if (_visualizer != null) {
+      _visualizer.GlobalPosition = new Vector3(GlobalPosition.X * 0.01f, 0.3f, GlobalPosition.Y * 0.01f);
+      _visualizer.Rotation = new Vector3(0, 0, -GlobalRotation);
+    }
   }
 }

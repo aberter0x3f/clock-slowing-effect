@@ -73,10 +73,6 @@ public partial class Violinist : BaseEnemy {
     }
 
     MoveAndSlide();
-
-    if (IsOnWall()) {
-      _randomWalkComponent.PickNewMovement();
-    }
   }
 
   /// <summary>
@@ -108,26 +104,22 @@ public partial class Violinist : BaseEnemy {
     Vector2 perpendicularDir = direction.Rotated(Mathf.Pi / 2.0f);
 
     // --- 阶段 1: 创建静态的「五线谱」子弹 ---
-    if (StaffLineBulletScene != null) {
-      for (float dist = 0; dist <= lineLength; dist += StaffBulletSpacing) {
-        for (int lineIndex = -2; lineIndex <= 2; lineIndex++) {
-          Vector2 lineOffset = perpendicularDir * lineIndex * StaffLineSpacing;
-          var staffLineBullet = StaffLineBulletScene.Instantiate<Node2D>();
-          staffLineBullet.GlobalPosition = enemyPos + direction * dist + lineOffset;
-          staffLineBullet.GlobalRotation = direction.Angle();
-          GetTree().Root.AddChild(staffLineBullet);
-        }
-        await GetTree().CreateTimeScaleTimer(StaffLineCreationInterval);
+    for (float dist = 0; dist <= lineLength; dist += StaffBulletSpacing) {
+      for (int lineIndex = -2; lineIndex <= 2; lineIndex++) {
+        Vector2 lineOffset = perpendicularDir * lineIndex * StaffLineSpacing;
+        var staffLineBullet = StaffLineBulletScene.Instantiate<Node2D>();
+        staffLineBullet.GlobalPosition = enemyPos + direction * dist + lineOffset;
+        staffLineBullet.GlobalRotation = direction.Angle();
+        GetTree().Root.AddChild(staffLineBullet);
       }
-    } else {
-      GD.PrintErr("Violinist: StaffLineBulletScene is not set in the editor.");
+      await GetTree().CreateTimeScaleTimer(StaffLineCreationInterval);
     }
 
     // --- 阶段 2: 从「五线谱」上发射「音符」子弹 ---
     if (NoteBulletScene != null) {
       float sigmaRadians = Mathf.DegToRad(NOTE_ANGLE_SIGMA_DEGREES);
 
-      for (int i = 0; i < NoteBulletCount; i++) {
+      for (int i = 0; i < 1L * NoteBulletCount * lineLength / 500; i++) {
         int randomLineIndex = _rnd.RandiRange(-2, 2);
         Vector2 randomLineOffset = perpendicularDir * randomLineIndex * StaffLineSpacing;
         float randomDistOnLine = (float) _rnd.RandfRange(0, lineLength);

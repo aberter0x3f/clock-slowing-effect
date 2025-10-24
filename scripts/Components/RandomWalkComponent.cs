@@ -40,8 +40,10 @@ public partial class RandomWalkComponent : Node {
 
     _moveTimer -= scaledDelta;
 
-    // 注意：这里不再检查 IsOnWall()，因为这个 Node 本身没有物理特性．
-    // 碰撞检测应该由父节点处理．如果需要，父节点可以调用 PickNewMovement()．
+    if (_parentBody.IsOnWall()) {
+      _currentMoveDirection *= -1;
+    }
+
     if (_moveTimer <= 0) {
       PickNewMovement();
     }

@@ -1,3 +1,4 @@
+using System;
 using Bullet;
 using Godot;
 
@@ -10,12 +11,13 @@ public partial class Player : CharacterBody2D {
   private AnimationState _currentState = AnimationState.Idle;
   private AnimationState _lastState = AnimationState.Idle;
   private float _health;
-  private AnimatedSprite2D _sprite;
+  private AnimatedSprite3D _sprite;
   private Node2D _currentTarget = null;
   private Area2D _grazeArea; // 擦弹区域的引用
-  private AnimatedSprite2D _hitPointSprite;
+  private AnimatedSprite3D _hitPointSprite;
   private bool _timeSlowPressed = false;
   private RandomNumberGenerator _rnd = new RandomNumberGenerator();
+  private Node3D _visualizer;
 
   [ExportGroup("Movement")]
   [Export]
@@ -29,7 +31,6 @@ public partial class Player : CharacterBody2D {
   public float Health {
     get => _health;
     set {
-      GD.Print($"Health changed to {value}");
       if (value <= 0) {
         _health = 0; // 确保不会变成负数
         Die();
@@ -61,18 +62,20 @@ public partial class Player : CharacterBody2D {
 
   [ExportGroup("Graze")]
   [Export]
-  public float GrazeTimeBonus { get; set; } = 0.5f;
+  public float GrazeTimeBonus { get; set; } = 0.3f;
 
   public override void _Ready() {
-    _sprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
     _grazeArea = GetNode<Area2D>("GrazeArea");
-    _hitPointSprite = GetNode<AnimatedSprite2D>("HitPointSprite");
+    _visualizer = GetNode<Node3D>("Visualizer");
+    _sprite = _visualizer.GetNode<AnimatedSprite3D>("AnimatedSprite3D");
+    _hitPointSprite = _visualizer.GetNode<AnimatedSprite3D>("HitPointSprite");
 
     CurrentAmmo = MaxAmmo; // 初始化弹药
     _health = MaxHealth;
 
     _sprite.Play();
     _hitPointSprite.Play();
+    UpdateVisualizer();
   }
 
   public override void _Process(double delta) {
@@ -106,20 +109,24 @@ public partial class Player : CharacterBody2D {
 
     ShootTimer -= (float) delta;
     UpdateState();
+
+    UpdateVisualizer();
+  }
+
+  private void UpdateVisualizer() {
+    _visualizer.GlobalPosition = new Vector3(GlobalPosition.X * 0.01f, 0.3f, GlobalPosition.Y * 0.01f);
   }
 
   private void StartReload() {
     if (IsReloading) return;
     IsReloading = true;
     TimeToReloaded = ReloadTime;
-    GD.Print("Reloading...");
   }
 
   private void FinishReload() {
     IsReloading = false;
     CurrentAmmo = MaxAmmo;
     TimeToReloaded = 0.0f;
-    GD.Print("Reload finished!");
   }
 
   private void OnGrazeAreaBodyEntered(Node2D body) {
@@ -129,7 +136,6 @@ public partial class Player : CharacterBody2D {
       if (bullet.WasGrazed) return;
       bullet.WasGrazed = true;
       Health += GrazeTimeBonus;
-      GD.Print($"Graze successful! Gained {GrazeTimeBonus}s. New TimeHP: {Health}");
     }
   }
 
@@ -184,7 +190,7 @@ public partial class Player : CharacterBody2D {
     if (_currentTarget != null) {
       direction = (_currentTarget.GlobalPosition - GlobalPosition).Normalized().Rotated(randomRotation);
     } else {
-      direction = Vector2.Right.Rotated(_sprite.GlobalRotation).Rotated(randomRotation);
+      direction = Vector2.Right.Rotated(randomRotation);
     }
 
     // 设置初始速度和旋转
