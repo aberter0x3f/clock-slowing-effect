@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://n2m71jbbwpgs"]
+[gd_scene load_steps=7 format=3 uid="uid://n2m71jbbwpgs"]
 
 [ext_resource type="Script" uid="uid://b8ka5w4yb7rqh" path="res://scripts/Enemy/Drummer.cs" id="1_b4nag"]
 [ext_resource type="PackedScene" uid="uid://dsgioeubjysas" path="res://enemies/drummer/small_bullet.tscn" id="2_esscc"]
 [ext_resource type="PackedScene" uid="uid://b4e1560im0c5m" path="res://enemies/drummer/large_bullet.tscn" id="3_sl46g"]
+[ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_sl46g"]
 [ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="4_tvxum"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
@@ -16,7 +17,8 @@ script = ExtResource("1_b4nag")
 SmallBulletScene = ExtResource("2_esscc")
 LargeBulletScene = ExtResource("3_sl46g")
 MaxHealth = 50.0
-KillBonus = 20.0
+TimeShardScene = ExtResource("4_sl46g")
+TimeShardCount = 20
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false

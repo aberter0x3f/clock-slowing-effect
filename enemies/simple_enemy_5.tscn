@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://bd6s603e1jdfj"]
+[gd_scene load_steps=7 format=3 uid="uid://bd6s603e1jdfj"]
 
 [ext_resource type="Script" uid="uid://mj85qbe0hh8n" path="res://scripts/Enemy/SimpleEnemy5.cs" id="1_sm1ja"]
 [ext_resource type="PackedScene" uid="uid://dyk21cim21ukb" path="res://enemies/simple_enemy_5/bullet.tscn" id="2_nwshx"]
+[ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="3_75yjc"]
 [ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="3_dhwd4"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_0oxhm"]
 
@@ -14,7 +15,8 @@ collision_layer = 8
 collision_mask = 21
 script = ExtResource("1_sm1ja")
 Bullet = ExtResource("2_nwshx")
-KillBonus = 5.0
+TimeShardScene = ExtResource("3_75yjc")
+TimeShardCount = 5
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false

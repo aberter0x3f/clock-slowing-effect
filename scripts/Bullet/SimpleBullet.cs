@@ -49,8 +49,8 @@ public partial class SimpleBullet : BaseBullet {
     // 尝试从场景树中获取 MapGenerator 节点
     var mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
     if (mapGenerator != null) {
-      float worldWidth = mapGenerator.MapWidth * mapGenerator.TileSize.X;
-      float worldHeight = mapGenerator.MapHeight * mapGenerator.TileSize.Y;
+      float worldWidth = mapGenerator.MapWidth * mapGenerator.TileSize;
+      float worldHeight = mapGenerator.MapHeight * mapGenerator.TileSize;
 
       // 地图中心是 (0,0)，所以边界是半宽/半高
       float halfWidth = worldWidth / 2.0f;
@@ -61,10 +61,10 @@ public partial class SimpleBullet : BaseBullet {
       float despawnHalfHeight = halfHeight * 1.5f;
 
       _despawnBounds = new Rect2(
-          -despawnHalfWidth,
-          -despawnHalfHeight,
-          despawnHalfWidth * 2,
-          despawnHalfHeight * 2
+        -despawnHalfWidth,
+        -despawnHalfHeight,
+        despawnHalfWidth * 2,
+        despawnHalfHeight * 2
       );
       _boundsInitialized = true;
     } else {

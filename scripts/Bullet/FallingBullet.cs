@@ -127,11 +127,15 @@ public partial class FallingBullet : BaseBullet {
   /// </summary>
   protected override void UpdateVisualizer() {
     if (_visualizer != null) {
-      var position3D = new Vector3(GlobalPosition.X * 0.01f, 0.3f, GlobalPosition.Y * 0.01f);
+      var position3D = new Vector3(
+        GlobalPosition.X * GameConstants.WorldScaleFactor,
+        GameConstants.GamePlaneY,
+        GlobalPosition.Y * GameConstants.WorldScaleFactor
+      );
 
       _landingIndicator.GlobalPosition = position3D;
 
-      position3D.Y += _currentHeight * 0.01f;
+      position3D.Y += _currentHeight * GameConstants.WorldScaleFactor;
       _visualizer.GlobalPosition = position3D;
 
       _visualizer.Rotation = new Vector3(0, 0, -GlobalRotation);

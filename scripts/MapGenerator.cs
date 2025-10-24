@@ -5,17 +5,23 @@ using Godot;
 public partial class MapGenerator : Node {
   [ExportGroup("Map Configuration")]
   [Export]
-  public int MapWidth { get; set; } = 30;
+  public int MapWidth { get; set; } = 40;
   [Export]
-  public int MapHeight { get; set; } = 20;
+  public int MapHeight { get; set; } = 30;
   [Export]
-  public Vector2I TileSize { get; set; } = new Vector2I(32, 32);
+  public int TileSize { get; set; } = 32;
   [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
-  public float ObstacleProbability { get; set; } = 0.2f;
+  public float ObstacleProbability { get; set; } = 0.02f;
 
   [ExportGroup("Scene References")]
   [Export]
   public PackedScene ObstacleScene { get; set; } // 一个包含 StaticBody2D 和 3D Cube 的场景
+
+  [ExportGroup("Floor")]
+  [Export]
+  public PackedScene FloorTileScene1 { get; set; }
+  [Export]
+  public PackedScene FloorTileScene2 { get; set; }
 
   private int[,] _grid;
   private List<Vector2I> _walkableTiles = new();
@@ -92,9 +98,9 @@ public partial class MapGenerator : Node {
       accessibleTileCount++;
 
       Vector2I[] neighbors = {
-                current + Vector2I.Up, current + Vector2I.Down,
-                current + Vector2I.Left, current + Vector2I.Right
-            };
+        current + Vector2I.Up, current + Vector2I.Down,
+        current + Vector2I.Left, current + Vector2I.Right
+      };
 
       foreach (var neighbor in neighbors) {
         if (neighbor.X >= 0 && neighbor.X < MapWidth && neighbor.Y >= 0 && neighbor.Y < MapHeight &&
@@ -124,8 +130,24 @@ public partial class MapGenerator : Node {
   private void InstantiateTiles() {
     for (int x = 0; x < MapWidth; x++) {
       for (int y = 0; y < MapHeight; y++) {
+        // 生成地面
+        PackedScene tileSceneToUse = ((x + y) % 2 == 0) ? FloorTileScene1 : FloorTileScene2;
+        if (tileSceneToUse != null) {
+          var floorTile = tileSceneToUse.Instantiate<Node3D>();
+          Vector2 worldPos2D = MapToWorld(new Vector2I(x, y));
+          AddChild(floorTile);
+          // 地面放在 Y=0 的高度
+          floorTile.GlobalPosition = new Vector3(
+            worldPos2D.X * GameConstants.WorldScaleFactor,
+            0,
+            worldPos2D.Y * GameConstants.WorldScaleFactor
+          );
+        }
+
+        // -生成障碍物或添加到可行走列表
         if (_grid[x, y] == 1) {
-          var obstacle = ObstacleScene.Instantiate<Node2D>();
+          var obstacle = ObstacleScene.Instantiate<Obstacle>();
+          obstacle.TileSize = TileSize;
           obstacle.Position = MapToWorld(new Vector2I(x, y));
           AddChild(obstacle);
         } else {
@@ -147,9 +169,9 @@ public partial class MapGenerator : Node {
       }
 
       Vector2I[] neighbors = {
-                current + Vector2I.Up, current + Vector2I.Down,
-                current + Vector2I.Left, current + Vector2I.Right
-            };
+        current + Vector2I.Up, current + Vector2I.Down,
+        current + Vector2I.Left, current + Vector2I.Right
+      };
 
       foreach (var neighbor in neighbors) {
         if (neighbor.X >= 0 && neighbor.X < MapWidth && neighbor.Y >= 0 && neighbor.Y < MapHeight && !visited.Contains(neighbor)) {
@@ -171,8 +193,8 @@ public partial class MapGenerator : Node {
   public Vector2I WorldToMap(Vector2 worldCoords) {
     // 这是 MapToWorld 的逆运算
     return new Vector2I(
-        Mathf.RoundToInt(worldCoords.X / TileSize.X + (float) MapWidth / 2),
-        Mathf.RoundToInt(worldCoords.Y / TileSize.Y + (float) MapHeight / 2)
+      Mathf.RoundToInt(worldCoords.X / TileSize + (float) MapWidth / 2),
+      Mathf.RoundToInt(worldCoords.Y / TileSize + (float) MapHeight / 2)
     );
   }
 

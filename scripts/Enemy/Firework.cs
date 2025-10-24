@@ -23,7 +23,7 @@ public partial class Firework : BaseEnemy {
   [Export]
   public float AttackInterval { get; set; } = 5.0f;
   [Export(PropertyHint.Range, "10, 200, 1")]
-  public int ExplosionBulletCount { get; set; } = 100;
+  public int ExplosionBulletCount { get; set; } = 40;
   [Export(PropertyHint.Range, "100, 2000, 10")]
   public float ExplosionHeight { get; set; } = 600.0f; // Height in 2D units where the firework explodes
   [Export(PropertyHint.Range, "10, 500, 5")]
@@ -102,7 +102,11 @@ public partial class Firework : BaseEnemy {
         Vector2 current2DPos = startPos.Lerp(targetPos, progress);
         float currentHeight = Mathf.Ease(progress, 0.5f) * ExplosionHeight;
 
-        var pos3D = new Vector3(current2DPos.X * 0.01f, 0.3f + currentHeight * 0.01f, current2DPos.Y * 0.01f);
+        var pos3D = new Vector3(
+          current2DPos.X * GameConstants.WorldScaleFactor,
+          GameConstants.GamePlaneY + currentHeight * GameConstants.WorldScaleFactor,
+          current2DPos.Y * GameConstants.WorldScaleFactor
+        );
         _activeProjectileVisualizer.GlobalPosition = pos3D;
 
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);

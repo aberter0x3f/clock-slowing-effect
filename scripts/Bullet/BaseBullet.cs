@@ -48,7 +48,11 @@ public abstract partial class BaseBullet : Area2D {
 
   protected virtual void UpdateVisualizer() {
     if (_visualizer != null) {
-      _visualizer.GlobalPosition = new Vector3(GlobalPosition.X * 0.01f, 0.3f, GlobalPosition.Y * 0.01f);
+      _visualizer.GlobalPosition = new Vector3(
+        GlobalPosition.X * GameConstants.WorldScaleFactor,
+        GameConstants.GamePlaneY,
+        GlobalPosition.Y * GameConstants.WorldScaleFactor
+      );
       _visualizer.Rotation = new Vector3(0, 0, -GlobalRotation);
     }
   }

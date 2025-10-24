@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3 uid="uid://c2swi1jboj4j4"]
+
+[ext_resource type="Script" uid="uid://dsmfcjusv0r88" path="res://scripts/TimeShard.cs" id="1_ylx71"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_va5h8"]
+radius = 120.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ylx71"]
+albedo_color = Color(1, 1, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_va5h8"]
+material = SubResource("StandardMaterial3D_ylx71")
+size = Vector3(0.15, 0.01, 0.15)
+
+[node name="TimeShard" type="Area2D"]
+collision_layer = 32
+collision_mask = 2
+script = ExtResource("1_ylx71")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_va5h8")
+
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Visualizer"]
+mesh = SubResource("BoxMesh_va5h8")
+
+[connection signal="body_entered" from="." to="." method="OnBodyEntered"]

@@ -11,7 +11,7 @@ public partial class SimpleEnemy3 : BaseEnemy {
   public PackedScene Bullet { get; set; }
 
   [Export]
-  public float ShootInterval { get; set; } = 3f;
+  public float ShootInterval { get; set; } = 4f;
 
   private RandomWalkComponent _randomWalkComponent;
   private bool _isAttacking = false;

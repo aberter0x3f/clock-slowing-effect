@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://wngnk3v6gahp"]
+[gd_scene load_steps=17 format=3 uid="uid://wngnk3v6gahp"]
 
 [ext_resource type="Script" uid="uid://rqvlf8vet6o0" path="res://scripts/GameRoot.cs" id="1_bxsma"]
 [ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="1_xj5yv"]
@@ -6,6 +6,8 @@
 [ext_resource type="Script" uid="uid://ddv4ypiw0mqcp" path="res://scripts/Enemy/EnemySpawner.cs" id="4_lkrbl"]
 [ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="4_soos4"]
 [ext_resource type="Resource" uid="uid://bavwyb1080vsp" path="res://enemies/simple_enemy_1.tres" id="5_8tlgu"]
+[ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="5_lt8bm"]
+[ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="6_q7c2t"]
 [ext_resource type="Resource" uid="uid://bc4c7si6m041s" path="res://enemies/simple_enemy_2.tres" id="6_soos4"]
 [ext_resource type="Resource" uid="uid://ho3dfxin8aet" path="res://enemies/simple_enemy_3.tres" id="7_0pxas"]
 [ext_resource type="Resource" uid="uid://dmlw8484d2lso" path="res://enemies/simple_enemy_4.tres" id="8_nknqk"]
@@ -19,8 +21,9 @@
 script = ExtResource("1_bxsma")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 0)
+transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
 shadow_enabled = true
+directional_shadow_mode = 1
 
 [node name="Player" parent="." instance=ExtResource("1_xj5yv")]
 position = Vector2(0, 0.3)
@@ -37,6 +40,8 @@ MapWidth = 40
 MapHeight = 30
 ObstacleProbability = 0.02
 ObstacleScene = ExtResource("4_soos4")
+FloorTileScene1 = ExtResource("5_lt8bm")
+FloorTileScene2 = ExtResource("6_q7c2t")
 metadata/_custom_type_script = "uid://d1if7b56ademj"
 
 [node name="EnemySpawner" type="Node" parent="."]

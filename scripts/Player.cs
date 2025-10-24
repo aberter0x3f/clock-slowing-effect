@@ -1,4 +1,3 @@
-using System;
 using Bullet;
 using Godot;
 
@@ -114,7 +113,11 @@ public partial class Player : CharacterBody2D {
   }
 
   private void UpdateVisualizer() {
-    _visualizer.GlobalPosition = new Vector3(GlobalPosition.X * 0.01f, 0.3f, GlobalPosition.Y * 0.01f);
+    _visualizer.GlobalPosition = new Vector3(
+      GlobalPosition.X * GameConstants.WorldScaleFactor,
+      GameConstants.GamePlaneY,
+      GlobalPosition.Y * GameConstants.WorldScaleFactor
+    );
   }
 
   private void StartReload() {
