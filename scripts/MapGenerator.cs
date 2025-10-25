@@ -65,12 +65,6 @@ public partial class MapGenerator : Node {
         }
       }
     }
-    // 确保中心点（玩家初始出生点）不是障碍
-    for (int x = (int) (MapWidth / 2.0), xMax = (int) double.Ceiling(MapWidth / 2.0); x <= xMax; ++x) {
-      for (int y = (int) (MapHeight / 2.0), yMax = (int) double.Ceiling(MapHeight / 2.0); y <= yMax; ++y) {
-        _grid[x, y] = 0;
-      }
-    }
   }
 
   private bool EnsureConnectivity() {

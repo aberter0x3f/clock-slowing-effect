@@ -1,21 +1,23 @@
-[gd_scene load_steps=5 format=3 uid="uid://c2swi1jboj4j4"]
+[gd_scene load_steps=5 format=3 uid="uid://cf51bidbo3k5j"]
 
-[ext_resource type="Script" uid="uid://dsmfcjusv0r88" path="res://scripts/TimeShard.cs" id="1_ylx71"]
+[ext_resource type="Script" uid="uid://dsmfcjusv0r88" path="res://scripts/TimeShard.cs" id="1_eeww2"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_va5h8"]
 radius = 120.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ylx71"]
-albedo_color = Color(1, 1, 0, 1)
+transparency = 1
+albedo_color = Color(0, 0.99215686, 0.8627451, 0.24705882)
 
 [sub_resource type="BoxMesh" id="BoxMesh_va5h8"]
 material = SubResource("StandardMaterial3D_ylx71")
-size = Vector3(0.15, 0.01, 0.15)
+size = Vector3(0.1, 0.01, 0.1)
 
-[node name="TimeShard" type="Area2D" groups=["pickups"]]
+[node name="TimeShardSmall" type="Area2D" groups=["pickups"]]
 collision_layer = 32
 collision_mask = 2
-script = ExtResource("1_ylx71")
+script = ExtResource("1_eeww2")
+TimeBonus = 0.3
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_va5h8")

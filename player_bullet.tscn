@@ -6,7 +6,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_oxuh6"]
 size = Vector2(20, 8)
 
-[node name="PlayerBullet" type="Area2D"]
+[node name="PlayerBullet" type="Area2D" groups=["bullets"]]
 z_index = -1
 collision_layer = 16
 collision_mask = 8
@@ -18,7 +18,7 @@ shape = SubResource("RectangleShape2D_oxuh6")
 
 [node name="Visualizer" type="Node3D" parent="."]
 
-[node name="Sprite" type="Sprite3D" parent="Visualizer" groups=["bullets"]]
+[node name="Sprite" type="Sprite3D" parent="Visualizer"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.00056415796, 0)
 texture_filter = 0
 texture = ExtResource("2_oxuh6")

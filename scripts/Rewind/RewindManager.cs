@@ -8,11 +8,11 @@ namespace Rewind;
 public partial class RewindManager : Node {
   public static RewindManager Instance { get; private set; }
 
-  [Export(PropertyHint.Range, "1, 60, 1")]
-  public int RecordFps { get; set; } = 20;
+  [Export(PropertyHint.Range, "1, 120, 1")]
+  public int RecordFps { get; set; } = 30;
 
   [Export(PropertyHint.Range, "1, 120, 1")]
-  public float MaxRecordTime { get; set; } = 30.0f;
+  public float MaxRecordTime { get; set; } = 60.0f;
 
   public bool IsRewinding { get; private set; } = false;
   public bool IsPreviewing { get; private set; } = false;
@@ -77,9 +77,32 @@ public partial class RewindManager : Node {
     }
   }
 
+  /// <summary>
+  /// 清空所有历史记录和内部状态，用于关卡重置．
+  /// </summary>
+  public void ResetHistory() {
+    _history.Clear();
+    _deadObjectIds.Clear();
+    _idReferenceCounts.Clear();
+
+    // 注意：这里不清除 _trackedObjects 和 _objectPool，
+    // 因为动态对象被 QueueFree() 时，它们的 _ExitTree 会调用 Unregister() 来清理．
+    // 持久化对象（如 Player）仍然需要被追踪．
+
+    IsRewinding = false;
+    IsPreviewing = false;
+    _isAutoRewinding = false;
+    _recordTimer = 1.0f / RecordFps;
+  }
+
   private void HandleInput() {
+    // 游戏暂停时，不处理任何输入．
+    if (GetTree().Paused) {
+      return;
+    }
+
     if (Input.IsActionPressed("time_slow")) {
-      TimeManager.Instance.TimeScale = 0.2f;
+      TimeManager.Instance.TimeScale = 0.333f;
     } else {
       TimeManager.Instance.TimeScale = 1.0f;
     }

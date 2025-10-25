@@ -19,6 +19,9 @@ public partial class Player : CharacterBody2D, IRewindable {
     Walk,
   }
 
+  [Signal]
+  public delegate void DiedPermanentlyEventHandler();
+
   private AnimationState _currentState = AnimationState.Idle;
   private AnimationState _lastState = AnimationState.Idle;
   private float _health;
@@ -29,6 +32,8 @@ public partial class Player : CharacterBody2D, IRewindable {
   private bool _timeSlowPressed = false;
   private RandomNumberGenerator _rnd = new RandomNumberGenerator();
   private Node3D _visualizer;
+  private bool _isPermanentlyDead = false;
+  private MapGenerator _mapGenerator;
 
   [ExportGroup("Movement")]
   [Export]
@@ -74,6 +79,8 @@ public partial class Player : CharacterBody2D, IRewindable {
   [ExportGroup("Graze")]
   [Export]
   public float GrazeTimeBonus { get; set; } = 0.3f;
+  [Export]
+  public PackedScene GrazeTimeShard { get; set; }
 
   [ExportGroup("Rewind")]
   [Export]
@@ -87,6 +94,11 @@ public partial class Player : CharacterBody2D, IRewindable {
     _sprite = _visualizer.GetNode<AnimatedSprite3D>("AnimatedSprite3D");
     _hitPointSprite = _visualizer.GetNode<AnimatedSprite3D>("HitPointSprite");
 
+    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    if (_mapGenerator == null) {
+      GD.PrintErr($"Player: MapGenerator not found at 'GameRoot/MapGenerator'. TimeShards may not spawn correctly.");
+    }
+
     CurrentAmmo = MaxAmmo; // 初始化弹药
     _health = MaxHealth;
 
@@ -98,6 +110,8 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   public override void _Process(double delta) {
+    if (_isPermanentlyDead) return;
+
     if (RewindManager.Instance.IsPreviewing) {
       // 在预览时，我们只更新 3D 可视化对象的位置，不做任何逻辑
       UpdateVisualizer();
@@ -168,7 +182,10 @@ public partial class Player : CharacterBody2D, IRewindable {
       bullet.OnGrazeEnter();
       if (bullet.WasGrazed) return;
       bullet.WasGrazed = true;
-      Health += GrazeTimeBonus;
+      var shard = GrazeTimeShard.Instantiate<TimeShard>();
+      shard.SpawnCenter = bullet.GlobalPosition;
+      shard.MapGeneratorRef = _mapGenerator;
+      GetTree().Root.CallDeferred(Node.MethodName.AddChild, shard);
     }
   }
 
@@ -248,14 +265,31 @@ public partial class Player : CharacterBody2D, IRewindable {
     MoveAndSlide();
   }
 
+  public void ResetState(Vector2 spawnPosition) {
+    GlobalPosition = spawnPosition;
+    Velocity = Vector2.Zero;
+    _health = MaxHealth; // 直接设置字段以避免触发 Die()
+    CurrentAmmo = MaxAmmo;
+    IsReloading = false;
+    TimeToReloaded = 0.0f;
+    ShootTimer = 0.0f;
+    _isPermanentlyDead = false; // 非常重要：重置永久死亡状态
+    _currentState = AnimationState.Idle;
+    UpdateState();
+    UpdateVisualizer();
+  }
+
   public void Die() {
+    if (_isPermanentlyDead) return;
+
     // 尝试触发自动回溯
     bool didRewind = RewindManager.Instance.TriggerAutoRewind(AutoRewindOnHitDuration);
 
-    // 如果回溯失败（例如时间不够），则游戏结束
+    // 如果回溯失败（例如时间不够），则触发死亡菜单
     if (!didRewind) {
       GD.Print("Game Over! Not enough rewind time to survive.");
-      GetTree().Quit();
+      _isPermanentlyDead = true;
+      EmitSignal(SignalName.DiedPermanently);
     }
     // 如果回溯成功，玩家将「复活」到几秒前的状态，游戏继续
   }

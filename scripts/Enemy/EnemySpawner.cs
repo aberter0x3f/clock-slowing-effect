@@ -65,6 +65,14 @@ public partial class EnemySpawner : Node, IRewindable {
   public void Destroy() { }
   public void Resurrect() { }
 
+  public void ResetSpawner() {
+    _currentConcurrentDifficulty = 0.0f;
+    _currentSpawnIndex = 0;
+    IsFinished = false;
+    // 不重新生成队列，而是从头开始尝试生成
+    TrySpawnNext();
+  }
+
   public void StartSpawning(MapGenerator mapGenerator, Player player) {
     _mapGenerator = mapGenerator;
     _walkableTiles = new List<Vector2I>(mapGenerator.WalkableTiles);
