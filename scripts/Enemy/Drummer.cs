@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Godot;
 
 namespace Enemy;
@@ -10,13 +9,30 @@ public partial class Drummer : BaseEnemy {
     Retreating
   }
 
+  // 攻击子状态机
+  private enum AttackSubState {
+    None,
+    Jumping,
+    Firing, // 这个状态现在会处理带间隔的连续发射
+    Pausing // 攻击循环之间的大停顿
+  }
+  private AttackSubState _attackSubState = AttackSubState.None;
+  private int _attackLoopCounter; // 主攻击循环计数 (0, 1, 2)
+  private int _fireSubLoopCounter; // Firing 状态下的子循环计数 (0, 1, 2)
+  private float _attackTimer; // 用于所有攻击相关的计时
+
+  // --- 跳跃状态变量 ---
+  private Vector2 _jumpStartPosition;
+  private Vector2 _jumpTargetPosition;
+  private float _jumpDuration;
+  private float _jumpTime;
+
   private State _currentState = State.Idle;
   private float _attackCooldown;
   private Vector2 _retreatDirection;
   private float _retreatTimer;
-  private float _currentJumpHeight = 0f; // 用于 3D 跳跃的当前高度
+  private float _currentJumpHeight = 0f;
 
-  // --- 场景引用 ---
   private MapGenerator _mapGenerator;
   private CollisionShape2D _bodyCollisionShape;
 
@@ -26,44 +42,38 @@ public partial class Drummer : BaseEnemy {
   [Export]
   public PackedScene LargeBulletScene { get; set; }
   [Export]
-  public float AttackInterval { get; set; } = 3.0f; // 攻击序列之间的间隔
+  public float AttackInterval { get; set; } = 3.0f;
   [Export(PropertyHint.Range, "1, 50, 1")]
-  public int SmallBulletCount { get; set; } = 24; // 每个小弹幕圈的子弹数量
+  public int SmallBulletCount { get; set; } = 24;
   [Export(PropertyHint.Range, "1, 50, 1")]
-  public int LargeBulletCount { get; set; } = 24; // 大弹幕圈的子弹数量
+  public int LargeBulletCount { get; set; } = 24;
 
   [ExportGroup("Movement Configuration")]
   [Export(PropertyHint.Range, "100, 2000, 10")]
-  public float LungeSpeed { get; set; } = 400.0f; // 跳跃的水平速度
+  public float LungeSpeed { get; set; } = 400.0f;
   [Export(PropertyHint.Range, "100, 2000, 10")]
-  public float LungeDistance { get; set; } = 200.0f; // 每次跳跃的最大水平距离
+  public float LungeDistance { get; set; } = 200.0f;
   [Export(PropertyHint.Range, "50, 500, 10")]
-  public float JumpHeight { get; set; } = 150.0f; // 跳跃的 3D 高度
+  public float JumpHeight { get; set; } = 150.0f;
   [Export(PropertyHint.Range, "50, 300, 10")]
-  public float PlayerAvoidanceDistance { get; set; } = 150.0f; // 与玩家保持的最小距离
+  public float PlayerAvoidanceDistance { get; set; } = 150.0f;
   [Export(PropertyHint.Range, "100, 2000, 10")]
-  public float RetreatSpeed { get; set; } = 300.0f; // 撤退速度
+  public float RetreatSpeed { get; set; } = 300.0f;
   [Export(PropertyHint.Range, "0.5, 5.0, 0.1")]
-  public float RetreatDuration { get; set; } = 1.0f; // 撤退持续时间
+  public float RetreatDuration { get; set; } = 1.0f;
 
   public override void _Ready() {
     base._Ready();
-    // 随机化初始冷却时间，以错开多个鼓手的攻击
     _attackCooldown = (float) GD.RandRange(1.0f, 2 * AttackInterval);
-
-    // 获取对 MapGenerator 的引用以进行寻路检查
     _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
     if (_mapGenerator == null) {
       GD.PrintErr("Drummer: MapGenerator not found! Jump validation will be disabled.");
     }
-
-    // 获取碰撞体引用，以便在跳跃时禁用它们
     _bodyCollisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
   }
 
   public override void _PhysicsProcess(double delta) {
     base._PhysicsProcess(delta);
-
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
     switch (_currentState) {
@@ -71,26 +81,22 @@ public partial class Drummer : BaseEnemy {
         HandleIdleState(scaledDelta);
         break;
       case State.Attacking:
-        // 移动逻辑由异步的 AttackSequence 方法处理
-        Velocity = Vector2.Zero;
+        HandleAttackingState(scaledDelta);
         break;
       case State.Retreating:
         HandleRetreatingState(scaledDelta);
         break;
     }
     MoveAndSlide();
-    // 持续更新 3D 可视化对象的位置，包括跳跃高度
     UpdateVisualizer();
   }
 
   protected override void UpdateVisualizer() {
-    // 重写基类方法以加入高度
     var position3D = new Vector3(
       GlobalPosition.X * GameConstants.WorldScaleFactor,
       GameConstants.GamePlaneY,
       GlobalPosition.Y * GameConstants.WorldScaleFactor
     );
-    // 加上跳跃的垂直位移
     position3D.Y += _currentJumpHeight * GameConstants.WorldScaleFactor;
     _visualizer.GlobalPosition = position3D;
   }
@@ -100,7 +106,7 @@ public partial class Drummer : BaseEnemy {
     _attackCooldown -= scaledDelta;
     if (_attackCooldown <= 0) {
       if (_player != null && IsInstanceValid(_player)) {
-        AttackSequence();
+        StartAttackSequence();
       }
     }
   }
@@ -114,88 +120,115 @@ public partial class Drummer : BaseEnemy {
     }
   }
 
-  private async void AttackSequence() {
+  private void StartAttackSequence() {
     if (_currentState != State.Idle) return;
     _currentState = State.Attacking;
-
-    Vector2 attackDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
-
-    for (int i = 0; i < 3; i++) {
-      // 计算并验证跳跃目标
-      Vector2 startPos = GlobalPosition;
-      float distanceToPlayer = startPos.DistanceTo(_player.GlobalPosition);
-      float actualLungeDistance = Mathf.Min(LungeDistance, distanceToPlayer - PlayerAvoidanceDistance);
-
-      if (actualLungeDistance > 0) {
-        Vector2 targetPos = startPos + attackDirection * actualLungeDistance;
-
-        // 验证目标位置是否可通行
-        bool canJump = false;
-        if (_mapGenerator != null) {
-          Vector2I mapCoords = _mapGenerator.WorldToMap(targetPos);
-          if (_mapGenerator.IsWalkable(mapCoords)) {
-            canJump = true;
-          } else {
-            GD.Print($"Drummer jump target {targetPos} (grid: {mapCoords}) is not walkable. Skipping jump.");
-          }
-        } else {
-          canJump = true; // 如果找不到地图生成器，则跳过检查
-        }
-
-        if (canJump) {
-          await PerformJump(targetPos);
-        }
-      }
-
-      // 敲鼓 (发射子弹)
-      if (i < 2) {
-        FireBulletCircle(SmallBulletScene, SmallBulletCount);
-        await GetTree().CreateTimeScaleTimer(0.1f);
-        FireBulletCircle(SmallBulletScene, SmallBulletCount);
-        await GetTree().CreateTimeScaleTimer(0.1f);
-        FireBulletCircle(SmallBulletScene, SmallBulletCount);
-      } else {
-        FireBulletCircle(LargeBulletScene, LargeBulletCount);
-      }
-
-      await GetTree().CreateTimeScaleTimer(0.4f);
-    }
-
-    // 转换到撤退状态
-    _retreatDirection = (GlobalPosition - _player.GlobalPosition).Normalized();
-    _retreatTimer = RetreatDuration;
-    _currentState = State.Retreating;
+    _attackLoopCounter = 0;
+    PrepareNextJump();
   }
 
-  private async Task PerformJump(Vector2 targetPosition) {
-    SetCollisionsEnabled(false);
+  private void HandleAttackingState(float scaledDelta) {
+    Velocity = Vector2.Zero;
+    _attackTimer -= scaledDelta;
 
-    Vector2 startPosition = GlobalPosition;
-    float distance = startPosition.DistanceTo(targetPosition);
-    float duration = distance / LungeSpeed;
-    float time = 0f;
+    switch (_attackSubState) {
+      case AttackSubState.Jumping:
+        ProcessJump(scaledDelta);
+        break;
 
-    while (time < duration) {
-      // 检查实例是否仍然有效，以防在跳跃中被杀死
-      if (!IsInstanceValid(this)) return;
+      case AttackSubState.Firing:
+        if (_attackTimer <= 0) {
+          // --- 检查是小弹幕还是大弹幕 ---
+          if (_attackLoopCounter < 2) {
+            // --- 小弹幕循环 ---
+            FireBulletCircle(SmallBulletScene, SmallBulletCount);
+            _fireSubLoopCounter++;
 
-      time += (float) GetProcessDeltaTime() * TimeManager.Instance.TimeScale;
-      float progress = Mathf.Min(1.0f, time / duration);
+            if (_fireSubLoopCounter < 3) {
+              // 还没射完 3 波，设置 0.1 秒的间隔
+              _attackTimer = 0.1f;
+            } else {
+              // 3 波射完了，进入大停顿
+              _attackSubState = AttackSubState.Pausing;
+              _attackTimer = 0.4f;
+            }
+          } else {
+            // --- 大弹幕（最后一次） ---
+            FireBulletCircle(LargeBulletScene, LargeBulletCount);
+            // 射完了，进入大停顿
+            _attackSubState = AttackSubState.Pausing;
+            _attackTimer = 0.4f;
+          }
+        }
+        break;
 
-      // 更新 2D 平面位置
-      GlobalPosition = startPosition.Lerp(targetPosition, progress);
+      case AttackSubState.Pausing:
+        if (_attackTimer <= 0) {
+          _attackLoopCounter++;
+          if (_attackLoopCounter < 3) {
+            PrepareNextJump(); // 准备下一次跳跃
+          } else {
+            // 3 次攻击循环全部结束，转换到撤退状态
+            _retreatDirection = (GlobalPosition - _player.GlobalPosition).Normalized();
+            _retreatTimer = RetreatDuration;
+            _currentState = State.Retreating;
+            _attackSubState = AttackSubState.None;
+          }
+        }
+        break;
+    }
+  }
 
-      // 计算并更新 3D 高度 (使用 sin 曲线模拟抛物线)
-      _currentJumpHeight = Mathf.Sin(progress * Mathf.Pi) * JumpHeight;
+  private void PrepareNextJump() {
+    Vector2 attackDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
+    Vector2 startPos = GlobalPosition;
+    float distanceToPlayer = startPos.DistanceTo(_player.GlobalPosition);
+    float actualLungeDistance = Mathf.Min(LungeDistance, distanceToPlayer - PlayerAvoidanceDistance);
 
-      // 等待下一物理帧
-      await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+    if (actualLungeDistance > 0) {
+      Vector2 targetPos = startPos + attackDirection * actualLungeDistance;
+      bool canJump = _mapGenerator == null || _mapGenerator.IsWalkable(_mapGenerator.WorldToMap(targetPos));
+
+      if (canJump) {
+        _jumpStartPosition = GlobalPosition;
+        _jumpTargetPosition = targetPos;
+        float distance = _jumpStartPosition.DistanceTo(_jumpTargetPosition);
+        _jumpDuration = distance / LungeSpeed;
+        _jumpTime = 0f;
+        _attackSubState = AttackSubState.Jumping;
+        SetCollisionsEnabled(false);
+        return;
+      }
     }
 
-    // 确保最终状态正确
-    GlobalPosition = targetPosition;
-    _currentJumpHeight = 0f;
-    SetCollisionsEnabled(true);
+    // 如果不能跳跃，直接进入开火阶段
+    InitializeFiringState();
+  }
+
+  private void ProcessJump(float scaledDelta) {
+    // 注意：跳跃动画不依赖 _attackTimer，它有自己的计时器 _jumpTime
+    _jumpTime += scaledDelta;
+    float progress = Mathf.Min(1.0f, _jumpTime / _jumpDuration);
+
+    GlobalPosition = _jumpStartPosition.Lerp(_jumpTargetPosition, progress);
+    _currentJumpHeight = Mathf.Sin(progress * Mathf.Pi) * JumpHeight;
+
+    if (progress >= 1.0f) {
+      GlobalPosition = _jumpTargetPosition;
+      _currentJumpHeight = 0f;
+      SetCollisionsEnabled(true);
+      // 跳跃结束，初始化并进入开火状态
+      InitializeFiringState();
+    }
+  }
+
+  /// <summary>
+  /// 重置开火状态的计数器和计时器，并切换到 Firing 状态．
+  /// </summary>
+  private void InitializeFiringState() {
+    _attackSubState = AttackSubState.Firing;
+    _fireSubLoopCounter = 0;
+    _attackTimer = 0; // 立即发射第一波
   }
 
   private void SetCollisionsEnabled(bool enabled) {

@@ -112,11 +112,11 @@ public abstract partial class BaseEnemy : CharacterBody2D {
     for (int i = 0; i < TimeShardCount; i++) {
       var shard = TimeShardScene.Instantiate<TimeShard>();
 
-      // 在添加到场景前，设置好初始化所需的属性。
+      // 在添加到场景前，设置好初始化所需的属性
       shard.SpawnCenter = GlobalPosition;
       shard.MapGeneratorRef = _mapGenerator;
 
-      // 使用 CallDeferred 将节点添加到场景树，以避免在物理帧内修改物理世界。
+      // 使用 CallDeferred 将节点添加到场景树，以避免在物理帧内修改物理世界
       GetTree().Root.CallDeferred(Node.MethodName.AddChild, shard);
     }
   }

@@ -226,7 +226,7 @@ public partial class Player : CharacterBody2D {
   public void Die() {
     GD.Print("Game Over!");
     // 测试阶段限不死
-    GetTree().Quit();
+    // GetTree().Quit();
   }
 
   private void UpdateState() {

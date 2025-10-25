@@ -13,7 +13,7 @@ collision_mask = 4
 script = ExtResource("1_76wvu")
 InitialSpeed = 170.0
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." groups=["bullets"]]
 visible = false
 texture = ExtResource("2_76wvu")
 region_enabled = true

@@ -12,16 +12,12 @@ public partial class SimpleBullet : BaseBullet {
   public float SameDirectionAcceleration { get; set; } = 0.0f;
   [Export]
   public Vector2 Acceleration { get; set; } = Vector2.Zero;
-  [Export(PropertyHint.Range, "0.0, 1.0")]
-  public float Damping { get; set; } = 0.0f; // 线性阻尼，模拟摩擦力
 
   [ExportGroup("Rotation")]
   [Export]
   public float AngularVelocity { get; set; } = 0.0f; // 角速度 (弧度/秒)
   [Export]
   public float AngularAcceleration { get; set; } = 0.0f; // 角加速度
-  [Export(PropertyHint.Range, "0.0, 1.0")]
-  public float AngularDamping { get; set; } = 0.0f; // 角阻尼
 
   [ExportGroup("Lifetime")]
   [Export]
@@ -43,7 +39,7 @@ public partial class SimpleBullet : BaseBullet {
   }
 
   /// <summary>
-  /// 获取 MapGenerator 并计算销毁边界。
+  /// 获取 MapGenerator 并计算销毁边界．
   /// </summary>
   private void InitializeDespawnBounds() {
     // 尝试从场景树中获取 MapGenerator 节点
@@ -90,7 +86,6 @@ public partial class SimpleBullet : BaseBullet {
     if (!Velocity.IsZeroApprox()) {
       Velocity += Velocity.Normalized() * SameDirectionAcceleration * scaledDelta;
     }
-    Velocity = Velocity.Lerp(Vector2.Zero, Damping * scaledDelta); // 应用阻尼
     if (MaxSpeed > 0) {
       var length = Velocity.Length();
       if (length > MaxSpeed) {
@@ -101,7 +96,6 @@ public partial class SimpleBullet : BaseBullet {
 
     // --- Update Angular Velocity & Rotation ---
     AngularVelocity += AngularAcceleration * scaledDelta;
-    AngularVelocity = Mathf.Lerp(AngularVelocity, 0, AngularDamping * scaledDelta); // 应用角阻尼
     Rotation += AngularVelocity * scaledDelta;
 
     // -边界检查

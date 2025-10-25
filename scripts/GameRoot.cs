@@ -28,7 +28,8 @@ public partial class GameRoot : Node {
       } else {
         ammoText = $"Ammo: {_player.CurrentAmmo} / {_player.MaxAmmo}";
       }
-      _uiLabel.Text = $"Time HP: {_player.Health:F2}\nTime Scale: {TimeManager.Instance.TimeScale:F2}\n{ammoText}";
+      var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
+      _uiLabel.Text = $"Time HP: {_player.Health:F2}\nTime Scale: {TimeManager.Instance.TimeScale:F2}\n{ammoText}\nBullet object count: {bulletObjectCount}";
     }
 
     if (GetTree().GetNodesInGroup("enemies").Count > 0) {

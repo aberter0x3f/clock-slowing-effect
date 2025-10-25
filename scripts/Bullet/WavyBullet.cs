@@ -38,7 +38,7 @@ public partial class WavyBullet : BaseBullet {
   }
 
   /// <summary>
-  /// 获取 MapGenerator 并计算销毁边界。
+  /// 获取 MapGenerator 并计算销毁边界．
   /// </summary>
   private void InitializeDespawnBounds() {
     // 尝试从场景树中获取 MapGenerator 节点

@@ -36,9 +36,6 @@ offset_bottom = 23.0
 
 [node name="MapGenerator" type="Node" parent="."]
 script = ExtResource("3_bxsma")
-MapWidth = 40
-MapHeight = 30
-ObstacleProbability = 0.02
 ObstacleScene = ExtResource("4_soos4")
 FloorTileScene1 = ExtResource("5_lt8bm")
 FloorTileScene2 = ExtResource("6_q7c2t")
