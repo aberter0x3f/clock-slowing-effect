@@ -1,6 +1,11 @@
 using Godot;
+using Rewind;
 
 namespace Bullet;
+
+public class WavyBulletState : BaseBulletState {
+  public float TimeAlive;
+}
 
 public partial class WavyBullet : BaseBullet {
   [ExportGroup("Wavy Movement")]
@@ -35,6 +40,8 @@ public partial class WavyBullet : BaseBullet {
 
     // 初始化销毁边界
     InitializeDespawnBounds();
+
+    UpdateVisualizer();
   }
 
   /// <summary>
@@ -75,7 +82,7 @@ public partial class WavyBullet : BaseBullet {
 
     _timeAlive += scaledDelta;
     if (_timeAlive > MaxLifetime) {
-      QueueFree();
+      Destroy();
       return;
     }
 
@@ -96,12 +103,31 @@ public partial class WavyBullet : BaseBullet {
     // 边界检查
     // 如果边界已初始化，并且子弹的全局位置不在边界矩形内
     if (_boundsInitialized && !_despawnBounds.HasPoint(GlobalPosition)) {
-      QueueFree();
+      Destroy(); // 使用 Destroy
       return;
     }
 
     // 子弹的朝向也随着波浪路径变化
     Vector2 currentVelocity = (_forwardDirection * ForwardSpeed) + (_perpendicularDirection * Amplitude * Frequency * Mathf.Tau * Mathf.Cos(_timeAlive * Frequency * Mathf.Tau));
     GlobalRotation = currentVelocity.Angle();
+
+    UpdateVisualizer();
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseBulletState) base.CaptureState();
+    return new WavyBulletState {
+      GlobalPosition = baseState.GlobalPosition,
+      GlobalRotation = baseState.GlobalRotation,
+      WasGrazed = baseState.WasGrazed,
+      Modulate = baseState.Modulate,
+      TimeAlive = this._timeAlive
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not WavyBulletState wbs) return;
+    this._timeAlive = wbs.TimeAlive;
   }
 }

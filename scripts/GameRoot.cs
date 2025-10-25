@@ -1,16 +1,19 @@
 using Godot;
+using Rewind;
 
 public partial class GameRoot : Node {
   private Player _player;
   private Label _uiLabel;
   private MapGenerator _mapGenerator;
   private EnemySpawner _enemySpawner;
+  private RewindManager _rewindManager;
 
   public override void _Ready() {
     _player = GetNode<Player>("Player");
     _uiLabel = GetNode<Label>("CanvasLayer/Label");
     _mapGenerator = GetNode<MapGenerator>("MapGenerator");
     _enemySpawner = GetNode<EnemySpawner>("EnemySpawner");
+    _rewindManager = GetNode<RewindManager>("RewindManager");
 
     // 1. 生成地图并获取玩家出生点
     Vector2 playerSpawnPosition = _mapGenerator.GenerateMap();
@@ -29,10 +32,16 @@ public partial class GameRoot : Node {
         ammoText = $"Ammo: {_player.CurrentAmmo} / {_player.MaxAmmo}";
       }
       var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
-      _uiLabel.Text = $"Time HP: {_player.Health:F2}\nTime Scale: {TimeManager.Instance.TimeScale:F2}\n{ammoText}\nBullet object count: {bulletObjectCount}";
+      var rewindTimeLeft = _rewindManager.AvailableRewindTime;
+
+      _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
+                      $"Time Scale: {TimeManager.Instance.TimeScale:F2}\n" +
+                      $"Rewind Left: {rewindTimeLeft:F1}s\n" +
+                      $"{ammoText}\n" +
+                      $"Bullet object count: {bulletObjectCount}";
     }
 
-    if (GetTree().GetNodesInGroup("enemies").Count > 0) {
+    if (_enemySpawner != null && !_enemySpawner.IsFinished) {
       _player.Health -= (float) delta;
     }
   }

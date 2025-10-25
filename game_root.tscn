@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://wngnk3v6gahp"]
+[gd_scene load_steps=19 format=3 uid="uid://wngnk3v6gahp"]
 
 [ext_resource type="Script" uid="uid://rqvlf8vet6o0" path="res://scripts/GameRoot.cs" id="1_bxsma"]
 [ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="1_xj5yv"]
@@ -10,12 +10,14 @@
 [ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="6_q7c2t"]
 [ext_resource type="Resource" uid="uid://bc4c7si6m041s" path="res://enemies/simple_enemy_2.tres" id="6_soos4"]
 [ext_resource type="Resource" uid="uid://ho3dfxin8aet" path="res://enemies/simple_enemy_3.tres" id="7_0pxas"]
+[ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="7_1uov0"]
 [ext_resource type="Resource" uid="uid://dmlw8484d2lso" path="res://enemies/simple_enemy_4.tres" id="8_nknqk"]
 [ext_resource type="Resource" uid="uid://p2ewkufe1nn" path="res://enemies/simple_enemy_5.tres" id="9_lt8bm"]
 [ext_resource type="Resource" uid="uid://bnmryy1spjtl2" path="res://enemies/dna.tres" id="10_q7c2t"]
 [ext_resource type="Resource" uid="uid://c32pgymbawkmy" path="res://enemies/drummer.tres" id="11_1uov0"]
 [ext_resource type="Resource" uid="uid://buj1ymolwiapl" path="res://enemies/violinist.tres" id="12_i2rhi"]
 [ext_resource type="Resource" uid="uid://ckqpio203plex" path="res://enemies/firework.tres" id="14_0pxas"]
+[ext_resource type="PackedScene" uid="uid://cyest5jveonbm" path="res://enemies/simple_enemy_1.tscn" id="15_nknqk"]
 
 [node name="GameRoot" type="Node3D"]
 script = ExtResource("1_bxsma")
@@ -24,9 +26,6 @@ script = ExtResource("1_bxsma")
 transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
 shadow_enabled = true
 directional_shadow_mode = 1
-
-[node name="Player" parent="." instance=ExtResource("1_xj5yv")]
-position = Vector2(0, 0.3)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -41,8 +40,17 @@ FloorTileScene1 = ExtResource("5_lt8bm")
 FloorTileScene2 = ExtResource("6_q7c2t")
 metadata/_custom_type_script = "uid://d1if7b56ademj"
 
+[node name="RewindManager" type="Node" parent="."]
+script = ExtResource("7_1uov0")
+metadata/_custom_type_script = "uid://vn61cc2q0j34"
+
 [node name="EnemySpawner" type="Node" parent="."]
 script = ExtResource("4_lkrbl")
 EnemyDatabase = Array[Object]([ExtResource("5_8tlgu"), ExtResource("6_soos4"), ExtResource("7_0pxas"), ExtResource("8_nknqk"), ExtResource("9_lt8bm"), ExtResource("10_q7c2t"), ExtResource("11_1uov0"), ExtResource("12_i2rhi"), ExtResource("14_0pxas")])
-MinPlayerSpawnDistance = 500.0
 metadata/_custom_type_script = "uid://ddv4ypiw0mqcp"
+
+[node name="Player" parent="." instance=ExtResource("1_xj5yv")]
+position = Vector2(0, 0.3)
+
+[node name="Enemy" parent="." instance=ExtResource("15_nknqk")]
+position = Vector2(106, 88)

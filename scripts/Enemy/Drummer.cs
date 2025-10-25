@@ -1,16 +1,33 @@
 using Godot;
+using Rewind;
 
 namespace Enemy;
 
+public class DrummerState : BaseEnemyState {
+  public Drummer.State CurrentState;
+  public Drummer.AttackSubState AttackSubState;
+  public int AttackLoopCounter;
+  public int FireSubLoopCounter;
+  public float AttackTimer;
+  public Vector2 JumpStartPosition;
+  public Vector2 JumpTargetPosition;
+  public float JumpDuration;
+  public float JumpTime;
+  public float CurrentJumpHeight;
+  public float AttackCooldown;
+  public Vector2 RetreatDirection;
+  public float RetreatTimer;
+}
+
 public partial class Drummer : BaseEnemy {
-  private enum State {
+  public enum State {
     Idle,
     Attacking,
     Retreating
   }
 
   // 攻击子状态机
-  private enum AttackSubState {
+  public enum AttackSubState {
     None,
     Jumping,
     Firing, // 这个状态现在会处理带间隔的连续发射
@@ -72,8 +89,9 @@ public partial class Drummer : BaseEnemy {
     _bodyCollisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
   }
 
-  public override void _PhysicsProcess(double delta) {
-    base._PhysicsProcess(delta);
+  public override void _Process(double delta) {
+    base._Process(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
     switch (_currentState) {
@@ -87,8 +105,15 @@ public partial class Drummer : BaseEnemy {
         HandleRetreatingState(scaledDelta);
         break;
     }
-    MoveAndSlide();
+
     UpdateVisualizer();
+  }
+
+  public override void _PhysicsProcess(double delta) {
+    base._PhysicsProcess(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+
+    MoveAndSlide();
   }
 
   protected override void UpdateVisualizer() {
@@ -256,5 +281,48 @@ public partial class Drummer : BaseEnemy {
 
       GetTree().Root.AddChild(bullet);
     }
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseEnemyState) base.CaptureState();
+    return new DrummerState {
+      GlobalPosition = baseState.GlobalPosition,
+      Velocity = baseState.Velocity,
+      Health = baseState.Health,
+      HitTimerLeft = baseState.HitTimerLeft,
+      SpriteModulate = baseState.SpriteModulate,
+      CurrentState = this._currentState,
+      AttackSubState = this._attackSubState,
+      AttackLoopCounter = this._attackLoopCounter,
+      FireSubLoopCounter = this._fireSubLoopCounter,
+      AttackTimer = this._attackTimer,
+      JumpStartPosition = this._jumpStartPosition,
+      JumpTargetPosition = this._jumpTargetPosition,
+      JumpDuration = this._jumpDuration,
+      JumpTime = this._jumpTime,
+      CurrentJumpHeight = this._currentJumpHeight,
+      AttackCooldown = this._attackCooldown,
+      RetreatDirection = this._retreatDirection,
+      RetreatTimer = this._retreatTimer
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not DrummerState ds) return;
+    this._currentState = ds.CurrentState;
+    this._attackSubState = ds.AttackSubState;
+    this._attackLoopCounter = ds.AttackLoopCounter;
+    this._fireSubLoopCounter = ds.FireSubLoopCounter;
+    this._attackTimer = ds.AttackTimer;
+    this._jumpStartPosition = ds.JumpStartPosition;
+    this._jumpTargetPosition = ds.JumpTargetPosition;
+    this._jumpDuration = ds.JumpDuration;
+    this._jumpTime = ds.JumpTime;
+    this._currentJumpHeight = ds.CurrentJumpHeight;
+    this._attackCooldown = ds.AttackCooldown;
+    this._retreatDirection = ds.RetreatDirection;
+    this._retreatTimer = ds.RetreatTimer;
+    SetCollisionsEnabled(_attackSubState != AttackSubState.Jumping);
   }
 }

@@ -1,12 +1,21 @@
 using Godot;
+using Rewind;
+
+public class TimeShardState : RewindState {
+  public TimeShard.State CurrentState;
+  public Vector2 GlobalPosition;
+  public float CurrentHeight;
+  public float LifetimeTimer;
+  public float AnimationTimer;
+}
 
 /// <summary>
 /// 代表敌人死亡后掉落的时间碎片．
 /// 玩家接触后会获得时间奖励，并触发飞向玩家的视觉效果．
 /// </summary>
 [GlobalClass]
-public partial class TimeShard : Area2D {
-  private enum State {
+public partial class TimeShard : RewindableArea2D {
+  public enum State {
     Spawning, // 正在生成，从空中飘落
     Idle,     // 落在地上，等待被拾取或超时
     Collected // 已被玩家拾取，正在飞向玩家
@@ -40,11 +49,11 @@ public partial class TimeShard : Area2D {
   public MapGenerator MapGeneratorRef { get; set; }
 
   public override void _Ready() {
+    base._Ready();
+
     _collisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
     _visualizer = GetNode<Node3D>("Visualizer");
 
-    // 初始时禁用碰撞，直到它落地
-    _collisionShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
     _lifetimeTimer = MaxLifetime;
 
     // 确定一个有效的随机落点
@@ -53,9 +62,31 @@ public partial class TimeShard : Area2D {
     // 将初始 2D 位置设置在生成中心，并记录下来
     GlobalPosition = SpawnCenter;
     _startPosition = SpawnCenter;
+
+    // 这可以处理 TimeShard 生成时玩家就站在其范围内的边缘情况．
+    // 为了确保物理服务器已更新，我们延迟一帧执行检查．
+    CallDeferred(nameof(CheckInitialOverlap));
+  }
+
+  private void CheckInitialOverlap() {
+    // 如果在检查时已经被别的逻辑拾取了，就直接返回
+    if (_currentState == State.Collected) return;
+
+    foreach (var body in GetOverlappingBodies()) {
+      if (body is Player player) {
+        CollectByPlayer(player);
+        break;
+      }
+    }
   }
 
   public override void _Process(double delta) {
+    if (RewindManager.Instance.IsPreviewing) {
+      UpdateVisualizer();
+      return;
+    }
+    if (RewindManager.Instance.IsRewinding) return;
+
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
     switch (_currentState) {
@@ -68,36 +99,18 @@ public partial class TimeShard : Area2D {
         GlobalPosition = _startPosition.Lerp(_landingPosition, progress);
 
         // 2. 垂直高度模拟抛物线 (先上后下)
-        // 动画分为两部分：上升 (前 1/3 时间) 和下降 (后 2/3 时间)
         float upDuration = FallDuration / 3.0f;
         if (_animationTimer <= upDuration) {
-          // 上升阶段
-          _currentHeight = (float) Tween.InterpolateValue(
-              0f, // initialValue
-              BurstHeight, // deltaValue (final - initial)
-              _animationTimer, // elapsedTime
-              upDuration, // duration
-              Tween.TransitionType.Cubic,
-              Tween.EaseType.Out
-          );
+          _currentHeight = (float) Tween.InterpolateValue(0f, BurstHeight, _animationTimer, upDuration, Tween.TransitionType.Cubic, Tween.EaseType.Out);
         } else {
-          // 下降阶段
           float downDuration = FallDuration - upDuration;
           float timeInDownPhase = _animationTimer - upDuration;
-          _currentHeight = (float) Tween.InterpolateValue(
-              BurstHeight, // initialValue
-              -BurstHeight, // deltaValue (0 - BurstHeight)
-              timeInDownPhase, // elapsedTime
-              downDuration, // duration
-              Tween.TransitionType.Cubic,
-              Tween.EaseType.In
-          );
+          _currentHeight = (float) Tween.InterpolateValue(BurstHeight, -BurstHeight, timeInDownPhase, downDuration, Tween.TransitionType.Cubic, Tween.EaseType.In);
         }
 
         // 动画结束
         if (progress >= 1.0f) {
           _currentState = State.Idle;
-          _collisionShape.Disabled = false;
           GlobalPosition = _landingPosition; // 确保最终位置精确
           _currentHeight = 0;
         }
@@ -106,18 +119,18 @@ public partial class TimeShard : Area2D {
       case State.Idle:
         _lifetimeTimer -= scaledDelta;
         if (_lifetimeTimer <= 0) {
-          QueueFree();
+          Destroy();
         }
         break;
 
       case State.Collected:
         if (!IsInstanceValid(_targetPlayer)) {
-          QueueFree();
+          Destroy();
           return;
         }
         GlobalPosition = GlobalPosition.MoveToward(_targetPlayer.GlobalPosition, FlyToPlayerSpeed * scaledDelta);
         if (GlobalPosition.DistanceTo(_targetPlayer.GlobalPosition) < 10.0f) {
-          QueueFree();
+          Destroy();
         }
         break;
     }
@@ -138,12 +151,20 @@ public partial class TimeShard : Area2D {
   }
 
   private void OnBodyEntered(Node2D body) {
-    if (_currentState == State.Idle && body is Player player) {
-      player.Health += TimeBonus;
-      _currentState = State.Collected;
-      _targetPlayer = player;
-      _collisionShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
+    if (IsDestroyed) return;
+    // Spawning 和 Idle 状态都可以被拾取 ---
+    if ((_currentState == State.Spawning || _currentState == State.Idle) && body is Player player) {
+      CollectByPlayer(player);
     }
+  }
+
+  private void CollectByPlayer(Player player) {
+    if (_currentState == State.Collected) return;
+
+    player.Health += TimeBonus;
+    _currentState = State.Collected;
+    _targetPlayer = player;
+    _collisionShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
   }
 
   private Vector2 FindValidLandingSpot(Vector2 center, MapGenerator mapGenerator) {
@@ -166,5 +187,35 @@ public partial class TimeShard : Area2D {
 
     GD.Print("TimeShard: Could not find a valid walkable landing spot after 20 attempts. Spawning at enemy death location.");
     return center;
+  }
+
+  public override RewindState CaptureState() {
+    return new TimeShardState {
+      CurrentState = this._currentState,
+      GlobalPosition = this.GlobalPosition,
+      CurrentHeight = this._currentHeight,
+      LifetimeTimer = this._lifetimeTimer,
+      AnimationTimer = this._animationTimer
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    if (state is not TimeShardState tss) return;
+
+    bool wasCollected = (this._currentState == State.Collected || this.IsDestroyed) && IsInstanceValid(_targetPlayer);
+    bool isNowIdleOrSpawning = (tss.CurrentState == State.Idle || tss.CurrentState == State.Spawning);
+
+    if (wasCollected && isNowIdleOrSpawning) {
+      _targetPlayer.Health -= TimeBonus;
+      _targetPlayer = null;
+    }
+
+    this._currentState = tss.CurrentState;
+    this.GlobalPosition = tss.GlobalPosition;
+    this._currentHeight = tss.CurrentHeight;
+    this._lifetimeTimer = tss.LifetimeTimer;
+    this._animationTimer = tss.AnimationTimer;
+
+    _collisionShape.Disabled = _currentState == State.Collected;
   }
 }

@@ -1,21 +1,22 @@
 using Bullet;
 using Godot;
+using Rewind;
 
 namespace Enemy;
 
-public partial class SimpleEnemy2 : BaseEnemy {
+public class SimpleEnemy2State : BaseEnemyState {
+  public float ShootTimer;
+}
 
+public partial class SimpleEnemy2 : BaseEnemy {
   private float _shootTimer;
 
   [Export]
   public PackedScene Bullet { get; set; }
-
   [Export]
   public float ShootInterval { get; set; } = 2.5f;
-
   [Export]
   public int ShootCount { get; set; } = 40;
-
   [Export]
   public float SafeAngle { get; set; } = 0.25f;
 
@@ -29,27 +30,28 @@ public partial class SimpleEnemy2 : BaseEnemy {
 
   public override void _Process(double delta) {
     base._Process(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+
     _shootTimer -= TimeManager.Instance.TimeScale * (float) delta;
     if (_shootTimer <= 0) {
       Shoot();
       _shootTimer = ShootInterval;
     }
+
+    UpdateVisualizer();
   }
 
   public override void _PhysicsProcess(double delta) {
     base._PhysicsProcess(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
 
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
     Velocity = _randomWalkComponent.TargetVelocity * TimeManager.Instance.TimeScale;
-
     MoveAndSlide();
   }
 
   private void Shoot() {
-    if (_player == null) return;
-
+    if (_player == null || !IsInstanceValid(_player)) return;
     var baseDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
-
     for (int i = 0; i < ShootCount; ++i) {
       var rotationAngle = Mathf.Tau / ShootCount * i;
       if (rotationAngle > Mathf.Pi) {
@@ -58,14 +60,30 @@ public partial class SimpleEnemy2 : BaseEnemy {
       if (float.Abs(rotationAngle) < SafeAngle) {
         continue;
       }
-
       var dir = baseDirection.Rotated(rotationAngle);
-
       var bullet = Bullet.Instantiate<SimpleBullet>();
       bullet.GlobalPosition = GlobalPosition;
       bullet.Velocity = dir * bullet.InitialSpeed;
       bullet.Rotation = dir.Angle();
       GetTree().Root.AddChild(bullet);
     }
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseEnemyState) base.CaptureState();
+    return new SimpleEnemy2State {
+      GlobalPosition = baseState.GlobalPosition,
+      Velocity = baseState.Velocity,
+      Health = baseState.Health,
+      HitTimerLeft = baseState.HitTimerLeft,
+      SpriteModulate = baseState.SpriteModulate,
+      ShootTimer = this._shootTimer
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not SimpleEnemy2State ses) return;
+    this._shootTimer = ses.ShootTimer;
   }
 }

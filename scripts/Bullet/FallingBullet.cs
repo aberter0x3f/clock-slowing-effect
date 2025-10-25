@@ -1,6 +1,16 @@
 using Godot;
+using Rewind;
 
 namespace Bullet;
+
+public class FallingBulletState : BaseBulletState {
+  public FallingBullet.State CurrentState;
+  public float CurrentHeight;
+  public float VerticalVelocity;
+  public bool LandingIndicatorVisible;
+  public Vector3 LandingIndicatorScale;
+  public float TimeOnGround;
+}
 
 /// <summary>
 /// Represents a bullet that "falls" from a certain height in 3D space.
@@ -8,7 +18,7 @@ namespace Bullet;
 /// It now includes a landing indicator for better player feedback.
 /// </summary>
 public partial class FallingBullet : BaseBullet {
-  private enum State {
+  public enum State {
     Falling,
     Landed
   }
@@ -21,6 +31,7 @@ public partial class FallingBullet : BaseBullet {
   private float _verticalVelocity;
   private float _startHeight;
   private RandomNumberGenerator _rnd = new RandomNumberGenerator();
+  private float _timeOnGround;
 
   [ExportGroup("Falling Behavior")]
   [Export]
@@ -33,6 +44,8 @@ public partial class FallingBullet : BaseBullet {
   public float LifetimeOnGround { get; set; } = 0.5f;
 
   public override void _Ready() {
+    base._Ready();
+
     _collisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
     _landingIndicator = GetNode<Node3D>("LandingIndicator");
 
@@ -47,7 +60,8 @@ public partial class FallingBullet : BaseBullet {
 
     GravityZ += float.Abs(_rnd.Randfn(0, GravitySigma));
 
-    base._Ready();
+    UpdateLandingIndicator();
+    UpdateVisualizer();
   }
 
   /// <summary>
@@ -61,6 +75,8 @@ public partial class FallingBullet : BaseBullet {
   }
 
   public override void _Process(double delta) {
+    base._Process(delta);
+
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
     switch (_currentState) {
@@ -85,18 +101,20 @@ public partial class FallingBullet : BaseBullet {
             _landingIndicator.Visible = false;
           }
 
-          var timer = GetTree().CreateTimer(LifetimeOnGround);
-          timer.Timeout += QueueFree;
+          _timeOnGround = LifetimeOnGround;
         }
         break;
 
       case State.Landed:
-        // 逻辑由落地时设置的计时器处理
+        _timeOnGround -= scaledDelta;
+        if (_timeOnGround <= 0) {
+          Destroy();
+          return;
+        }
         break;
     }
 
-    // 必须调用基类的 _Process 来更新 3D 可视化对象
-    base._Process(delta);
+    UpdateVisualizer();
   }
 
   /// <summary>
@@ -117,28 +135,73 @@ public partial class FallingBullet : BaseBullet {
     float finalScale = 1.0f;
     float currentScale = Mathf.Lerp(initialScale, finalScale, fallProgress);
     _landingIndicator.Scale = new Vector3(currentScale, currentScale, currentScale);
-
-    // 你也可以改变透明度
-    // _landingIndicator.Modulate = new Color(1, 1, 1, fallProgress);
   }
 
   /// <summary>
   /// Overrides the default visualizer update to incorporate the Z-axis (Y in 3D) height.
   /// </summary>
   protected override void UpdateVisualizer() {
-    if (_visualizer != null) {
-      var position3D = new Vector3(
-        GlobalPosition.X * GameConstants.WorldScaleFactor,
-        GameConstants.GamePlaneY,
-        GlobalPosition.Y * GameConstants.WorldScaleFactor
-      );
+    var position3D = new Vector3(
+      GlobalPosition.X * GameConstants.WorldScaleFactor,
+      GameConstants.GamePlaneY,
+      GlobalPosition.Y * GameConstants.WorldScaleFactor
+    );
 
+    if (_landingIndicator != null) {
       _landingIndicator.GlobalPosition = position3D;
+    }
 
+    if (_visualizer != null) {
       position3D.Y += _currentHeight * GameConstants.WorldScaleFactor;
       _visualizer.GlobalPosition = position3D;
 
       _visualizer.Rotation = new Vector3(0, 0, -GlobalRotation);
     }
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseBulletState) base.CaptureState();
+    return new FallingBulletState {
+      GlobalPosition = baseState.GlobalPosition,
+      GlobalRotation = baseState.GlobalRotation,
+      WasGrazed = baseState.WasGrazed,
+      Modulate = baseState.Modulate,
+      CurrentState = this._currentState,
+      CurrentHeight = this._currentHeight,
+      VerticalVelocity = this._verticalVelocity,
+      LandingIndicatorVisible = _landingIndicator?.Visible ?? false,
+      LandingIndicatorScale = _landingIndicator?.Scale ?? Vector3.One,
+      TimeOnGround = this._timeOnGround,
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not FallingBulletState fbs) return;
+    this._currentState = fbs.CurrentState;
+    this._currentHeight = fbs.CurrentHeight;
+    this._verticalVelocity = fbs.VerticalVelocity;
+    if (_landingIndicator != null) {
+      _landingIndicator.Visible = fbs.LandingIndicatorVisible;
+      _landingIndicator.Scale = fbs.LandingIndicatorScale;
+    }
+    // 恢复碰撞体状态
+    if (_collisionShape != null) {
+      _collisionShape.Disabled = _currentState == State.Falling;
+    }
+    this._timeOnGround = fbs.TimeOnGround;
+  }
+
+
+  public override void Destroy() {
+    base.Destroy();
+    if (IsDestroyed) return;
+    _landingIndicator.Visible = false;
+  }
+
+  public override void Resurrect() {
+    base.Resurrect();
+    if (!IsDestroyed) return;
+    _landingIndicator.Visible = true;
   }
 }

@@ -1,15 +1,29 @@
 using Bullet;
 using Godot;
+using Rewind;
 
 namespace Enemy;
 
+public class FireworkState : BaseEnemyState {
+  public Firework.State CurrentState;
+  public Firework.AttackSubState AttackSubState;
+  public float LaunchTime;
+  public float LaunchDuration;
+  public Vector2 LaunchStartPosition;
+  public Vector2 LaunchTargetPosition;
+  public Vector2 ExplosionCenter;
+  public float AttackCooldown;
+  public bool ProjectileVisualizerActive;
+  public Vector3 ProjectileVisualizerPosition;
+}
+
 public partial class Firework : BaseEnemy {
-  private enum State {
+  public enum State {
     Idle,
     Attacking
   }
-  // --- 攻击子状态 ---
-  private enum AttackSubState {
+  // 攻击子状态
+  public enum AttackSubState {
     None,
     Launching
   }
@@ -49,6 +63,7 @@ public partial class Firework : BaseEnemy {
   }
 
   public override void Die() {
+    if (IsDestroyed) return;
     if (IsInstanceValid(_activeProjectileVisualizer)) {
       _activeProjectileVisualizer.QueueFree();
       _activeProjectileVisualizer = null;
@@ -56,8 +71,9 @@ public partial class Firework : BaseEnemy {
     base.Die();
   }
 
-  public override void _PhysicsProcess(double delta) {
-    base._PhysicsProcess(delta);
+  public override void _Process(double delta) {
+    base._Process(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
     switch (_currentState) {
@@ -69,6 +85,13 @@ public partial class Firework : BaseEnemy {
         HandleAttackingState(scaledDelta);
         break;
     }
+    UpdateVisualizer();
+  }
+
+  public override void _PhysicsProcess(double delta) {
+    base._PhysicsProcess(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+
     MoveAndSlide();
   }
 
@@ -153,5 +176,52 @@ public partial class Firework : BaseEnemy {
     _attackCooldown = AttackInterval;
     _currentState = State.Idle;
     _attackSubState = AttackSubState.None;
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseEnemyState) base.CaptureState();
+    return new FireworkState {
+      GlobalPosition = baseState.GlobalPosition,
+      Velocity = baseState.Velocity,
+      Health = baseState.Health,
+      HitTimerLeft = baseState.HitTimerLeft,
+      SpriteModulate = baseState.SpriteModulate,
+      CurrentState = this._currentState,
+      AttackSubState = this._attackSubState,
+      LaunchTime = this._launchTime,
+      LaunchDuration = this._launchDuration,
+      LaunchStartPosition = this._launchStartPosition,
+      LaunchTargetPosition = this._launchTargetPosition,
+      ExplosionCenter = this._explosionCenter,
+      AttackCooldown = this._attackCooldown,
+      ProjectileVisualizerActive = IsInstanceValid(_activeProjectileVisualizer),
+      ProjectileVisualizerPosition = IsInstanceValid(_activeProjectileVisualizer) ? _activeProjectileVisualizer.GlobalPosition : Vector3.Zero
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not FireworkState fs) return;
+    this._currentState = fs.CurrentState;
+    this._attackSubState = fs.AttackSubState;
+    this._launchTime = fs.LaunchTime;
+    this._launchDuration = fs.LaunchDuration;
+    this._launchStartPosition = fs.LaunchStartPosition;
+    this._launchTargetPosition = fs.LaunchTargetPosition;
+    this._explosionCenter = fs.ExplosionCenter;
+    this._attackCooldown = fs.AttackCooldown;
+
+    if (fs.ProjectileVisualizerActive) {
+      if (!IsInstanceValid(_activeProjectileVisualizer)) {
+        _activeProjectileVisualizer = FireworkProjectileVisualizerScene.Instantiate<Node3D>();
+        GetTree().Root.AddChild(_activeProjectileVisualizer);
+      }
+      _activeProjectileVisualizer.GlobalPosition = fs.ProjectileVisualizerPosition;
+    } else {
+      if (IsInstanceValid(_activeProjectileVisualizer)) {
+        _activeProjectileVisualizer.QueueFree();
+        _activeProjectileVisualizer = null;
+      }
+    }
   }
 }

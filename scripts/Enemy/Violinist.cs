@@ -1,13 +1,26 @@
 using Godot;
+using Rewind;
 
 namespace Enemy;
+
+public class ViolinistState : BaseEnemyState {
+  public Violinist.AttackState CurrentAttackState;
+  public float AttackTimer;
+  public float StaffCreationDist;
+  public int NotesFiredCount;
+  public Vector2 AttackDirection;
+  public float AttackLineLength;
+  public Vector2 AttackPerpendicularDir;
+  public Vector2 AttackStartPosition;
+  public float AttackCooldown;
+}
 
 public partial class Violinist : BaseEnemy {
   private const float MAIN_ATTACK_INTERVAL = 3.0f;
   private const float NOTE_ANGLE_SIGMA_DEGREES = 40.0f;
 
-  // --- 攻击状态机 ---
-  private enum AttackState {
+  // 攻击状态机
+  public enum AttackState {
     Idle,
     CreatingStaff,
     FiringNotes
@@ -40,7 +53,6 @@ public partial class Violinist : BaseEnemy {
   public float NoteBulletAcceleration { get; set; } = 100.0f;
 
   private float _attackCooldown = MAIN_ATTACK_INTERVAL;
-  private bool _isAttacking = false;
   private RandomWalkComponent _randomWalkComponent;
   private readonly RandomNumberGenerator _rnd = new();
 
@@ -50,11 +62,12 @@ public partial class Violinist : BaseEnemy {
     _attackCooldown = (float) _rnd.RandfRange(1.0f, 2 * MAIN_ATTACK_INTERVAL);
   }
 
-  public override void _PhysicsProcess(double delta) {
-    base._PhysicsProcess(delta);
+  public override void _Process(double delta) {
+    base._Process(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
-    if (!_isAttacking) {
+    if (_attackState == AttackState.Idle) {
       Velocity = _randomWalkComponent.TargetVelocity * TimeManager.Instance.TimeScale;
       _attackCooldown -= scaledDelta;
       if (_attackCooldown <= 0) {
@@ -65,6 +78,12 @@ public partial class Violinist : BaseEnemy {
       Velocity = Vector2.Zero;
       HandleAttackState(scaledDelta);
     }
+  }
+
+  public override void _PhysicsProcess(double delta) {
+    base._PhysicsProcess(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+
     MoveAndSlide();
   }
 
@@ -73,9 +92,7 @@ public partial class Violinist : BaseEnemy {
       GD.PrintErr("Violinist: Player not found, cannot attack.");
       return;
     }
-    if (_isAttacking) return;
 
-    _isAttacking = true;
     _attackState = AttackState.CreatingStaff;
 
     // --- 初始化攻击参数 ---
@@ -118,7 +135,6 @@ public partial class Violinist : BaseEnemy {
         long noteCount = 1L * NoteBulletCount * (long) _attackLineLength / 500;
         if (_notesFiredCount >= noteCount) {
           // --- 阶段 2 结束，重置状态 ---
-          _isAttacking = false;
           _attackState = AttackState.Idle;
           return;
         }
@@ -145,10 +161,43 @@ public partial class Violinist : BaseEnemy {
         } else {
           GD.PrintErr("Violinist: NoteBulletScene is not set in the editor.");
           // 避免死循环
-          _isAttacking = false;
           _attackState = AttackState.Idle;
         }
         break;
     }
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseEnemyState) base.CaptureState();
+    return new ViolinistState {
+      GlobalPosition = baseState.GlobalPosition,
+      Velocity = baseState.Velocity,
+      Health = baseState.Health,
+      HitTimerLeft = baseState.HitTimerLeft,
+      SpriteModulate = baseState.SpriteModulate,
+      CurrentAttackState = this._attackState,
+      AttackTimer = this._attackTimer,
+      StaffCreationDist = this._staffCreationDist,
+      NotesFiredCount = this._notesFiredCount,
+      AttackDirection = this._attackDirection,
+      AttackLineLength = this._attackLineLength,
+      AttackPerpendicularDir = this._attackPerpendicularDir,
+      AttackStartPosition = this._attackStartPosition,
+      AttackCooldown = this._attackCooldown,
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not ViolinistState vs) return;
+    this._attackState = vs.CurrentAttackState;
+    this._attackTimer = vs.AttackTimer;
+    this._staffCreationDist = vs.StaffCreationDist;
+    this._notesFiredCount = vs.NotesFiredCount;
+    this._attackDirection = vs.AttackDirection;
+    this._attackLineLength = vs.AttackLineLength;
+    this._attackPerpendicularDir = vs.AttackPerpendicularDir;
+    this._attackStartPosition = vs.AttackStartPosition;
+    this._attackCooldown = vs.AttackCooldown;
   }
 }

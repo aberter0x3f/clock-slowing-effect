@@ -1,10 +1,18 @@
 using Bullet;
 using Godot;
+using Rewind;
 
 namespace Enemy;
 
+public class SimpleEnemy5State : BaseEnemyState {
+  public SimpleEnemy5.State CurrentState;
+  public float StateTimer;
+  public float ShootTimer;
+  public Vector2 AttackMoveDirection;
+}
+
 public partial class SimpleEnemy5 : BaseEnemy {
-  private enum State {
+  public enum State {
     RandomWalk,
     Attacking
   }
@@ -41,8 +49,9 @@ public partial class SimpleEnemy5 : BaseEnemy {
     _shootTimer = ShootInterval;
   }
 
-  public override void _PhysicsProcess(double delta) {
-    base._PhysicsProcess(delta);
+  public override void _Process(double delta) {
+    base._Process(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
 
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
     _stateTimer -= scaledDelta;
@@ -56,6 +65,13 @@ public partial class SimpleEnemy5 : BaseEnemy {
         HandleAttackingState(scaledDelta);
         break;
     }
+
+    UpdateVisualizer();
+  }
+
+  public override void _PhysicsProcess(double delta) {
+    base._PhysicsProcess(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
 
     MoveAndSlide();
 
@@ -123,5 +139,29 @@ public partial class SimpleEnemy5 : BaseEnemy {
     // 子弹的 _Ready() 函数会根据其 Rotation 和 InitialSpeed 设置初始速度
 
     GetTree().Root.AddChild(bullet);
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseEnemyState) base.CaptureState();
+    return new SimpleEnemy5State {
+      GlobalPosition = baseState.GlobalPosition,
+      Velocity = baseState.Velocity,
+      Health = baseState.Health,
+      HitTimerLeft = baseState.HitTimerLeft,
+      SpriteModulate = baseState.SpriteModulate,
+      CurrentState = this._currentState,
+      StateTimer = this._stateTimer,
+      ShootTimer = this._shootTimer,
+      AttackMoveDirection = this._attackMoveDirection
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not SimpleEnemy5State ses) return;
+    this._currentState = ses.CurrentState;
+    this._stateTimer = ses.StateTimer;
+    this._shootTimer = ses.ShootTimer;
+    this._attackMoveDirection = ses.AttackMoveDirection;
   }
 }

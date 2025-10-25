@@ -1,7 +1,16 @@
 using Bullet;
 using Godot;
+using Rewind;
 
 namespace Enemy;
+
+public class SimpleEnemy3State : BaseEnemyState {
+  public bool IsAttacking;
+  public float ShootTimer;
+  public float AttackTimer;
+  public int AttackOuterLoopCounter;
+  public Vector2 AttackBaseDirection;
+}
 
 public partial class SimpleEnemy3 : BaseEnemy {
   // 攻击状态机
@@ -27,6 +36,7 @@ public partial class SimpleEnemy3 : BaseEnemy {
 
   public override void _Process(double delta) {
     base._Process(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
     if (!_isAttacking) {
@@ -38,10 +48,13 @@ public partial class SimpleEnemy3 : BaseEnemy {
     } else {
       HandleAttackState(scaledDelta);
     }
+    UpdateVisualizer();
   }
 
   public override void _PhysicsProcess(double delta) {
     base._PhysicsProcess(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+
     if (_isAttacking) {
       Velocity = Vector2.Zero;
     } else {
@@ -85,5 +98,31 @@ public partial class SimpleEnemy3 : BaseEnemy {
 
     _attackOuterLoopCounter++;
     _attackTimer = 0.1f; // 重置计时器
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseEnemyState) base.CaptureState();
+    return new SimpleEnemy3State {
+      GlobalPosition = baseState.GlobalPosition,
+      Velocity = baseState.Velocity,
+      Health = baseState.Health,
+      HitTimerLeft = baseState.HitTimerLeft,
+      SpriteModulate = baseState.SpriteModulate,
+      IsAttacking = this._isAttacking,
+      ShootTimer = this._shootTimer,
+      AttackTimer = this._attackTimer,
+      AttackOuterLoopCounter = this._attackOuterLoopCounter,
+      AttackBaseDirection = this._attackBaseDirection
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not SimpleEnemy3State ses) return;
+    this._isAttacking = ses.IsAttacking;
+    this._shootTimer = ses.ShootTimer;
+    this._attackTimer = ses.AttackTimer;
+    this._attackOuterLoopCounter = ses.AttackOuterLoopCounter;
+    this._attackBaseDirection = ses.AttackBaseDirection;
   }
 }

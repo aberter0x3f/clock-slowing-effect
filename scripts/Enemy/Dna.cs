@@ -1,11 +1,20 @@
 using Bullet;
 using Godot;
+using Rewind;
 
 namespace Enemy;
 
+public class DnaState : BaseEnemyState {
+  public Dna.AttackState CurrentAttackState;
+  public float AttackTimer;
+  public int BulletsFiredInSequence;
+  public Vector2 AttackDirection;
+  public float ShootTimer;
+}
+
 public partial class Dna : BaseEnemy {
   // 攻击状态机
-  private enum AttackState {
+  public enum AttackState {
     Idle,
     Attacking
   }
@@ -40,6 +49,7 @@ public partial class Dna : BaseEnemy {
 
   public override void _Process(double delta) {
     base._Process(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
     if (_attackState == AttackState.Idle) {
@@ -52,10 +62,12 @@ public partial class Dna : BaseEnemy {
       // 如果正在攻击，则处理攻击状态机
       HandleAttackState(scaledDelta);
     }
+    UpdateVisualizer();
   }
 
   public override void _PhysicsProcess(double delta) {
     base._PhysicsProcess(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
 
     // 攻击时敌人不移动
     if (_attackState == AttackState.Idle) {
@@ -110,5 +122,31 @@ public partial class Dna : BaseEnemy {
       // 重置计时器，等待下一次发射
       _attackTimer = BulletCreationInterval;
     }
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseEnemyState) base.CaptureState();
+    return new DnaState {
+      GlobalPosition = baseState.GlobalPosition,
+      Velocity = baseState.Velocity,
+      Health = baseState.Health,
+      HitTimerLeft = baseState.HitTimerLeft,
+      SpriteModulate = baseState.SpriteModulate,
+      CurrentAttackState = this._attackState,
+      AttackTimer = this._attackTimer,
+      BulletsFiredInSequence = this._bulletsFiredInSequence,
+      AttackDirection = this._attackDirection,
+      ShootTimer = this._shootTimer
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not DnaState ds) return;
+    this._attackState = ds.CurrentAttackState;
+    this._attackTimer = ds.AttackTimer;
+    this._bulletsFiredInSequence = ds.BulletsFiredInSequence;
+    this._attackDirection = ds.AttackDirection;
+    this._shootTimer = ds.ShootTimer;
   }
 }

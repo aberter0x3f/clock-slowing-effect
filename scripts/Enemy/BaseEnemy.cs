@@ -1,8 +1,18 @@
 using Godot;
+using Rewind;
 
 namespace Enemy;
 
-public abstract partial class BaseEnemy : CharacterBody2D {
+// 所有敌人状态快照的基类，包含通用属性
+public class BaseEnemyState : RewindState {
+  public Vector2 GlobalPosition;
+  public Vector2 Velocity;
+  public float Health;
+  public float HitTimerLeft;
+  public Color SpriteModulate;
+}
+
+public abstract partial class BaseEnemy : RewindableCharacterBody2D {
   public static readonly Color HIT_COLOR = new Color(1.0f, 0.5f, 0.5f);
 
   protected Player _player;
@@ -12,7 +22,6 @@ public abstract partial class BaseEnemy : CharacterBody2D {
   protected Label3D _healthLabel;
   protected Node3D _visualizer;
   protected SpriteBase3D _sprite;
-  private bool _isDead = false;
   private MapGenerator _mapGenerator; // 添加对地图生成器的引用
 
   [Export]
@@ -43,16 +52,14 @@ public abstract partial class BaseEnemy : CharacterBody2D {
   public float Difficulty;
 
   public virtual void Die() {
-    if (_isDead) return;
-    _isDead = true;
-
+    if (IsDestroyed) return; // 使用基类的 IsDestroyed 属性检查
     SpawnTimeShards();
-
+    Destroy();
     EmitSignal(SignalName.Died, Difficulty); // 发射信号
-    QueueFree();
   }
 
   public override void _Ready() {
+    base._Ready();
     _health = MaxHealth;
     _player = GetTree().Root.GetNode<Player>("GameRoot/Player");
     _hitTimer = GetNode<Timer>("HitTimer");
@@ -72,6 +79,12 @@ public abstract partial class BaseEnemy : CharacterBody2D {
   }
 
   public override void _Process(double delta) {
+    if (RewindManager.Instance.IsPreviewing) {
+      UpdateVisualizer();
+      return;
+    }
+    if (RewindManager.Instance.IsRewinding) return;
+
     Health -= (float) delta * TimeManager.Instance.TimeScale;
     UpdateVisualizer();
   }
@@ -119,5 +132,30 @@ public abstract partial class BaseEnemy : CharacterBody2D {
       // 使用 CallDeferred 将节点添加到场景树，以避免在物理帧内修改物理世界
       GetTree().Root.CallDeferred(Node.MethodName.AddChild, shard);
     }
+  }
+
+  public override RewindState CaptureState() {
+    return new BaseEnemyState {
+      GlobalPosition = this.GlobalPosition,
+      Velocity = this.Velocity,
+      Health = this.Health,
+      HitTimerLeft = (float) _hitTimer.TimeLeft,
+      SpriteModulate = _sprite.Modulate
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    if (state is not BaseEnemyState bes) return;
+    this.GlobalPosition = bes.GlobalPosition;
+    this.Velocity = bes.Velocity;
+    // 直接赋值 _health 而不是 Health 属性，避免在恢复状态时触发 Die()
+    this._health = bes.Health;
+    _sprite.Modulate = bes.SpriteModulate;
+    if (bes.HitTimerLeft > 0) {
+      _hitTimer.Start(bes.HitTimerLeft);
+    } else {
+      _hitTimer.Stop();
+    }
+    UpdateHealthLabel();
   }
 }

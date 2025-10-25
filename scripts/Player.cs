@@ -1,7 +1,19 @@
 using Bullet;
+using Enemy;
 using Godot;
+using Rewind;
 
-public partial class Player : CharacterBody2D {
+public class PlayerState : RewindState {
+  public Vector2 GlobalPosition;
+  public Vector2 Velocity;
+  public Player.AnimationState CurrentState;
+  public int CurrentAmmo;
+  public bool IsReloading;
+  public float TimeToReloaded;
+  public float ShootTimer;
+}
+
+public partial class Player : CharacterBody2D, IRewindable {
   public enum AnimationState {
     Idle,
     Walk,
@@ -63,6 +75,12 @@ public partial class Player : CharacterBody2D {
   [Export]
   public float GrazeTimeBonus { get; set; } = 0.3f;
 
+  [ExportGroup("Rewind")]
+  [Export]
+  public float AutoRewindOnHitDuration { get; set; } = 3.0f;  // 被击中时自动回溯的时长
+
+  public ulong InstanceId => GetInstanceId();
+
   public override void _Ready() {
     _grazeArea = GetNode<Area2D>("GrazeArea");
     _visualizer = GetNode<Node3D>("Visualizer");
@@ -75,9 +93,18 @@ public partial class Player : CharacterBody2D {
     _sprite.Play();
     _hitPointSprite.Play();
     UpdateVisualizer();
+
+    RewindManager.Instance.Register(this);
   }
 
   public override void _Process(double delta) {
+    if (RewindManager.Instance.IsPreviewing) {
+      // 在预览时，我们只更新 3D 可视化对象的位置，不做任何逻辑
+      UpdateVisualizer();
+      return;
+    }
+    if (RewindManager.Instance.IsRewinding) return;
+
     _currentState = AnimationState.Idle;
 
     if (IsReloading) {
@@ -94,8 +121,9 @@ public partial class Player : CharacterBody2D {
     }
 
     FindAndAimTarget();
-    HandleTimeScaleInput();
     HandleMovement();
+
+    _timeSlowPressed = Input.IsActionPressed("time_slow");
 
     if (Input.IsActionPressed("shoot")) {
       if (!IsReloading && CurrentAmmo <= 0) {
@@ -118,6 +146,8 @@ public partial class Player : CharacterBody2D {
       GameConstants.GamePlaneY,
       GlobalPosition.Y * GameConstants.WorldScaleFactor
     );
+
+    _hitPointSprite.Visible = _timeSlowPressed;
   }
 
   private void StartReload() {
@@ -150,6 +180,9 @@ public partial class Player : CharacterBody2D {
   }
 
   private void OnHitAreaBodyEntered(Node2D body) {
+    // 玩家在回溯预览期间是无敌的
+    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+
     if (body.IsInGroup("enemies")) {
       Die();
       return;
@@ -165,7 +198,10 @@ public partial class Player : CharacterBody2D {
     _currentTarget = null;
     float closestDistance = float.MaxValue;
     var enemies = GetTree().GetNodesInGroup("enemies");
-    foreach (Node2D enemy in enemies) {
+    foreach (BaseEnemy enemy in enemies) {
+      if (enemy.IsDestroyed) {
+        continue;
+      }
       float distance = GlobalPosition.DistanceSquaredTo(enemy.GlobalPosition);
       if (distance < closestDistance) {
         closestDistance = distance;
@@ -203,17 +239,6 @@ public partial class Player : CharacterBody2D {
     GetTree().Root.AddChild(bullet);
   }
 
-  private void HandleTimeScaleInput() {
-    _timeSlowPressed = Input.IsActionPressed("time_slow");
-    if (_timeSlowPressed) {
-      TimeManager.Instance.TimeScale = 0.2f;
-      _hitPointSprite.Visible = true;
-    } else {
-      TimeManager.Instance.TimeScale = 1f;
-      _hitPointSprite.Visible = false;
-    }
-  }
-
   private void HandleMovement() {
     Vector2 direction = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
     Velocity = direction * (_timeSlowPressed ? Speed * SlowSpeedScale : Speed);
@@ -224,9 +249,15 @@ public partial class Player : CharacterBody2D {
   }
 
   public void Die() {
-    GD.Print("Game Over!");
-    // 测试阶段限不死
-    // GetTree().Quit();
+    // 尝试触发自动回溯
+    bool didRewind = RewindManager.Instance.TriggerAutoRewind(AutoRewindOnHitDuration);
+
+    // 如果回溯失败（例如时间不够），则游戏结束
+    if (!didRewind) {
+      GD.Print("Game Over! Not enough rewind time to survive.");
+      GetTree().Quit();
+    }
+    // 如果回溯成功，玩家将「复活」到几秒前的状态，游戏继续
   }
 
   private void UpdateState() {
@@ -242,5 +273,43 @@ public partial class Player : CharacterBody2D {
         break;
     }
     _lastState = _currentState;
+  }
+
+  public RewindState CaptureState() {
+    return new PlayerState {
+      GlobalPosition = this.GlobalPosition,
+      Velocity = this.Velocity,
+      CurrentState = this._currentState,
+      CurrentAmmo = this.CurrentAmmo,
+      IsReloading = this.IsReloading,
+      TimeToReloaded = this.TimeToReloaded,
+      ShootTimer = this.ShootTimer
+    };
+  }
+
+  public void RestoreState(RewindState state) {
+    if (state is not PlayerState ps) return;
+
+    this.GlobalPosition = ps.GlobalPosition;
+    this.Velocity = ps.Velocity;
+    this._currentState = ps.CurrentState;
+    this.CurrentAmmo = ps.CurrentAmmo;
+    this.IsReloading = ps.IsReloading;
+    this.TimeToReloaded = ps.TimeToReloaded;
+    this.ShootTimer = ps.ShootTimer;
+
+    // 恢复状态后可能需要更新一些依赖状态的视觉效果
+    UpdateState();
+  }
+
+  // Player 不会被 Destroy 或 Resurrect，所以提供空实现
+  public void Destroy() { }
+  public void Resurrect() { }
+
+  public override void _ExitTree() {
+    if (RewindManager.Instance != null) {
+      RewindManager.Instance.Unregister(this);
+    }
+    base._ExitTree();
   }
 }

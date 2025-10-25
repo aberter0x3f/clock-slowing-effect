@@ -1,6 +1,13 @@
 using Godot;
+using Rewind;
 
 namespace Bullet;
+
+public class SimpleBulletState : BaseBulletState {
+  public Vector2 Velocity;
+  public float AngularVelocity;
+  public float TimeAlive;
+}
 
 public partial class SimpleBullet : BaseBullet {
   [ExportGroup("Movement")]
@@ -36,6 +43,7 @@ public partial class SimpleBullet : BaseBullet {
     Velocity = Vector2.Right.Rotated(Rotation) * InitialSpeed;
     // 初始化销毁边界
     InitializeDespawnBounds();
+    UpdateVisualizer();
   }
 
   /// <summary>
@@ -77,7 +85,7 @@ public partial class SimpleBullet : BaseBullet {
     // --- Lifetime Check ---
     _timeAlive += scaledDelta;
     if (_timeAlive > MaxLifetime) {
-      QueueFree();
+      Destroy();
       return;
     }
 
@@ -98,12 +106,34 @@ public partial class SimpleBullet : BaseBullet {
     AngularVelocity += AngularAcceleration * scaledDelta;
     Rotation += AngularVelocity * scaledDelta;
 
-    // -边界检查
+    // 边界检查
     // 如果边界已初始化，并且子弹的全局位置不在边界矩形内
     if (_boundsInitialized && !_despawnBounds.HasPoint(GlobalPosition)) {
-      QueueFree();
-      // 释放后立即返回，避免后续代码对已释放节点进行操作
+      Destroy(); // 使用 Destroy
       return;
     }
+
+    UpdateVisualizer();
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseBulletState) base.CaptureState();
+    return new SimpleBulletState {
+      GlobalPosition = baseState.GlobalPosition,
+      GlobalRotation = baseState.GlobalRotation,
+      WasGrazed = baseState.WasGrazed,
+      Modulate = baseState.Modulate,
+      Velocity = this.Velocity,
+      AngularVelocity = this.AngularVelocity,
+      TimeAlive = this._timeAlive
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not SimpleBulletState sbs) return;
+    this.Velocity = sbs.Velocity;
+    this.AngularVelocity = sbs.AngularVelocity;
+    this._timeAlive = sbs.TimeAlive;
   }
 }

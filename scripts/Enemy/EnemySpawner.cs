@@ -2,9 +2,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Enemy;
 using Godot;
+using Rewind;
+
+public class EnemySpawnerState : RewindState {
+  public float CurrentConcurrentDifficulty;
+  public int CurrentSpawnIndex;
+}
 
 [GlobalClass]
-public partial class EnemySpawner : Node {
+public partial class EnemySpawner : Node, IRewindable {
   [ExportGroup("Spawning Configuration")]
   [Export]
   public Godot.Collections.Array<EnemyData> EnemyDatabase { get; set; }
@@ -13,14 +19,51 @@ public partial class EnemySpawner : Node {
   [Export]
   public float MaxConcurrentDifficulty { get; set; } = 30.0f;
   [Export]
-  public float MinPlayerSpawnDistance { get; set; } = 300.0f;
+  public float MinPlayerSpawnDistance { get; set; } = 500.0f;
 
   private List<EnemyData> _spawnQueue = new();
   private float _currentConcurrentDifficulty = 0.0f;
+  private int _currentSpawnIndex = 0;
   private List<Vector2I> _walkableTiles;
   private MapGenerator _mapGenerator;
   private Player _player;
   private readonly RandomNumberGenerator _rnd = new();
+
+  public ulong InstanceId => GetInstanceId();
+  public bool IsFinished { get; set; } = false;
+
+  public override void _Ready() {
+    base._Ready();
+    // 在 RewindManager 中注册自己
+    if (RewindManager.Instance != null) {
+      RewindManager.Instance.Register(this);
+    }
+  }
+
+  public override void _ExitTree() {
+    if (RewindManager.Instance != null) {
+      RewindManager.Instance.Unregister(this);
+    }
+    base._ExitTree();
+  }
+
+  public RewindState CaptureState() {
+    return new EnemySpawnerState {
+      CurrentConcurrentDifficulty = this._currentConcurrentDifficulty,
+      CurrentSpawnIndex = this._currentSpawnIndex
+    };
+  }
+
+  public void RestoreState(RewindState state) {
+    if (state is not EnemySpawnerState ess) return;
+
+    this._currentConcurrentDifficulty = ess.CurrentConcurrentDifficulty;
+    this._currentSpawnIndex = ess.CurrentSpawnIndex;
+  }
+
+  // Spawner 本身不会被 Destroy 或 Resurrect，所以提供空实现
+  public void Destroy() { }
+  public void Resurrect() { }
 
   public void StartSpawning(MapGenerator mapGenerator, Player player) {
     _mapGenerator = mapGenerator;
@@ -44,6 +87,8 @@ public partial class EnemySpawner : Node {
 
   private void GenerateSpawnQueue() {
     _spawnQueue.Clear();
+    _currentSpawnIndex = 0;
+    IsFinished = false;
     var availableEnemies = EnemyDatabase
         .Where(e => e.Difficulty <= MaxConcurrentDifficulty)
         .OrderByDescending(e => e.Difficulty)
@@ -78,16 +123,10 @@ public partial class EnemySpawner : Node {
   }
 
   private void TrySpawnNext() {
-    // 使用 while 循环，只要队列里有怪，并且当前难度预算还有空间，就一直尝试生成
-    while (_spawnQueue.Count > 0 && _currentConcurrentDifficulty + _spawnQueue[0].Difficulty <= MaxConcurrentDifficulty) {
-      // 从队列头部取出一个敌人
-      EnemyData enemyToSpawn = _spawnQueue[0];
-      _spawnQueue.RemoveAt(0);
-
-      // 更新当前场上难度
+    while (_currentSpawnIndex < _spawnQueue.Count && _currentConcurrentDifficulty + _spawnQueue[_currentSpawnIndex].Difficulty <= MaxConcurrentDifficulty) {
+      EnemyData enemyToSpawn = _spawnQueue[_currentSpawnIndex];
+      ++_currentSpawnIndex;
       _currentConcurrentDifficulty += enemyToSpawn.Difficulty;
-
-      // 生成敌人
       SpawnEnemy(enemyToSpawn);
     }
   }
@@ -131,10 +170,9 @@ public partial class EnemySpawner : Node {
     TrySpawnNext();
 
     // 检查波次是否真正完成（生成队列为空，并且场上也没有敌人了）
-    // 注意：这个检查放在 OnEnemyDied 中可能更合适，但放在这里也可以作为一种状态更新
-    if (_spawnQueue.Count == 0 && GetTree().GetNodesInGroup("enemies").Count == 0) {
+    if (_currentSpawnIndex >= _spawnQueue.Count && GetTree().GetNodesInGroup("enemies").All(e => (e as BaseEnemy).IsDestroyed)) {
       GD.Print("Spawn queue is empty and all enemies are defeated. Wave complete!");
-      // 在这里可以触发胜利条件或生成下一波的逻辑
+      IsFinished = true;
     }
   }
 }

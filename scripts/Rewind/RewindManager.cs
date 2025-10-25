@@ -1,0 +1,281 @@
+using System.Collections.Generic;
+using System.Linq;
+using Godot;
+
+namespace Rewind;
+
+[GlobalClass]
+public partial class RewindManager : Node {
+  public static RewindManager Instance { get; private set; }
+
+  [Export(PropertyHint.Range, "1, 60, 1")]
+  public int RecordFps { get; set; } = 20;
+
+  [Export(PropertyHint.Range, "1, 120, 1")]
+  public float MaxRecordTime { get; set; } = 30.0f;
+
+  public bool IsRewinding { get; private set; } = false;
+  public bool IsPreviewing { get; private set; } = false;
+
+  // 用于自动回溯的状态
+  private bool _isAutoRewinding = false;
+  private double _autoRewindCommitTimestamp;
+
+  /// <summary>
+  /// 获取当前可回溯的总时长（秒）．
+  /// </summary>
+  public float AvailableRewindTime {
+    get {
+      if (_history.Count < 2) {
+        return 0.0f;
+      }
+      return (float) (_history.Last().Timestamp - _history.First().Timestamp);
+    }
+  }
+
+  // 内部类，用于存储一帧的快照数据
+  private class RewindFrame {
+    public double Timestamp;
+    public Dictionary<ulong, RewindState> States = new();
+  }
+
+  private readonly List<RewindFrame> _history = new();
+  private readonly Dictionary<ulong, IRewindable> _trackedObjects = new();
+  private readonly HashSet<ulong> _deadObjectIds = new(); // 存放已调用 Destroy() 的对象 ID
+  private readonly Dictionary<ulong, Node> _objectPool = new(); // 存放已禁用的节点实例
+
+  // 高效的引用计数器，用于对象池清理
+  private readonly Dictionary<ulong, int> _idReferenceCounts = new();
+
+  private float _recordTimer;
+  private double _rewindTargetTimestamp;
+  private int _currentPreviewFrameIndex;
+
+  public override void _Ready() {
+    Instance = this;
+    _recordTimer = 1.0f / RecordFps;
+  }
+
+  public override void _Process(double delta) {
+    HandleInput();
+
+    if (IsPreviewing) {
+      // 在预览模式下，根据 TimeScale 调整回溯速度
+      _rewindTargetTimestamp -= delta * TimeManager.Instance.TimeScale;
+      ApplyPreview();
+
+      if (_isAutoRewinding && _rewindTargetTimestamp <= _autoRewindCommitTimestamp) {
+        CommitRewind();
+      }
+    } else {
+      // 正常记录
+      _recordTimer -= (float) delta;
+      if (_recordTimer <= 0) {
+        RecordFrame();
+        _recordTimer = 1.0f / RecordFps;
+      }
+    }
+  }
+
+  private void HandleInput() {
+    if (Input.IsActionPressed("time_slow")) {
+      TimeManager.Instance.TimeScale = 0.2f;
+    } else {
+      TimeManager.Instance.TimeScale = 1.0f;
+    }
+
+    // 自动回溯期间，禁用玩家手动控制
+    if (!_isAutoRewinding) {
+      if (Input.IsActionJustPressed("time_rewind")) {
+        StartRewindPreview();
+      } else if (Input.IsActionJustReleased("time_rewind")) {
+        CommitRewind();
+      }
+    }
+  }
+
+  /// <summary>
+  /// 新增：触发一次自动回溯．
+  /// </summary>
+  /// <param name="duration">要回溯的时间长度（秒）．</param>
+  /// <returns>如果成功触发则返回 true，否则返回 false．</returns>
+  public bool TriggerAutoRewind(float duration) {
+    // 如果正在回溯或历史记录不足，则无法触发
+    if (IsPreviewing || IsRewinding || AvailableRewindTime < duration) {
+      return false;
+    }
+
+    GD.Print($"Triggering auto-rewind for {duration} seconds.");
+
+    _isAutoRewinding = true;
+    StartRewindPreview(); // 启动预览模式
+
+    // 计算回溯预览结束并提交状态的时间点
+    _autoRewindCommitTimestamp = _rewindTargetTimestamp - duration;
+    // 确保不会回溯到比历史记录还早的时间
+    _autoRewindCommitTimestamp = double.Max(_autoRewindCommitTimestamp, _history.First().Timestamp);
+
+    return true;
+  }
+
+  public void Register(IRewindable obj) {
+    if (obj is not Node node) return;
+    ulong id = obj.InstanceId;
+    if (!_trackedObjects.ContainsKey(id)) {
+      _trackedObjects.Add(id, obj);
+      _objectPool.Add(id, node); // 添加到池中以便管理
+    }
+    _deadObjectIds.Remove(id); // 如果是复活的对象，从死亡列表中移除
+  }
+
+  public void Unregister(IRewindable obj) {
+    // 这是对象真正被 QueueFree 时调用的，通常在清理时
+    ulong id = obj.InstanceId;
+    _trackedObjects.Remove(id);
+    _objectPool.Remove(id);
+    _deadObjectIds.Remove(id);
+    _idReferenceCounts.Remove(id);
+  }
+
+  public void NotifyDestroyed(IRewindable obj) {
+    // 这是对象调用 Destroy() 时调用的
+    _deadObjectIds.Add(obj.InstanceId);
+  }
+
+  private void RecordFrame() {
+    if (IsRewinding) return;
+
+    var frame = new RewindFrame {
+      Timestamp = TimeManager.Instance.CurrentGameTime
+    };
+
+    // 捕获所有活动对象的状态
+    foreach (var (id, obj) in _trackedObjects) {
+      if (!_deadObjectIds.Contains(id)) {
+        frame.States.Add(id, obj.CaptureState());
+      }
+    }
+
+    _history.Add(frame);
+
+    // 为新帧中的所有对象增加引用计数
+    foreach (var id in frame.States.Keys) {
+      _idReferenceCounts[id] = _idReferenceCounts.GetValueOrDefault(id, 0) + 1;
+    }
+
+    TrimHistory();
+  }
+
+  private void TrimHistory() {
+    double cutoffTimestamp = TimeManager.Instance.CurrentGameTime - MaxRecordTime;
+    int removeCount = _history.FindIndex(f => f.Timestamp >= cutoffTimestamp);
+    if (removeCount > 0) {
+      var framesToRemove = _history.GetRange(0, removeCount);
+      _history.RemoveRange(0, removeCount);
+      CleanupObjectPool(framesToRemove);
+    }
+  }
+
+  private void CleanupObjectPool(List<RewindFrame> removedFrames) {
+    var potentialPurgeIds = new HashSet<ulong>();
+
+    // 1. 遍历被移除的帧，减少对应 ID 的引用计数
+    foreach (var frame in removedFrames) {
+      foreach (var id in frame.States.Keys) {
+        if (_idReferenceCounts.ContainsKey(id)) {
+          _idReferenceCounts[id]--;
+          if (_idReferenceCounts[id] <= 0) {
+            // 此 ID 的引用计数已降为 0，意味着它不再存在于任何历史快照中．
+            // 将其从计数器中移除，并加入待清理候选列表．
+            _idReferenceCounts.Remove(id);
+            potentialPurgeIds.Add(id);
+          }
+        }
+      }
+    }
+
+    // 2. 遍历候选列表，检查哪些对象可以被真正销毁
+    foreach (var id in potentialPurgeIds) {
+      // 清理条件：对象的引用计数为 0，并且它已经被标记为死亡．
+      if (_deadObjectIds.Contains(id)) {
+        if (_objectPool.TryGetValue(id, out var nodeToPurge) && IsInstanceValid(nodeToPurge)) {
+          // 在 QueueFree 之前，必须从所有追踪系统中完全注销
+          if (nodeToPurge is IRewindable rewindable) {
+            Unregister(rewindable);
+          }
+          nodeToPurge.QueueFree();
+        }
+      }
+    }
+  }
+
+  private void StartRewindPreview() {
+    if (_history.Count == 0) return;
+    IsPreviewing = true;
+    _rewindTargetTimestamp = _history.Last().Timestamp;
+    _currentPreviewFrameIndex = _history.Count - 1;
+  }
+
+  private void ApplyPreview() {
+    if (_history.Count == 0) {
+      CommitRewind();
+      return;
+    }
+
+    // 找到最接近目标时间戳的帧
+    while (_currentPreviewFrameIndex > 0 && _history[_currentPreviewFrameIndex].Timestamp > _rewindTargetTimestamp) {
+      _currentPreviewFrameIndex--;
+    }
+    while (_currentPreviewFrameIndex < _history.Count - 1 && _history[_currentPreviewFrameIndex + 1].Timestamp < _rewindTargetTimestamp) {
+      _currentPreviewFrameIndex++;
+    }
+
+    var frame = _history[_currentPreviewFrameIndex];
+    RestoreFromFrame(frame);
+  }
+
+  private void CommitRewind() {
+    if (!IsPreviewing) return;
+
+    IsRewinding = true; // 标记正在进行一次真正的状态恢复
+
+    // 恢复到最终选择的帧
+    if (_currentPreviewFrameIndex >= 0 && _currentPreviewFrameIndex < _history.Count) {
+      var finalFrame = _history[_currentPreviewFrameIndex];
+      RestoreFromFrame(finalFrame);
+      TimeManager.Instance.SetCurrentGameTime(finalFrame.Timestamp);
+
+      // 移除此帧之后的所有历史记录
+      int removeCount = _history.Count - 1 - _currentPreviewFrameIndex;
+      if (removeCount > 0) {
+        var framesToRemove = _history.GetRange(_currentPreviewFrameIndex + 1, removeCount);
+        _history.RemoveRange(_currentPreviewFrameIndex + 1, removeCount);
+        CleanupObjectPool(framesToRemove);
+      }
+    }
+
+    IsPreviewing = false;
+    IsRewinding = false; // 恢复完成
+    _isAutoRewinding = false; // 确保重置自动回溯状态
+  }
+
+  private void RestoreFromFrame(RewindFrame frame) {
+    var frameObjectIds = new HashSet<ulong>(frame.States.Keys);
+
+    // 遍历所有当前被追踪的对象
+    foreach (var (id, obj) in _trackedObjects) {
+      if (frameObjectIds.Contains(id)) {
+        // 这个对象在快照中存在，恢复它的状态
+        if (_deadObjectIds.Contains(id)) {
+          obj.Resurrect(); // 如果它之前是死的，现在复活
+        }
+        obj.RestoreState(frame.States[id]);
+      } else {
+        // 这个对象在快照中不存在，意味着它在那个时间点还没出生或已经死了
+        if (!_deadObjectIds.Contains(id)) {
+          obj.Destroy(); // 标记为死亡
+        }
+      }
+    }
+  }
+}
