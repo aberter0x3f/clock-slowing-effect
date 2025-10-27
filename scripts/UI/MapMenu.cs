@@ -1,3 +1,5 @@
+// ./scripts/UI/MapMenu.cs
+
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -15,8 +17,9 @@ public partial class MapMenu : Control {
 
   private Label _clearedLevelsLabel;
   private Control _mapContainer;
-  private List<TextureButton> _accessibleNodeButtons = new();
-  private int _selectedIndex = 0;
+
+  private Dictionary<Vector2I, TextureButton> _nodeButtons = new();
+  private Vector2I _selectedPosition;
 
   public override void _Ready() {
     _clearedLevelsLabel = GetNode<Label>("HBoxContainer/ClearedLevels/Count");
@@ -24,7 +27,6 @@ public partial class MapMenu : Control {
 
     if (GameManager.Instance?.GameMap == null) {
       GD.PrintErr("MapMenu: GameManager or GameMap not initialized!");
-      // 可以在这里添加返回主菜单的逻辑
       return;
     }
 
@@ -37,9 +39,12 @@ public partial class MapMenu : Control {
     foreach (Node child in _mapContainer.GetChildren()) {
       child.QueueFree();
     }
-    _accessibleNodeButtons.Clear();
+    _nodeButtons.Clear();
 
-    var map = GameManager.Instance.GameMap;
+    var gm = GameManager.Instance;
+    var map = gm.GameMap;
+    var accessibleNodePositions = new HashSet<Vector2I>(gm.GetAccessibleNodes());
+
     foreach (var (pos, nodeData) in map.Nodes) {
       var mapNode = MapMenuNodeScene.Instantiate<TextureButton>();
       Vector2 nodeSize = mapNode.Size;
@@ -50,22 +55,33 @@ public partial class MapMenu : Control {
       label.Text = "C";
 
       // 根据节点状态设置图标外观
-      if (nodeData.IsCleared) {
-        mapNode.SelfModulate = new Color(0f, 0.5f, 0f); // 已通关
-      } else if (nodeData.IsAccessible) {
-        mapNode.SelfModulate = new Color(0.5f, 0.5f, 0f); // 可选
-        _accessibleNodeButtons.Add(mapNode);
-        mapNode.Pressed += () => OnLevelSelected(nodeData.Position);
+      if (gm.PlayerMapPosition.HasValue && pos == gm.PlayerMapPosition.Value) {
+        mapNode.SelfModulate = new Color(0f, 0f, 0.5f); // 玩家当前所在的节点
+      } else if (nodeData.IsCleared) {
+        mapNode.SelfModulate = new Color(0f, 0.5f, 0f); // 已通关的节点
+      } else if (accessibleNodePositions.Contains(pos)) {
+        mapNode.SelfModulate = new Color(0.5f, 0.5f, 0f); // 可选的节点
       } else {
-        mapNode.SelfModulate = new Color(0.2f, 0.2f, 0.2f); // 锁定
+        mapNode.SelfModulate = new Color(0.2f, 0.2f, 0.2f); // 锁定的节点
       }
+
+      // 为所有节点连接信号，并在回调中检查可访问性
+      mapNode.Pressed += () => OnLevelSelected(nodeData.Position);
+      _nodeButtons.Add(pos, mapNode);
     }
 
-    // 对可选节点进行排序，以便导航
-    _accessibleNodeButtons = _accessibleNodeButtons.OrderBy(b => b.GlobalPosition.X).ThenBy(b => b.GlobalPosition.Y).ToList();
+    // -初始化选中位置
+    // 优先选择玩家当前位置，其次是第一个可访问节点，最后是地图上的任意一个节点作为备用
+    var accessibleNodes = gm.GetAccessibleNodes();
+    if (gm.PlayerMapPosition.HasValue && map.Nodes.ContainsKey(gm.PlayerMapPosition.Value)) {
+      _selectedPosition = gm.PlayerMapPosition.Value;
+    } else if (accessibleNodes.Any()) {
+      _selectedPosition = accessibleNodes.First();
+    } else if (map.Nodes.Any()) {
+      _selectedPosition = map.Nodes.Keys.First();
+    }
   }
 
-  // 将轴向坐标转换为屏幕像素坐标
   private Vector2 AxialToPixel(Vector2I axial) {
     float x = HexagonSize * (Mathf.Sqrt(3) * axial.X + Mathf.Sqrt(3) / 2 * axial.Y);
     float y = HexagonSize * 3.0f / 2 * axial.Y;
@@ -73,33 +89,71 @@ public partial class MapMenu : Control {
   }
 
   public override void _Input(InputEvent @event) {
-    if (_accessibleNodeButtons.Count == 0) return;
+    if (_nodeButtons.Count == 0) return;
 
-    if (@event.IsActionPressed("ui_right") || @event.IsActionPressed("ui_down")) {
-      _selectedIndex = (_selectedIndex + 1) % _accessibleNodeButtons.Count;
-      UpdateSelection();
-      GetViewport().SetInputAsHandled();
-    } else if (@event.IsActionPressed("ui_left") || @event.IsActionPressed("ui_up")) {
-      _selectedIndex = (_selectedIndex - 1 + _accessibleNodeButtons.Count) % _accessibleNodeButtons.Count;
-      UpdateSelection();
+    Vector2I direction = Vector2I.Zero;
+    if (@event.IsActionPressed("ui_right")) direction = Vector2I.Right;
+    else if (@event.IsActionPressed("ui_left")) direction = Vector2I.Left;
+    else if (@event.IsActionPressed("ui_down")) direction = Vector2I.Down;
+    else if (@event.IsActionPressed("ui_up")) direction = Vector2I.Up;
+
+    if (direction != Vector2I.Zero) {
+      MoveSelection(direction);
       GetViewport().SetInputAsHandled();
     } else if (@event.IsActionPressed("ui_accept")) {
-      _accessibleNodeButtons[_selectedIndex].EmitSignal(Button.SignalName.Pressed);
+      OnLevelSelected(_selectedPosition);
       GetViewport()?.SetInputAsHandled();
     }
   }
 
-  private void UpdateSelection() {
-    if (_accessibleNodeButtons.Count == 0) return;
-    for (int i = 0; i < _accessibleNodeButtons.Count; i++) {
-      if (i == _selectedIndex) {
-        _accessibleNodeButtons[i].GrabFocus();
+  private void MoveSelection(Vector2I direction) {
+    Vector2I nextPos = _selectedPosition + direction;
+
+    // 尝试直接移动到相邻节点
+    if (_nodeButtons.ContainsKey(nextPos)) {
+      _selectedPosition = nextPos;
+      UpdateSelection();
+      return;
+    }
+
+    // 如果直接移动失败，则执行循环逻辑
+    if (direction.X != 0) { // 水平移动
+      var rowNodes = _nodeButtons.Keys
+        .Where(p => p.Y == _selectedPosition.Y)
+        .OrderBy(p => p.X)
+        .ToList();
+      if (rowNodes.Count > 1) {
+        _selectedPosition = (direction.X > 0) ? rowNodes.First() : rowNodes.Last();
       }
+    } else if (direction.Y != 0) { // 垂直移动
+      var colNodes = _nodeButtons.Keys
+        .Where(p => p.X == _selectedPosition.X)
+        .OrderBy(p => p.Y)
+        .ToList();
+      if (colNodes.Count > 1) {
+        _selectedPosition = (direction.Y > 0) ? colNodes.First() : colNodes.Last();
+      }
+    }
+    UpdateSelection();
+  }
+
+  private void UpdateSelection() {
+    if (_nodeButtons.TryGetValue(_selectedPosition, out var button)) {
+      button.GrabFocus();
     }
   }
 
   private void OnLevelSelected(Vector2I mapPosition) {
-    GameManager.Instance.CurrentMapPosition = mapPosition;
-    GetTree().ChangeSceneToFile(CombatScenePath);
+    var gm = GameManager.Instance;
+    var accessibleNodes = new HashSet<Vector2I>(gm.GetAccessibleNodes());
+
+    // 只有当选中的节点是可访问的时，才加载战斗场景
+    if (accessibleNodes.Contains(mapPosition)) {
+      gm.SelectedMapPosition = mapPosition;
+      GetTree().ChangeSceneToFile(CombatScenePath);
+    } else {
+      // 可选：在这里添加一个音效或视觉提示，表示该节点不可进入
+      GD.Print($"Node {mapPosition} is not accessible.");
+    }
   }
 }

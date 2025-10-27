@@ -32,7 +32,7 @@ public partial class Portal : RewindableArea2D, IInteractable {
     GameManager.Instance.CompleteLevel();
 
     // 2. 检查当前关卡是否为最终关卡
-    bool isTargetNode = GameManager.Instance.CurrentMapPosition == GameManager.Instance.GameMap.TargetPosition;
+    bool isTargetNode = GameManager.Instance.SelectedMapPosition == GameManager.Instance.GameMap.TargetPosition;
 
     if (isTargetNode) {
       // 通关，返回主菜单
