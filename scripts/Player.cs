@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Bullet;
 using Enemy;
 using Godot;
@@ -34,6 +35,9 @@ public partial class Player : CharacterBody2D, IRewindable {
   private Node3D _visualizer;
   private bool _isPermanentlyDead = false;
   private MapGenerator _mapGenerator;
+  private Area2D _interactionArea;
+  private readonly List<IInteractable> _nearbyInteractables = new();
+  private IInteractable _closestInteractable = null;
 
   [ExportGroup("Movement")]
   [Export]
@@ -93,10 +97,13 @@ public partial class Player : CharacterBody2D, IRewindable {
     _visualizer = GetNode<Node3D>("Visualizer");
     _sprite = _visualizer.GetNode<AnimatedSprite3D>("AnimatedSprite3D");
     _hitPointSprite = _visualizer.GetNode<AnimatedSprite3D>("HitPointSprite");
+    _interactionArea = GetNode<Area2D>("InteractionArea");
+    _interactionArea.AreaEntered += OnInteractionAreaEntered;
+    _interactionArea.AreaExited += OnInteractionAreaExited;
 
     _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
     if (_mapGenerator == null) {
-      GD.PrintErr($"Player: MapGenerator not found at 'GameRoot/MapGenerator'. TimeShards may not spawn correctly.");
+      GD.Print($"Player: MapGenerator not found at 'GameRoot/MapGenerator'. TimeShards may not spawn correctly.");
     }
 
     CurrentAmmo = MaxAmmo; // 初始化弹药
@@ -120,6 +127,9 @@ public partial class Player : CharacterBody2D, IRewindable {
     if (RewindManager.Instance.IsRewinding) return;
 
     _currentState = AnimationState.Idle;
+
+    UpdateInteractionTarget();
+    HandleInteractionInput();
 
     if (IsReloading) {
       TimeToReloaded -= (float) delta * TimeManager.Instance.TimeScale; // 换弹时间不受时间缩放影响
@@ -185,7 +195,7 @@ public partial class Player : CharacterBody2D, IRewindable {
       var shard = GrazeTimeShard.Instantiate<TimeShard>();
       shard.SpawnCenter = bullet.GlobalPosition;
       shard.MapGeneratorRef = _mapGenerator;
-      GetTree().Root.CallDeferred(Node.MethodName.AddChild, shard);
+      GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, shard);
     }
   }
 
@@ -208,6 +218,60 @@ public partial class Player : CharacterBody2D, IRewindable {
       if (bullet.IsPlayerBullet) return;
       Die();
       return;
+    }
+  }
+
+  private void HandleInteractionInput() {
+    if (Input.IsActionJustPressed("interact") && _closestInteractable != null) {
+      _closestInteractable.Interact();
+    }
+  }
+
+  // 更新交互目标
+  private void UpdateInteractionTarget() {
+    IInteractable newClosest = null;
+    float minDistanceSq = float.MaxValue;
+
+    // 遍历所有在范围内的可交互对象
+    foreach (var interactable in _nearbyInteractables) {
+      if (interactable is not Node2D node) continue;
+
+      float distanceSq = this.GlobalPosition.DistanceSquaredTo(node.GlobalPosition);
+      if (distanceSq < minDistanceSq) {
+        minDistanceSq = distanceSq;
+        newClosest = interactable;
+      }
+    }
+
+    // 如果最近的目标发生了变化
+    if (newClosest != _closestInteractable) {
+      // 取消旧目标的高亮
+      _closestInteractable?.SetHighlight(false);
+      // 高亮新目标
+      newClosest?.SetHighlight(true);
+      // 更新当前目标
+      _closestInteractable = newClosest;
+    }
+  }
+
+  // 处理进入交互范围的信号
+  private void OnInteractionAreaEntered(Area2D area) {
+    if (area is IInteractable interactable) {
+      if (!_nearbyInteractables.Contains(interactable)) {
+        _nearbyInteractables.Add(interactable);
+      }
+    }
+  }
+
+  // 处理离开交互范围的信号
+  private void OnInteractionAreaExited(Area2D area) {
+    if (area is IInteractable interactable) {
+      // 如果离开的是当前高亮的目标，取消高亮
+      if (interactable == _closestInteractable) {
+        _closestInteractable.SetHighlight(false);
+        _closestInteractable = null;
+      }
+      _nearbyInteractables.Remove(interactable);
     }
   }
 
@@ -253,7 +317,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     bullet.Velocity = direction * bullet.InitialSpeed;
     bullet.GlobalRotation = direction.Angle();
 
-    GetTree().Root.AddChild(bullet);
+    GameRootProvider.CurrentGameRoot.AddChild(bullet);
   }
 
   private void HandleMovement() {

@@ -125,7 +125,7 @@ public partial class Violinist : BaseEnemy {
           var staffLineBullet = StaffLineBulletScene.Instantiate<Node2D>();
           staffLineBullet.GlobalPosition = _attackStartPosition + _attackDirection * _staffCreationDist + lineOffset;
           staffLineBullet.GlobalRotation = _attackDirection.Angle();
-          GetTree().Root.AddChild(staffLineBullet);
+          GameRootProvider.CurrentGameRoot.AddChild(staffLineBullet);
         }
         _staffCreationDist += StaffBulletSpacing;
         _attackTimer = StaffLineCreationInterval;
@@ -155,7 +155,7 @@ public partial class Violinist : BaseEnemy {
           noteBullet.InitialSpeed = 1.0f;
           noteBullet.Acceleration = finalDirection.Normalized() * NoteBulletAcceleration;
           noteBullet.MaxSpeed = 300f;
-          GetTree().Root.AddChild(noteBullet);
+          GameRootProvider.CurrentGameRoot.AddChild(noteBullet);
           _notesFiredCount++;
           _attackTimer = NoteCreationInterval;
         } else {

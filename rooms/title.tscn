@@ -1,0 +1,58 @@
+[gd_scene load_steps=13 format=3 uid="uid://bqtbfjrfe5x52"]
+
+[ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="1_7vrkn"]
+[ext_resource type="Script" uid="uid://bvjdkwu2pid2q" path="res://scripts/Room/Title.cs" id="1_8qtwp"]
+[ext_resource type="Script" uid="uid://d1if7b56ademj" path="res://scripts/MapGenerator.cs" id="1_qe12f"]
+[ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="2_fu7sn"]
+[ext_resource type="PackedScene" uid="uid://br6keneknyhnm" path="res://ui/difficulty_menu.tscn" id="2_npp43"]
+[ext_resource type="PackedScene" uid="uid://3fjshysy5akb" path="res://title_menu_interactable/start_game.tscn" id="3_nlkkf"]
+[ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="4_j5v2v"]
+[ext_resource type="PackedScene" uid="uid://b4na7v3y56t7w" path="res://title_menu_interactable/change_character.tscn" id="4_qe12f"]
+[ext_resource type="PackedScene" uid="uid://cddiolkpjm4i2" path="res://title_menu_interactable/settings.tscn" id="5_8qtwp"]
+[ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="5_iotk1"]
+[ext_resource type="PackedScene" uid="uid://jppmfh2mxeel" path="res://title_menu_interactable/exit_game.tscn" id="6_dy7ct"]
+[ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="6_w44g7"]
+
+[node name="GameRoot" type="Node3D"]
+script = ExtResource("1_8qtwp")
+DifficultyMenuScene = ExtResource("2_npp43")
+MapMenuScenePath = "uid://bto53p17w4ixu"
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_mode = 1
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="MapGenerator" type="Node" parent="."]
+script = ExtResource("1_qe12f")
+MapWidth = 30
+MapHeight = 20
+ObstacleProbability = 0.0
+ObstacleScene = ExtResource("4_j5v2v")
+FloorTileScene1 = ExtResource("5_iotk1")
+FloorTileScene2 = ExtResource("6_w44g7")
+metadata/_custom_type_script = "uid://d1if7b56ademj"
+
+[node name="RewindManager" type="Node" parent="."]
+script = ExtResource("1_7vrkn")
+metadata/_custom_type_script = "uid://vn61cc2q0j34"
+
+[node name="Player" parent="." instance=ExtResource("2_fu7sn")]
+
+[node name="StartGame" parent="." instance=ExtResource("3_nlkkf")]
+position = Vector2(-300, -200)
+
+[node name="ChangeCharacter" parent="." instance=ExtResource("4_qe12f")]
+position = Vector2(-100, -200)
+
+[node name="Settings" parent="." instance=ExtResource("5_8qtwp")]
+position = Vector2(100, -200)
+
+[node name="ExitGame" parent="." instance=ExtResource("6_dy7ct")]
+position = Vector2(300, -200)

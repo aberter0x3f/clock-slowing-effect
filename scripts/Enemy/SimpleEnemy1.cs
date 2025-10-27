@@ -51,7 +51,7 @@ public partial class SimpleEnemy1 : BaseEnemy {
     bullet.GlobalPosition = GlobalPosition;
     bullet.Velocity = direction * bullet.InitialSpeed;
     bullet.Rotation = direction.Angle();
-    GetTree().Root.AddChild(bullet);
+    GameRootProvider.CurrentGameRoot.AddChild(bullet);
   }
 
   public override RewindState CaptureState() {

@@ -92,7 +92,7 @@ public partial class SimpleEnemy3 : BaseEnemy {
         var bullet = Bullet.Instantiate<SimpleBullet>();
         bullet.GlobalPosition = position;
         bullet.Rotation = direction.Angle();
-        GetTree().Root.AddChild(bullet);
+        GameRootProvider.CurrentGameRoot.AddChild(bullet);
       }
     }
 

@@ -4,6 +4,7 @@
 
 [node name="PauseMenu" type="CanvasLayer"]
 script = ExtResource("1_hdmo1")
+TitleScenePath = "uid://bqtbfjrfe5x52"
 metadata/_custom_type_script = "uid://ce3p6krk58nbi"
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
@@ -32,8 +33,13 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Restart"
 
-[node name="OptionsButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 disabled = true
-text = "Options"
+text = "Settings"
+
+[node name="ReturnToTitleButton" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Return to title"

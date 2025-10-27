@@ -2,7 +2,9 @@ using System.Linq;
 using Godot;
 using Rewind;
 
-public partial class GameRoot : Node {
+namespace Room;
+
+public partial class Combat : Node {
   private Player _player;
   private Label _uiLabel;
   private MapGenerator _mapGenerator;
@@ -10,18 +12,23 @@ public partial class GameRoot : Node {
   private RewindManager _rewindManager;
   private PauseMenu _pauseMenu;
   private Vector2 _playerSpawnPosition;
+  private Portal _spawnedPortal = null;
 
   [Export]
   public PackedScene PauseMenuScene { get; set; }
 
+  [Export]
+  public PackedScene PortalScene { get; set; }
+
   public override void _Ready() {
+    GameRootProvider.CurrentGameRoot = this;
+
     _player = GetNode<Player>("Player");
     _uiLabel = GetNode<Label>("CanvasLayer/Label");
     _mapGenerator = GetNode<MapGenerator>("MapGenerator");
     _enemySpawner = GetNode<EnemySpawner>("EnemySpawner");
     _rewindManager = GetNode<RewindManager>("RewindManager");
 
-    // 实例化暂停菜单并连接玩家死亡信号
     if (PauseMenuScene != null) {
       _pauseMenu = PauseMenuScene.Instantiate<PauseMenu>();
       AddChild(_pauseMenu);
@@ -29,12 +36,53 @@ public partial class GameRoot : Node {
     }
     _player.DiedPermanently += OnPlayerDiedPermanently;
 
-    // 1. 生成地图并获取玩家出生点
+    // 连接敌人生成器完成波次的信号
+    _enemySpawner.WaveCompleted += OnWaveCompleted;
+
     _playerSpawnPosition = _mapGenerator.GenerateMap();
     _player.GlobalPosition = _playerSpawnPosition;
 
-    // 2. 启动敌人生成器
+    // 从 GameManager 配置 EnemySpawner
+    ConfigureEnemySpawner();
+
     _enemySpawner.StartSpawning(_mapGenerator, _player);
+  }
+
+  private void ConfigureEnemySpawner() {
+    if (GameManager.Instance?.CurrentDifficulty == null) {
+      GD.PrintErr("Combat: GameManager not initialized. Using default spawner values.");
+      return;
+    }
+
+    var gm = GameManager.Instance;
+    _enemySpawner.TotalDifficultyBudget = gm.CurrentDifficulty.InitialTotalDifficulty * gm.DifficultyMultiplier;
+    _enemySpawner.MaxConcurrentDifficulty = gm.CurrentDifficulty.InitialMaxConcurrentDifficulty * gm.DifficultyMultiplier;
+
+    GD.Print($"Configuring spawner. Total Budget: {_enemySpawner.TotalDifficultyBudget}, Max Concurrent: {_enemySpawner.MaxConcurrentDifficulty}");
+  }
+
+  private void OnWaveCompleted() {
+    GD.Print("Combat scene received WaveCompleted signal. Spawning portal.");
+    if (PortalScene == null) {
+      GD.PrintErr("PortalScene is not set in the Combat scene!");
+      return;
+    }
+
+    // 检查传送门实例是否有效
+    if (!IsInstanceValid(_spawnedPortal)) {
+      // 如果实例不存在，则创建一个新的
+      Vector2I centerCell = new Vector2I(_mapGenerator.MapWidth / 2, _mapGenerator.MapHeight / 2);
+      if (!_mapGenerator.IsWalkable(centerCell)) {
+        centerCell = _mapGenerator.WorldToMap(_playerSpawnPosition);
+      }
+
+      _spawnedPortal = PortalScene.Instantiate<Portal>();
+      _spawnedPortal.GlobalPosition = _mapGenerator.MapToWorld(centerCell);
+      GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, _spawnedPortal);
+    } else {
+      // 如果实例已存在（可能是在回溯后被 Destroy() 了），则复活它
+      _spawnedPortal.Resurrect();
+    }
   }
 
   private void OnPlayerDiedPermanently() {
@@ -51,21 +99,15 @@ public partial class GameRoot : Node {
   }
 
   public override void _Process(double delta) {
-    if (_enemySpawner != null && !_enemySpawner.IsFinished) {
+    if (_enemySpawner != null && !_enemySpawner.IsWaveCompleted) {
       _player.Health -= (float) delta;
     }
-
     UpdateUILabelText();
   }
 
-  /// <summary>
-  /// 执行关卡重置的核心方法．
-  /// </summary>
   private void OnRestartRequested() {
     GD.Print("Restarting level...");
 
-    // 1. 清理所有动态生成的节点
-    // 为了安全地在迭代时删除节点，我们先将集合复制到列表中．
     foreach (var node in GetTree().GetNodesInGroup("enemies").ToList()) {
       node.QueueFree();
     }
@@ -76,27 +118,15 @@ public partial class GameRoot : Node {
       node.QueueFree();
     }
 
-    // 2. 重置玩家状态
     _player.ResetState(_playerSpawnPosition);
-
-    // 3. 重置回溯管理器
     _rewindManager.ResetHistory();
-
-    // 4. 重置敌人生成器
     _enemySpawner.ResetSpawner();
-
-    // 5. 重置全局时间
     TimeManager.Instance.SetCurrentGameTime(0.0);
   }
 
   private void UpdateUILabelText() {
     if (_player == null || _uiLabel == null) return;
-    string ammoText;
-    if (_player.IsReloading) {
-      ammoText = $"Reloading: {_player.TimeToReloaded:F1}s";
-    } else {
-      ammoText = $"Ammo: {_player.CurrentAmmo} / {_player.MaxAmmo}";
-    }
+    string ammoText = _player.IsReloading ? $"Reloading: {_player.TimeToReloaded:F1}s" : $"Ammo: {_player.CurrentAmmo} / {_player.MaxAmmo}";
     var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
     var rewindTimeLeft = _rewindManager.AvailableRewindTime;
 

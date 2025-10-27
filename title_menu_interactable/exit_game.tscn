@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://jppmfh2mxeel"]
+
+[ext_resource type="Script" uid="uid://djctb5wya2kvg" path="res://scripts/TitleMenuInteractable.cs" id="1_2wmwl"]
+[ext_resource type="Texture2D" uid="uid://o6x8c8ustv6h" path="res://images/Icons_Essential/Exit.png" id="2_2wmwl"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hyxel"]
+
+[node name="ExitGame" type="Area2D"]
+script = ExtResource("1_2wmwl")
+Action = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_hyxel")
+
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="Sprite3D" type="Sprite3D" parent="Visualizer"]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("2_2wmwl")
+
+[node name="Label3D" type="Label3D" parent="Visualizer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+text = "Exit Game"

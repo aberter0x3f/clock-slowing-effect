@@ -56,7 +56,7 @@ public partial class SimpleEnemy4 : BaseEnemy {
       bullet.GlobalPosition = GlobalPosition;
       bullet.InitialSpeed += i * 20;
       bullet.Rotation = direction.Angle();
-      GetTree().Root.AddChild(bullet);
+      GameRootProvider.CurrentGameRoot.AddChild(bullet);
     }
   }
 

@@ -138,7 +138,7 @@ public partial class SimpleEnemy5 : BaseEnemy {
     bullet.Rotation = direction.Angle();
     // 子弹的 _Ready() 函数会根据其 Rotation 和 InitialSpeed 设置初始速度
 
-    GetTree().Root.AddChild(bullet);
+    GameRootProvider.CurrentGameRoot.AddChild(bullet);
   }
 
   public override RewindState CaptureState() {

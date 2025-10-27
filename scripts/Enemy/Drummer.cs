@@ -279,7 +279,7 @@ public partial class Drummer : BaseEnemy {
       bullet.GlobalPosition = GlobalPosition;
       bullet.Rotation = direction.Angle();
 
-      GetTree().Root.AddChild(bullet);
+      GameRootProvider.CurrentGameRoot.AddChild(bullet);
     }
   }
 

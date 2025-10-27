@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DifficultySetting" load_steps=2 format=3 uid="uid://bkplvg8gd8vjs"]
+
+[ext_resource type="Script" uid="uid://26i87xlp1ear" path="res://scripts/DifficultySetting.cs" id="1_3yu18"]
+
+[resource]
+script = ExtResource("1_3yu18")
+Name = "Easy"
+Description = "Easy"
+InitialTotalDifficulty = 25.0
+InitialMaxConcurrentDifficulty = 15.0
+metadata/_custom_type_script = "uid://26i87xlp1ear"

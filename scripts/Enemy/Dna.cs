@@ -109,13 +109,13 @@ public partial class Dna : BaseEnemy {
       bullet1.GlobalPosition = enemyPosition;
       bullet1.GlobalRotation = _attackDirection.Angle();
       bullet1.InvertSine = false;
-      GetTree().Root.AddChild(bullet1);
+      GameRootProvider.CurrentGameRoot.AddChild(bullet1);
 
       var bullet2 = Bullet2.Instantiate<WavyBullet>();
       bullet2.GlobalPosition = enemyPosition;
       bullet2.GlobalRotation = _attackDirection.Angle();
       bullet2.InvertSine = true;
-      GetTree().Root.AddChild(bullet2);
+      GameRootProvider.CurrentGameRoot.AddChild(bullet2);
 
       _bulletsFiredInSequence++;
 

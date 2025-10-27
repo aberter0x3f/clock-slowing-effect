@@ -130,7 +130,7 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
       shard.MapGeneratorRef = _mapGenerator;
 
       // 使用 CallDeferred 将节点添加到场景树，以避免在物理帧内修改物理世界
-      GetTree().Root.CallDeferred(Node.MethodName.AddChild, shard);
+      GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, shard);
     }
   }
 

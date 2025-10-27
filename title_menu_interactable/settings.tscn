@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://cddiolkpjm4i2"]
+
+[ext_resource type="Script" uid="uid://djctb5wya2kvg" path="res://scripts/TitleMenuInteractable.cs" id="1_4ajto"]
+[ext_resource type="Texture2D" uid="uid://ck8yslxnr3kp8" path="res://images/Icons_Essential/Gear.png" id="2_4ajto"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hyxel"]
+
+[node name="Settings" type="Area2D"]
+script = ExtResource("1_4ajto")
+Action = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_hyxel")
+
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="Sprite3D" type="Sprite3D" parent="Visualizer"]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("2_4ajto")
+
+[node name="Label3D" type="Label3D" parent="Visualizer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+text = "Settings"

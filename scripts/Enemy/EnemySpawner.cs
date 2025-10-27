@@ -7,10 +7,15 @@ using Rewind;
 public class EnemySpawnerState : RewindState {
   public float CurrentConcurrentDifficulty;
   public int CurrentSpawnIndex;
+  public int SpawnedEnemiesAliveCount;
+  public bool IsWaveCompleted;
 }
 
 [GlobalClass]
 public partial class EnemySpawner : Node, IRewindable {
+  [Signal]
+  public delegate void WaveCompletedEventHandler();
+
   [ExportGroup("Spawning Configuration")]
   [Export]
   public Godot.Collections.Array<EnemyData> EnemyDatabase { get; set; }
@@ -24,13 +29,14 @@ public partial class EnemySpawner : Node, IRewindable {
   private List<EnemyData> _spawnQueue = new();
   private float _currentConcurrentDifficulty = 0.0f;
   private int _currentSpawnIndex = 0;
+  private int _spawnedEnemiesAliveCount = 0;
   private List<Vector2I> _walkableTiles;
   private MapGenerator _mapGenerator;
   private Player _player;
   private readonly RandomNumberGenerator _rnd = new();
 
   public ulong InstanceId => GetInstanceId();
-  public bool IsFinished { get; set; } = false;
+  public bool IsWaveCompleted { get; private set; } = false;
 
   public override void _Ready() {
     base._Ready();
@@ -50,7 +56,9 @@ public partial class EnemySpawner : Node, IRewindable {
   public RewindState CaptureState() {
     return new EnemySpawnerState {
       CurrentConcurrentDifficulty = this._currentConcurrentDifficulty,
-      CurrentSpawnIndex = this._currentSpawnIndex
+      CurrentSpawnIndex = this._currentSpawnIndex,
+      SpawnedEnemiesAliveCount = this._spawnedEnemiesAliveCount,
+      IsWaveCompleted = this.IsWaveCompleted,
     };
   }
 
@@ -59,6 +67,8 @@ public partial class EnemySpawner : Node, IRewindable {
 
     this._currentConcurrentDifficulty = ess.CurrentConcurrentDifficulty;
     this._currentSpawnIndex = ess.CurrentSpawnIndex;
+    this._spawnedEnemiesAliveCount = ess.SpawnedEnemiesAliveCount;
+    this.IsWaveCompleted = ess.IsWaveCompleted;
   }
 
   // Spawner 本身不会被 Destroy 或 Resurrect，所以提供空实现
@@ -68,7 +78,7 @@ public partial class EnemySpawner : Node, IRewindable {
   public void ResetSpawner() {
     _currentConcurrentDifficulty = 0.0f;
     _currentSpawnIndex = 0;
-    IsFinished = false;
+    IsWaveCompleted = false;
     // 不重新生成队列，而是从头开始尝试生成
     TrySpawnNext();
   }
@@ -96,7 +106,7 @@ public partial class EnemySpawner : Node, IRewindable {
   private void GenerateSpawnQueue() {
     _spawnQueue.Clear();
     _currentSpawnIndex = 0;
-    IsFinished = false;
+    IsWaveCompleted = false;
     var availableEnemies = EnemyDatabase
         .Where(e => e.Difficulty <= MaxConcurrentDifficulty)
         .OrderByDescending(e => e.Difficulty)
@@ -168,19 +178,24 @@ public partial class EnemySpawner : Node, IRewindable {
     enemy.GlobalPosition = position;
     enemy.Difficulty = enemyData.Difficulty;
     enemy.Died += OnEnemyDied; // 连接信号
-    GetTree().Root.CallDeferred(Node.MethodName.AddChild, enemy);
+    ++_spawnedEnemiesAliveCount;
+    GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, enemy);
     GD.Print($"Spawning {enemy.Name} with difficulty {enemyData.Difficulty} at {position}.");
   }
 
   private void OnEnemyDied(float difficulty) {
     _currentConcurrentDifficulty -= difficulty;
+    --_spawnedEnemiesAliveCount;
     GD.Print($"Enemy died (difficulty: {difficulty}). Current concurrent difficulty: {_currentConcurrentDifficulty}");
     TrySpawnNext();
 
     // 检查波次是否真正完成（生成队列为空，并且场上也没有敌人了）
-    if (_currentSpawnIndex >= _spawnQueue.Count && GetTree().GetNodesInGroup("enemies").All(e => (e as BaseEnemy).IsDestroyed)) {
-      GD.Print("Spawn queue is empty and all enemies are defeated. Wave complete!");
-      IsFinished = true;
+    if (!IsWaveCompleted &&
+        _currentSpawnIndex >= _spawnQueue.Count &&
+        _spawnedEnemiesAliveCount == 0) {
+      GD.Print("Spawn queue is empty and all spawned enemies are defeated. Wave complete!");
+      IsWaveCompleted = true;
+      EmitSignal(SignalName.WaveCompleted);
     }
   }
 }

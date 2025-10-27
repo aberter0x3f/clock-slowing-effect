@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://3fjshysy5akb"]
+
+[ext_resource type="Script" uid="uid://djctb5wya2kvg" path="res://scripts/TitleMenuInteractable.cs" id="1_5mxwl"]
+[ext_resource type="Texture2D" uid="uid://chsslscosdo1w" path="res://images/Icons_Essential/Play.png" id="2_hyxel"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hyxel"]
+
+[node name="StartGame" type="Area2D"]
+script = ExtResource("1_5mxwl")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_hyxel")
+
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="Sprite3D" type="Sprite3D" parent="Visualizer"]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("2_hyxel")
+
+[node name="Label3D" type="Label3D" parent="Visualizer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+text = "Start Game"

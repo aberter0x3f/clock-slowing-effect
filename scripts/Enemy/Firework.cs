@@ -117,7 +117,7 @@ public partial class Firework : BaseEnemy {
     }
 
     _activeProjectileVisualizer = FireworkProjectileVisualizerScene.Instantiate<Node3D>();
-    GetTree().Root.AddChild(_activeProjectileVisualizer);
+    GameRootProvider.CurrentGameRoot.AddChild(_activeProjectileVisualizer);
 
     _launchStartPosition = GlobalPosition;
     _launchTargetPosition = _player.GlobalPosition;
@@ -169,7 +169,7 @@ public partial class Firework : BaseEnemy {
         Vector2 landingPosition = _explosionCenter + new Vector2(offsetX, offsetY);
         bullet.GlobalPosition = landingPosition;
         bullet.Initialize(ExplosionHeight);
-        GetTree().Root.AddChild(bullet);
+        GameRootProvider.CurrentGameRoot.AddChild(bullet);
       }
     }
     // 切换回冷却阶段
@@ -214,7 +214,7 @@ public partial class Firework : BaseEnemy {
     if (fs.ProjectileVisualizerActive) {
       if (!IsInstanceValid(_activeProjectileVisualizer)) {
         _activeProjectileVisualizer = FireworkProjectileVisualizerScene.Instantiate<Node3D>();
-        GetTree().Root.AddChild(_activeProjectileVisualizer);
+        GameRootProvider.CurrentGameRoot.AddChild(_activeProjectileVisualizer);
       }
       _activeProjectileVisualizer.GlobalPosition = fs.ProjectileVisualizerPosition;
     } else {

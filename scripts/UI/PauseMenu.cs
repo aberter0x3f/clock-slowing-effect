@@ -6,10 +6,14 @@ public partial class PauseMenu : CanvasLayer {
   [Signal]
   public delegate void RestartRequestedEventHandler();
 
+  [Export(PropertyHint.File, "*.tscn")]
+  public string TitleScenePath { get; set; }
+
   private Label _titleLabel;
   private Button _continueButton;
   private Button _restartButton;
-  private Button _optionsButton;
+  private Button _settingsButton;
+  private Button _returnToTitleButton;
 
   private readonly List<Button> _activeButtons = new();
   private int _selectedIndex = 0;
@@ -21,11 +25,13 @@ public partial class PauseMenu : CanvasLayer {
     _titleLabel = GetNode<Label>("CenterContainer/VBoxContainer/TitleLabel");
     _continueButton = GetNode<Button>("CenterContainer/VBoxContainer/ContinueButton");
     _restartButton = GetNode<Button>("CenterContainer/VBoxContainer/RestartButton");
-    _optionsButton = GetNode<Button>("CenterContainer/VBoxContainer/OptionsButton");
+    _settingsButton = GetNode<Button>("CenterContainer/VBoxContainer/SettingsButton");
+    _returnToTitleButton = GetNode<Button>("CenterContainer/VBoxContainer/ReturnToTitleButton");
 
     _continueButton.Pressed += OnContinuePressed;
     _restartButton.Pressed += OnRestartPressed;
-    // 「选项」按钮是禁用的，所以不需要连接信号．
+    // 「Settings」按钮是禁用的，所以不需要连接信号．
+    _returnToTitleButton.Pressed += OnReturnToTitlePressed;
 
     Visible = false; // 初始时隐藏
   }
@@ -71,17 +77,17 @@ public partial class PauseMenu : CanvasLayer {
     if (isDeathMenu) {
       _titleLabel.Text = "YOU DIED";
       _continueButton.Visible = false;
-      _activeButtons.Add(_restartButton);
-      _activeButtons.Add(_optionsButton);
       _selectedIndex = 0; // 默认选择「重新开始」
     } else {
       _titleLabel.Text = "PAUSED";
       _continueButton.Visible = true;
       _activeButtons.Add(_continueButton);
-      _activeButtons.Add(_restartButton);
-      _activeButtons.Add(_optionsButton);
       _selectedIndex = 0; // 默认选择「继续」
     }
+
+    _activeButtons.Add(_restartButton);
+    _activeButtons.Add(_settingsButton);
+    _activeButtons.Add(_returnToTitleButton);
 
     UpdateSelection();
   }
@@ -105,5 +111,16 @@ public partial class PauseMenu : CanvasLayer {
     // 在发出信号前取消暂停并隐藏菜单
     HideMenu();
     EmitSignal(SignalName.RestartRequested);
+  }
+
+  private void OnReturnToTitlePressed() {
+    HideMenu();
+
+    GetTree().Paused = false;
+    if (TimeManager.Instance != null) {
+      TimeManager.Instance.TimeScale = 1.0f;
+    }
+
+    GetTree().ChangeSceneToFile(TitleScenePath);
   }
 }

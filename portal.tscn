@@ -1,0 +1,92 @@
+[gd_scene load_steps=13 format=3 uid="uid://c366ntgyj6v6m"]
+
+[ext_resource type="Script" uid="uid://4ovd556w4nt7" path="res://scripts/Portal.cs" id="1_ef3v5"]
+[ext_resource type="Texture2D" uid="uid://bdt5bj3ggpn7m" path="res://images/portal/blue.png" id="2_grrij"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_6r214"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2pgh4"]
+atlas = ExtResource("2_grrij")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wtc1a"]
+atlas = ExtResource("2_grrij")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w8rct"]
+atlas = ExtResource("2_grrij")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r8kna"]
+atlas = ExtResource("2_grrij")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0a7dg"]
+atlas = ExtResource("2_grrij")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jl8kn"]
+atlas = ExtResource("2_grrij")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3x30s"]
+atlas = ExtResource("2_grrij")
+region = Rect2(384, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_byaht"]
+atlas = ExtResource("2_grrij")
+region = Rect2(448, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_dd4p5"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2pgh4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wtc1a")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w8rct")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r8kna")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0a7dg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jl8kn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3x30s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_byaht")
+}],
+"loop": true,
+"name": &"default",
+"speed": 20.0
+}]
+
+[node name="Portal" type="Area2D"]
+script = ExtResource("1_ef3v5")
+MapMenuScenePath = "uid://bto53p17w4ixu"
+TitleScenePath = "uid://bqtbfjrfe5x52"
+metadata/_custom_type_script = "uid://4ovd556w4nt7"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_6r214")
+
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Visualizer"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0.08, 0, 0)
+texture_filter = 0
+sprite_frames = SubResource("SpriteFrames_dd4p5")
+frame_progress = 0.6334803
+
+[node name="Label3D" type="Label3D" parent="Visualizer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+sorting_offset = 1.0
+text = "Portal"
