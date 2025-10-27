@@ -103,6 +103,7 @@ public partial class RewindManager : Node {
 
     if (Input.IsActionPressed("time_slow")) {
       TimeManager.Instance.TimeScale = 0.333f;
+      if (GameManager.Instance != null) GameManager.Instance.UsedSlowThisLevel = true;
     } else {
       TimeManager.Instance.TimeScale = 1.0f;
     }
@@ -110,6 +111,7 @@ public partial class RewindManager : Node {
     // 自动回溯期间，禁用玩家手动控制
     if (!_isAutoRewinding) {
       if (Input.IsActionJustPressed("time_rewind")) {
+        if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;
         StartRewindPreview();
       } else if (Input.IsActionJustReleased("time_rewind")) {
         CommitRewind();
@@ -118,7 +120,7 @@ public partial class RewindManager : Node {
   }
 
   /// <summary>
-  /// 新增：触发一次自动回溯．
+  /// 触发一次自动回溯．
   /// </summary>
   /// <param name="duration">要回溯的时间长度（秒）．</param>
   /// <returns>如果成功触发则返回 true，否则返回 false．</returns>
@@ -129,6 +131,7 @@ public partial class RewindManager : Node {
     }
 
     GD.Print($"Triggering auto-rewind for {duration} seconds.");
+    if (GameManager.Instance != null) GameManager.Instance.HadMissThisLevel = true;
 
     _isAutoRewinding = true;
     StartRewindPreview(); // 启动预览模式

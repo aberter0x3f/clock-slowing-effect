@@ -11,6 +11,11 @@ public partial class GameManager : Node {
   public int LevelsCleared { get; private set; }
   public float DifficultyMultiplier { get; private set; } = 1.0f;
 
+  // 当前关卡表现
+  public bool UsedSlowThisLevel { get; set; }
+  public bool UsedSkillThisLevel { get; set; }
+  public bool HadMissThisLevel { get; set; }
+
   public override void _Ready() {
     Instance = this;
   }
@@ -28,15 +33,24 @@ public partial class GameManager : Node {
   }
 
   /// <summary>
+  /// 在进入一个新关卡或重玩关卡时调用，以重置评分追踪器．
+  /// </summary>
+  public void StartLevel() {
+    UsedSlowThisLevel = false;
+    UsedSkillThisLevel = false;
+    HadMissThisLevel = false;
+  }
+
+  /// <summary>
   /// 当玩家成功通过一个关卡时调用．
   /// </summary>
-  public void CompleteLevel() {
+  public void CompleteLevel(HexMap.ClearScore score) {
     if (GameMap == null) return;
 
     var completedNode = GameMap.GetNode(SelectedMapPosition);
-    if (completedNode != null && !completedNode.IsCleared) {
-      completedNode.IsCleared = true;
-      LevelsCleared++;
+    if (completedNode != null) {
+      completedNode.Score = score;
+      ++LevelsCleared;
       DifficultyMultiplier *= CurrentDifficulty.PerLevelDifficultyMultiplier;
       GD.Print($"Level at {SelectedMapPosition} completed. Levels cleared: {LevelsCleared}. New difficulty multiplier: {DifficultyMultiplier:F2}.");
     }

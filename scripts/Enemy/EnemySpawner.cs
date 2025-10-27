@@ -78,6 +78,7 @@ public partial class EnemySpawner : Node, IRewindable {
   public void ResetSpawner() {
     _currentConcurrentDifficulty = 0.0f;
     _currentSpawnIndex = 0;
+    _spawnedEnemiesAliveCount = 0;
     IsWaveCompleted = false;
     // 不重新生成队列，而是从头开始尝试生成
     TrySpawnNext();

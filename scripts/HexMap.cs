@@ -2,10 +2,19 @@ using System.Collections.Generic;
 using Godot;
 
 public class HexMap {
+  // 用于表示关卡通关分数的枚举
+  public enum ClearScore {
+    NotCleared = -1, // 尚未通关
+    StandardClear = 0, // 普通通关
+    NoMiss = 1, // ℕ
+    NoMissNoSkill = 2, // ℕ²
+    Perfect = 3 // ℕ³
+  }
+
   public class MapNode {
     public Vector2I Position { get; } // Axial coordinates (q,r)
-    public bool IsCleared { get; set; } = false;
     public bool IsStart { get; set; } = false;
+    public ClearScore Score { get; set; } = ClearScore.NotCleared;
 
     public MapNode(Vector2I position) {
       Position = position;

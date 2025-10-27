@@ -25,13 +25,13 @@ theme_override_constants/separation = 20
 [node name="Plane" type="VBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
 
-[node name="Count" type="Label" parent="HBoxContainer/Plane"]
+[node name="ValueLabel" type="Label" parent="HBoxContainer/Plane"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "N"
 horizontal_alignment = 1
 
-[node name="Label" type="Label" parent="HBoxContainer/Plane"]
+[node name="Label2" type="Label" parent="HBoxContainer/Plane"]
 layout_mode = 2
 text = "Plane"
 horizontal_alignment = 1
@@ -39,15 +39,29 @@ horizontal_alignment = 1
 [node name="ClearedLevels" type="VBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
 
-[node name="Count" type="Label" parent="HBoxContainer/ClearedLevels"]
+[node name="ValueLabel" type="Label" parent="HBoxContainer/ClearedLevels"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "N"
 horizontal_alignment = 1
 
-[node name="Label" type="Label" parent="HBoxContainer/ClearedLevels"]
+[node name="Label2" type="Label" parent="HBoxContainer/ClearedLevels"]
 layout_mode = 2
 text = "Cleared"
+horizontal_alignment = 1
+
+[node name="LevelScore" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="ValueLabel" type="Label" parent="HBoxContainer/LevelScore"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "N"
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="HBoxContainer/LevelScore"]
+layout_mode = 2
+text = "Score"
 horizontal_alignment = 1
 
 [node name="MapContainer" type="Control" parent="."]

@@ -28,10 +28,23 @@ public partial class Portal : RewindableArea2D, IInteractable {
   }
 
   public void Interact() {
-    // 1. 通知 GameManager 关卡已完成
-    GameManager.Instance.CompleteLevel();
+    // 根据本关表现计算得分
+    var gm = GameManager.Instance;
+    HexMap.ClearScore score;
+    if (!gm.HadMissThisLevel && !gm.UsedSkillThisLevel && !gm.UsedSlowThisLevel) {
+      score = HexMap.ClearScore.Perfect;
+    } else if (!gm.HadMissThisLevel && !gm.UsedSkillThisLevel) {
+      score = HexMap.ClearScore.NoMissNoSkill;
+    } else if (!gm.HadMissThisLevel) {
+      score = HexMap.ClearScore.NoMiss;
+    } else {
+      score = HexMap.ClearScore.StandardClear;
+    }
 
-    // 2. 检查当前关卡是否为最终关卡
+    // 通知 GameManager 关卡已完成并传入分数
+    GameManager.Instance.CompleteLevel(score);
+
+    // 检查当前关卡是否为最终关卡
     bool isTargetNode = GameManager.Instance.SelectedMapPosition == GameManager.Instance.GameMap.TargetPosition;
 
     if (isTargetNode) {

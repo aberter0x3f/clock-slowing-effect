@@ -9,7 +9,7 @@ public partial class MapMenuNode : TextureButton {
   public float BorderWidth { get; set; } = 2.0f;
 
   [Export]
-  public float BorderOffset { get; set; } = 3.0f; // 边框距离原始六边形的距离
+  public float BorderOffset { get; set; } = 5.0f; // 边框距离原始六边形的距离
 
   public override void _Ready() {
     FocusEntered += OnFocusChanged;

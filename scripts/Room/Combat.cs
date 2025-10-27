@@ -42,6 +42,9 @@ public partial class Combat : Node {
     _playerSpawnPosition = _mapGenerator.GenerateMap();
     _player.GlobalPosition = _playerSpawnPosition;
 
+    // 在配置 Spawner 之前重置关卡评分追踪器
+    GameManager.Instance?.StartLevel();
+
     // 从 GameManager 配置 EnemySpawner
     ConfigureEnemySpawner();
 
@@ -108,6 +111,11 @@ public partial class Combat : Node {
   private void OnRestartRequested() {
     GD.Print("Restarting level...");
 
+    if (IsInstanceValid(_spawnedPortal)) {
+      _spawnedPortal.QueueFree();
+      _spawnedPortal = null;
+    }
+
     foreach (var node in GetTree().GetNodesInGroup("enemies").ToList()) {
       node.QueueFree();
     }
@@ -122,6 +130,8 @@ public partial class Combat : Node {
     _rewindManager.ResetHistory();
     _enemySpawner.ResetSpawner();
     TimeManager.Instance.SetCurrentGameTime(0.0);
+
+    GameManager.Instance?.StartLevel();
   }
 
   private void UpdateUILabelText() {

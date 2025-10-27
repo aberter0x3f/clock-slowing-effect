@@ -1,5 +1,6 @@
 // ./scripts/UI/MapMenu.cs
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -16,13 +17,15 @@ public partial class MapMenu : Control {
   public float HexagonSize { get; set; } = 50f; // 六边形的大小，用于计算位置
 
   private Label _clearedLevelsLabel;
+  private Label _levelScoreLabel;
   private Control _mapContainer;
 
   private Dictionary<Vector2I, TextureButton> _nodeButtons = new();
   private Vector2I _selectedPosition;
 
   public override void _Ready() {
-    _clearedLevelsLabel = GetNode<Label>("HBoxContainer/ClearedLevels/Count");
+    _clearedLevelsLabel = GetNode<Label>("HBoxContainer/ClearedLevels/ValueLabel");
+    _levelScoreLabel = GetNode<Label>("HBoxContainer/LevelScore/ValueLabel");
     _mapContainer = GetNode<Control>("MapContainer");
 
     if (GameManager.Instance?.GameMap == null) {
@@ -57,7 +60,7 @@ public partial class MapMenu : Control {
       // 根据节点状态设置图标外观
       if (gm.PlayerMapPosition.HasValue && pos == gm.PlayerMapPosition.Value) {
         mapNode.SelfModulate = new Color(0f, 0f, 0.5f); // 玩家当前所在的节点
-      } else if (nodeData.IsCleared) {
+      } else if (nodeData.Score != HexMap.ClearScore.NotCleared) {
         mapNode.SelfModulate = new Color(0f, 0.5f, 0f); // 已通关的节点
       } else if (accessibleNodePositions.Contains(pos)) {
         mapNode.SelfModulate = new Color(0.5f, 0.5f, 0f); // 可选的节点
@@ -138,8 +141,25 @@ public partial class MapMenu : Control {
   }
 
   private void UpdateSelection() {
-    if (_nodeButtons.TryGetValue(_selectedPosition, out var button)) {
-      button.GrabFocus();
+    _nodeButtons[_selectedPosition].GrabFocus();
+    switch (GameManager.Instance.GameMap.Nodes[_selectedPosition].Score) {
+      case HexMap.ClearScore.NotCleared:
+        _levelScoreLabel.Text = "∅";
+        break;
+      case HexMap.ClearScore.StandardClear:
+        _levelScoreLabel.Text = "0";
+        break;
+      case HexMap.ClearScore.NoMiss:
+        _levelScoreLabel.Text = "ℕ";
+        break;
+      case HexMap.ClearScore.NoMissNoSkill:
+        _levelScoreLabel.Text = "ℕ²";
+        break;
+      case HexMap.ClearScore.Perfect:
+        _levelScoreLabel.Text = "ℕ³";
+        break;
+      default:
+        throw new ArgumentOutOfRangeException();
     }
   }
 
