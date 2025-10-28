@@ -1,8 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 public partial class GameManager : Node {
   public static GameManager Instance { get; private set; }
+
+  [Export]
+  public UpgradeDatabase UpgradeDb { get; set; }
 
   public DifficultySetting CurrentDifficulty { get; private set; }
   public HexMap GameMap { get; private set; }
@@ -11,6 +15,14 @@ public partial class GameManager : Node {
   public int LevelsCleared { get; private set; }
   public float DifficultyMultiplier { get; private set; } = 1.0f;
 
+  // 玩家状态和强化系统属性
+  [Export]
+  public PlayerBaseStats PlayerBaseStats { get; private set; }
+  public PlayerStats PlayerStats { get; set; }
+  public float CurrentPlayerHealth { get; set; }
+  public List<Upgrade> AcquiredUpgrades { get; } = new();
+  public List<Upgrade> PendingUpgrades { get; } = new();
+
   // 当前关卡表现
   public bool UsedSlowThisLevel { get; set; }
   public bool UsedSkillThisLevel { get; set; }
@@ -18,6 +30,7 @@ public partial class GameManager : Node {
 
   public override void _Ready() {
     Instance = this;
+    ResetPlayerStats();
   }
 
   /// <summary>
@@ -29,16 +42,39 @@ public partial class GameManager : Node {
     LevelsCleared = 0;
     DifficultyMultiplier = 1.0f;
     PlayerMapPosition = null; // 初始时玩家不在任何节点上
+
+    ResetPlayerStats();
+
     GD.Print($"New run started with difficulty '{difficulty.Name}'.");
   }
 
   /// <summary>
-  /// 在进入一个新关卡或重玩关卡时调用，以重置评分追踪器．
+  /// 重置玩家状态．
+  /// </summary>
+  public void ResetPlayerStats() {
+    AcquiredUpgrades.Clear();
+    PendingUpgrades.Clear();
+    CurrentPlayerHealth = PlayerBaseStats.MaxHealth;
+    PlayerStats = new PlayerStats(PlayerBaseStats);
+    PlayerStats.RecalculateStats(AcquiredUpgrades, CurrentPlayerHealth);
+  }
+
+  /// <summary>
+  /// 在重开一个关卡时调用．
+  /// </summary>
+  public void RestartLevel() {
+    PendingUpgrades.Clear();
+    StartLevel();
+  }
+
+  /// <summary>
+  /// 在进入一个新关卡时调用．
   /// </summary>
   public void StartLevel() {
     UsedSlowThisLevel = false;
     UsedSkillThisLevel = false;
     HadMissThisLevel = false;
+    CommitPendingUpgrades();
   }
 
   /// <summary>
@@ -56,6 +92,79 @@ public partial class GameManager : Node {
     }
     // 更新玩家当前所在的节点
     PlayerMapPosition = SelectedMapPosition;
+  }
+
+  /// <summary>
+  /// 将一个新强化添加到待定列表．它将在下一关开始时生效．
+  /// </summary>
+  public void AddUpgrade(Upgrade upgrade) {
+    // 确保强化在已获得和待定列表中都是唯一的
+    if (upgrade == null || AcquiredUpgrades.Contains(upgrade) || PendingUpgrades.Contains(upgrade)) return;
+    PendingUpgrades.Add(upgrade);
+  }
+
+  /// <summary>
+  /// 将所有待定强化正式应用，并重新计算玩家属性．
+  /// </summary>
+  public void CommitPendingUpgrades() {
+    if (PendingUpgrades.Count == 0) return;
+
+    AcquiredUpgrades.AddRange(PendingUpgrades);
+    PendingUpgrades.Clear();
+
+    // 立即重新计算属性，特别是血量上限
+    PlayerStats.RecalculateStats(AcquiredUpgrades, CurrentPlayerHealth);
+    // 确保玩家血量不超过新的上限
+    CurrentPlayerHealth = Mathf.Min(CurrentPlayerHealth, PlayerStats.MaxHealth);
+  }
+
+  /// <summary>
+  /// 根据规则获取一批可供选择的强化．
+  /// </summary>
+  public List<Upgrade> GetUpgradeChoices(int minLevel, int maxLevel, int count, RandomNumberGenerator rnd) {
+    var availableUpgrades = new List<Upgrade>();
+
+    // 从高到低遍历等级，填充候选列表
+    for (int level = minLevel; level <= maxLevel; ++level) {
+      var candidates = UpgradeDb.AllUpgrades
+        .Where(u => u.Level == level && !AcquiredUpgrades.Contains(u) && !PendingUpgrades.Contains(u))
+        .ToList();
+      availableUpgrades.AddRange(candidates);
+    }
+
+    // 如果候选列表数量不足，尝试扩充更低等级的强化
+    if (availableUpgrades.Count < count) {
+      for (int level = minLevel - 1; level >= 1; --level) {
+        var candidates = UpgradeDb.AllUpgrades
+          .Where(u => u.Level == level && !AcquiredUpgrades.Contains(u) && !PendingUpgrades.Contains(u))
+          .ToList();
+        if (availableUpgrades.Count + candidates.Count <= count) {
+          availableUpgrades.AddRange(candidates);
+        } else {
+          // 随机挑选更低等级的强化直到数量足够
+          while (availableUpgrades.Count < count) {
+            if (candidates.Count == 0) break;
+            int randomIndex = rnd.RandiRange(0, candidates.Count - 1);
+            availableUpgrades.Add(candidates[randomIndex]);
+            candidates.RemoveAt(randomIndex);
+          }
+        }
+      }
+    }
+
+    if (availableUpgrades.Count <= count) {
+      return availableUpgrades;
+    }
+
+    // 随机挑选指定数量的强化
+    var choices = new List<Upgrade>();
+    for (int i = 0; i < count; i++) {
+      if (availableUpgrades.Count == 0) break;
+      int randomIndex = rnd.RandiRange(0, availableUpgrades.Count - 1);
+      choices.Add(availableUpgrades[randomIndex]);
+      availableUpgrades.RemoveAt(randomIndex);
+    }
+    return choices;
   }
 
   /// <summary>

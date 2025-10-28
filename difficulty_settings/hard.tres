@@ -8,4 +8,5 @@ Name = "Hard"
 Description = "Hard"
 InitialTotalDifficulty = 60.0
 InitialMaxConcurrentDifficulty = 25.0
+EnemyRank = 7
 metadata/_custom_type_script = "uid://26i87xlp1ear"

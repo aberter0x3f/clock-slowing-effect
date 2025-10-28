@@ -70,7 +70,7 @@ public partial class Title : Node {
     if (_player.IsReloading) {
       ammoText = $"Reloading: {_player.TimeToReloaded:F1}s";
     } else {
-      ammoText = $"Ammo: {_player.CurrentAmmo} / {_player.MaxAmmo}";
+      ammoText = $"Ammo: {_player.CurrentAmmo} / {GameManager.Instance.PlayerStats.MaxAmmoInt}";
     }
     var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
     var rewindTimeLeft = _rewindManager.AvailableRewindTime;

@@ -4,11 +4,8 @@ using Rewind;
 public class PortalState : RewindState { }
 
 public partial class Portal : RewindableArea2D, IInteractable {
-  [Export(PropertyHint.File, "*.tscn")]
-  public string MapMenuScenePath { get; set; }
-
-  [Export(PropertyHint.File, "*.tscn")]
-  public string TitleScenePath { get; set; }
+  [Signal]
+  public delegate void LevelCompletedEventHandler(HexMap.ClearScore score);
 
   private Label3D _label;
   private Node3D _visualizer;
@@ -41,20 +38,12 @@ public partial class Portal : RewindableArea2D, IInteractable {
       score = HexMap.ClearScore.StandardClear;
     }
 
-    // 通知 GameManager 关卡已完成并传入分数
-    GameManager.Instance.CompleteLevel(score);
+    // 发出信号，让 Combat 场景处理后续流程
+    EmitSignal(SignalName.LevelCompleted, (int) score);
 
-    // 检查当前关卡是否为最终关卡
-    bool isTargetNode = GameManager.Instance.SelectedMapPosition == GameManager.Instance.GameMap.TargetPosition;
-
-    if (isTargetNode) {
-      // 通关，返回主菜单
-      GD.Print("Congratulations! Run completed. Returning to title screen.");
-      GetTree().ChangeSceneToFile(TitleScenePath);
-    } else {
-      // 前往地图选择界面
-      GetTree().ChangeSceneToFile(MapMenuScenePath);
-    }
+    // 禁用交互，防止重复触发
+    SetProcess(false);
+    SetHighlight(false);
   }
 
   public void SetHighlight(bool highlighted) {

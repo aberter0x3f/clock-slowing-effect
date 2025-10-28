@@ -1,0 +1,53 @@
+[gd_scene load_steps=3 format=3 uid="uid://mmihcj1vjj6v"]
+
+[ext_resource type="PackedScene" uid="uid://b8ut676kxyydg" path="res://ui/upgrade_card.tscn" id="1_82rw7"]
+[ext_resource type="Script" uid="uid://ooqlhfcg4t4b" path="res://scripts/UI/UpgradeMenu.cs" id="1_ppotq"]
+
+[node name="UpgradeMenu" type="CanvasLayer"]
+script = ExtResource("1_ppotq")
+UpgradeCardScene = ExtResource("1_82rw7")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Select an upgrade"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(800, 300)
+layout_mode = 2
+
+[node name="UpgradeCardContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="UpgradeCard" parent="CenterContainer/VBoxContainer/ScrollContainer/UpgradeCardContainer" instance=ExtResource("1_82rw7")]
+layout_mode = 2
+
+[node name="UpgradeCard2" parent="CenterContainer/VBoxContainer/ScrollContainer/UpgradeCardContainer" instance=ExtResource("1_82rw7")]
+layout_mode = 2
+
+[node name="UpgradeCard3" parent="CenterContainer/VBoxContainer/ScrollContainer/UpgradeCardContainer" instance=ExtResource("1_82rw7")]
+layout_mode = 2
+
+[node name="SkipConfirmationDialog" type="ConfirmationDialog" parent="."]
+oversampling_override = 1.0
+title = "Confirm to skip?"
+initial_position = 1
+size = Vector2i(403, 100)
+ok_button_text = "Yes"
+dialog_text = "By selecting \"Yes\", you will skip selecting Upgrade."
+cancel_button_text = "No"

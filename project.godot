@@ -18,7 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 TimeManager="*res://scripts/TimeManager.cs"
-GameManager="*res://scripts/GameManager.cs"
+GameManager="*res://game_manager.tscn"
 
 [display]
 

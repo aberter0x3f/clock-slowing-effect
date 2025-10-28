@@ -14,11 +14,23 @@ public partial class Combat : Node {
   private Vector2 _playerSpawnPosition;
   private Portal _spawnedPortal = null;
 
+  private ulong _levelSeed;
+  private RandomNumberGenerator _upgradeRng;
+
   [Export]
   public PackedScene PauseMenuScene { get; set; }
 
   [Export]
   public PackedScene PortalScene { get; set; }
+
+  [Export]
+  public PackedScene UpgradeMenuScene { get; set; }
+
+  [Export(PropertyHint.File, "*.tscn")]
+  public string MapMenuScenePath { get; set; }
+
+  [Export(PropertyHint.File, "*.tscn")]
+  public string TitleScenePath { get; set; }
 
   public override void _Ready() {
     GameRootProvider.CurrentGameRoot = this;
@@ -35,19 +47,18 @@ public partial class Combat : Node {
       _pauseMenu.RestartRequested += OnRestartRequested;
     }
     _player.DiedPermanently += OnPlayerDiedPermanently;
-
-    // 连接敌人生成器完成波次的信号
     _enemySpawner.WaveCompleted += OnWaveCompleted;
 
     _playerSpawnPosition = _mapGenerator.GenerateMap();
     _player.GlobalPosition = _playerSpawnPosition;
 
-    // 在配置 Spawner 之前重置关卡评分追踪器
+    // 初始化本关卡的随机种子和 RNG
+    _levelSeed = new RandomNumberGenerator().Randi();
+    _upgradeRng = new RandomNumberGenerator();
+    _upgradeRng.Seed = _levelSeed;
+
     GameManager.Instance?.StartLevel();
-
-    // 从 GameManager 配置 EnemySpawner
     ConfigureEnemySpawner();
-
     _enemySpawner.StartSpawning(_mapGenerator, _player);
   }
 
@@ -56,11 +67,9 @@ public partial class Combat : Node {
       GD.PrintErr("Combat: GameManager not initialized. Using default spawner values.");
       return;
     }
-
     var gm = GameManager.Instance;
     _enemySpawner.TotalDifficultyBudget = gm.CurrentDifficulty.InitialTotalDifficulty * gm.DifficultyMultiplier;
     _enemySpawner.MaxConcurrentDifficulty = gm.CurrentDifficulty.InitialMaxConcurrentDifficulty * gm.DifficultyMultiplier;
-
     GD.Print($"Configuring spawner. Total Budget: {_enemySpawner.TotalDifficultyBudget}, Max Concurrent: {_enemySpawner.MaxConcurrentDifficulty}");
   }
 
@@ -70,22 +79,68 @@ public partial class Combat : Node {
       GD.PrintErr("PortalScene is not set in the Combat scene!");
       return;
     }
-
-    // 检查传送门实例是否有效
     if (!IsInstanceValid(_spawnedPortal)) {
-      // 如果实例不存在，则创建一个新的
       Vector2I centerCell = new Vector2I(_mapGenerator.MapWidth / 2, _mapGenerator.MapHeight / 2);
       if (!_mapGenerator.IsWalkable(centerCell)) {
         centerCell = _mapGenerator.WorldToMap(_playerSpawnPosition);
       }
-
       _spawnedPortal = PortalScene.Instantiate<Portal>();
       _spawnedPortal.GlobalPosition = _mapGenerator.MapToWorld(centerCell);
+      // 连接传送门的信号
+      _spawnedPortal.LevelCompleted += OnLevelCompleted;
       GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, _spawnedPortal);
     } else {
       // 如果实例已存在（可能是在回溯后被 Destroy() 了），则复活它
       _spawnedPortal.Resurrect();
     }
+  }
+
+  /// <summary>
+  /// 当玩家与传送门交互后，由此方法处理后续逻辑．
+  /// </summary>
+  private void OnLevelCompleted(HexMap.ClearScore score) {
+    GameManager.Instance.CompleteLevel(score);
+
+    // 根据分数决定奖励
+    int picks = 0;
+    int maxLevel = 0;
+    switch (score) {
+      case HexMap.ClearScore.NoMiss:
+        picks = 1;
+        maxLevel = 1;
+        break;
+      case HexMap.ClearScore.NoMissNoSkill:
+        picks = 1;
+        maxLevel = 2;
+        break;
+      case HexMap.ClearScore.Perfect:
+        picks = 2;
+        maxLevel = 2;
+        break;
+    }
+
+    bool isTargetNode = GameManager.Instance.SelectedMapPosition == GameManager.Instance.GameMap.TargetPosition;
+
+    if (isTargetNode) {
+      GD.Print("Congratulations! Run completed. Returning to title screen.");
+      GetTree().ChangeSceneToFile(TitleScenePath);
+    } else if (picks > 0 && UpgradeMenuScene != null) {
+      var upgradeMenu = UpgradeMenuScene.Instantiate<UpgradeMenu>();
+      AddChild(upgradeMenu);
+      upgradeMenu.UpgradeSelectionFinished += OnUpgradeSelectionFinished;
+      // 传入本关专用的 RNG，以确保重玩时强化选项不变
+      upgradeMenu.StartUpgradeSelection(picks, 1, maxLevel, _upgradeRng);
+    } else {
+      // 没有奖励，直接切换场景
+      OnUpgradeSelectionFinished();
+    }
+  }
+
+  /// <summary>
+  /// 当强化选择结束后，切换到地图菜单．
+  /// </summary>
+  private void OnUpgradeSelectionFinished() {
+    GetTree().ChangeSceneToFile(MapMenuScenePath);
   }
 
   private void OnPlayerDiedPermanently() {
@@ -102,6 +157,7 @@ public partial class Combat : Node {
   }
 
   public override void _Process(double delta) {
+    // 在没结束之前，持续扣除玩家生命值
     if (_enemySpawner != null && !_enemySpawner.IsWaveCompleted) {
       _player.Health -= (float) delta;
     }
@@ -126,17 +182,21 @@ public partial class Combat : Node {
       node.QueueFree();
     }
 
-    _player.ResetState(_playerSpawnPosition);
+    _player.ResetState();
     _rewindManager.ResetHistory();
     _enemySpawner.ResetSpawner();
     TimeManager.Instance.SetCurrentGameTime(0.0);
 
-    GameManager.Instance?.StartLevel();
+    // 使用之前保存的种子重新初始化 RNG，以保证强化选项不变
+    _upgradeRng = new RandomNumberGenerator();
+    _upgradeRng.Seed = _levelSeed;
+
+    GameManager.Instance?.RestartLevel();
   }
 
   private void UpdateUILabelText() {
     if (_player == null || _uiLabel == null) return;
-    string ammoText = _player.IsReloading ? $"Reloading: {_player.TimeToReloaded:F1}s" : $"Ammo: {_player.CurrentAmmo} / {_player.MaxAmmo}";
+    string ammoText = _player.IsReloading ? $"Reloading: {_player.TimeToReloaded:F1}s" : $"Ammo: {_player.CurrentAmmo} / {GameManager.Instance.PlayerStats.MaxAmmoInt}";
     var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
     var rewindTimeLeft = _rewindManager.AvailableRewindTime;
 

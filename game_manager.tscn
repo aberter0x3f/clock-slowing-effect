@@ -1,0 +1,16 @@
+[gd_scene load_steps=5 format=3 uid="uid://b2ducq4wcnpjh"]
+
+[ext_resource type="Script" uid="uid://d3blju4s11jnk" path="res://scripts/GameManager.cs" id="1_smx3j"]
+[ext_resource type="Resource" uid="uid://d4n4ub6itg400" path="res://upgrade_database.tres" id="2_o2178"]
+[ext_resource type="Script" uid="uid://btsh8o314e538" path="res://scripts/PlayerBaseStats.cs" id="3_o2178"]
+
+[sub_resource type="Resource" id="Resource_d5upp"]
+script = ExtResource("3_o2178")
+BulletDamage = 999.0
+MaxAmmo = 999.0
+metadata/_custom_type_script = "uid://btsh8o314e538"
+
+[node name="GameManager" type="Node"]
+script = ExtResource("1_smx3j")
+UpgradeDb = ExtResource("2_o2178")
+PlayerBaseStats = SubResource("Resource_d5upp")

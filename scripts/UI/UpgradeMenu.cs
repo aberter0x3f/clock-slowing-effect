@@ -1,0 +1,157 @@
+using System;
+using System.Collections.Generic;
+using Godot;
+
+[GlobalClass]
+public partial class UpgradeMenu : CanvasLayer {
+  [Signal]
+  public delegate void UpgradeSelectionFinishedEventHandler();
+
+  [Export]
+  public PackedScene UpgradeCardScene { get; set; } // 用于显示单个强化选项的场景
+
+  private HBoxContainer _cardContainer;
+  private ConfirmationDialog _skipConfirmationDialog;
+  private readonly List<Button> _cards = new();
+  private readonly List<Upgrade> _currentChoices = new();
+  private int _selectedIndex = 0;
+  private int _picksRemaining = 0;
+  private int _minLevel = 1;
+  private int _maxLevel = 1;
+  private RandomNumberGenerator _rng;
+
+  private static readonly Color Level1Color = new Color("a0a0a0");
+  private static readonly Color Level2Color = new Color("608ee6");
+  private static readonly Color Level3Color = new Color("e6b760");
+
+  public override void _Ready() {
+    ProcessMode = ProcessModeEnum.Always; // 暂停时也能响应
+
+    _cardContainer = GetNode<HBoxContainer>("CenterContainer/VBoxContainer/ScrollContainer/UpgradeCardContainer");
+    _skipConfirmationDialog = GetNode<ConfirmationDialog>("SkipConfirmationDialog");
+    _skipConfirmationDialog.Confirmed += OnSkipConfirmed;
+
+    Visible = false;
+  }
+
+  /// <summary>
+  /// 显示强化选择菜单．
+  /// </summary>
+  /// <param name="picks">要进行的强化选择次数．</param>
+  /// <param name="minLevel">可供选择的强化最低等级．</param>
+  /// <param name="maxLevel">可供选择的强化最高等级．</param>
+  /// <param name="rng">用于随机选择的随机数生成器．</param>
+  public void StartUpgradeSelection(int picks, int minLevel, int maxLevel, RandomNumberGenerator rng) {
+    _picksRemaining = picks;
+    _minLevel = minLevel;
+    _maxLevel = maxLevel;
+    _rng = rng;
+    GetTree().Paused = true;
+    ShowNextChoice();
+  }
+
+  private void ShowNextChoice() {
+    if (_picksRemaining <= 0) {
+      FinishSelection();
+      return;
+    }
+
+    --_picksRemaining;
+
+    // 清理旧选项
+    foreach (Node child in _cardContainer.GetChildren()) {
+      child.QueueFree();
+    }
+    _cards.Clear();
+    _currentChoices.Clear();
+
+    // 从 GameManager 获取选项，传入本关专用的 RNG
+    var choices = GameManager.Instance.GetUpgradeChoices(_minLevel, _maxLevel, 3, _rng);
+    _currentChoices.AddRange(choices);
+
+    if (_currentChoices.Count == 0) {
+      GD.Print("No available upgrades to choose from. Skipping.");
+      // 如果没有可选项，直接进入下一轮或结束
+      ShowNextChoice();
+      return;
+    }
+
+    Visible = true;
+
+    for (int i = 0; i < _currentChoices.Count; i++) {
+      var upgrade = _currentChoices[i];
+      var card = UpgradeCardScene.Instantiate<Button>();
+      var shortNameLabel = card.GetNode<Label>("VBoxContainer/ShortNameLabel");
+      var nameLabel = card.GetNode<Label>("VBoxContainer/NameLabel");
+      var descLabel = card.GetNode<RichTextLabel>("VBoxContainer/DescriptionLabel");
+
+      shortNameLabel.Text = upgrade.ShortName;
+      nameLabel.Text = upgrade.Name;
+      descLabel.Text = upgrade.Description;
+
+      var nameColor = upgrade.Level switch {
+        1 => Level1Color,
+        2 => Level2Color,
+        3 => Level3Color,
+        _ => throw new ArgumentOutOfRangeException(nameof(upgrade.Level), upgrade.Level, null)
+      };
+
+      shortNameLabel.Modulate = nameColor;
+      nameLabel.Modulate = nameColor;
+      int index = i;
+      card.Pressed += () => OnCardSelected(index);
+      _cardContainer.AddChild(card);
+      _cards.Add(card);
+    }
+
+    _selectedIndex = 0;
+    UpdateSelection();
+  }
+
+  public override void _Input(InputEvent @event) {
+    if (!Visible) return;
+
+    GetViewport().SetInputAsHandled();
+
+    if (@event.IsActionPressed("ui_right")) {
+      _selectedIndex = (_selectedIndex + 1) % _cards.Count;
+      UpdateSelection();
+    } else if (@event.IsActionPressed("ui_left")) {
+      _selectedIndex = (_selectedIndex - 1 + _cards.Count) % _cards.Count;
+      UpdateSelection();
+    } else if (@event.IsActionPressed("ui_accept")) {
+      OnCardSelected(_selectedIndex);
+    } else if (@event.IsActionPressed("ui_cancel")) {
+      _skipConfirmationDialog.PopupCentered();
+    }
+  }
+
+  private void UpdateSelection() {
+    if (_cards.Count > 0 && _selectedIndex < _cards.Count) {
+      _cards[_selectedIndex].GrabFocus();
+    }
+  }
+
+  private void OnCardSelected(int index) {
+    if (index < 0 || index >= _currentChoices.Count) return;
+
+    var selectedUpgrade = _currentChoices[index];
+    GameManager.Instance.AddUpgrade(selectedUpgrade);
+    GD.Print($"Upgrade selected: {selectedUpgrade.Name}");
+
+    ShowNextChoice();
+  }
+
+  private void OnSkipConfirmed() {
+    GD.Print("Upgrade choice skipped.");
+    ShowNextChoice();
+  }
+
+  private void FinishSelection() {
+    Visible = false;
+    GetTree().Paused = false;
+    EmitSignal(SignalName.UpgradeSelectionFinished);
+    // 自我销毁，因为每次都是新实例
+    QueueFree();
+  }
+}

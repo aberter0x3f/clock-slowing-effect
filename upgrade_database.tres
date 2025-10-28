@@ -1,0 +1,297 @@
+[gd_resource type="Resource" script_class="UpgradeDatabase" load_steps=33 format=3 uid="uid://d4n4ub6itg400"]
+
+[ext_resource type="Script" uid="uid://ckupbr8ve0t0k" path="res://scripts/UpgradeDatabase.cs" id="1_ofy8g"]
+[ext_resource type="Script" uid="uid://be0eq177yq1as" path="res://scripts/Upgrade.cs" id="1_w5vlj"]
+
+[sub_resource type="Resource" id="Resource_q7gbs"]
+script = ExtResource("1_w5vlj")
+Name = "Damage Increase 1"
+ShortName = "Da₁"
+Description = "Increases player's bullet damage by [color=orange]10%.[/color]"
+Value1 = 0.1
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_p25qj"]
+script = ExtResource("1_w5vlj")
+Level = 2
+Name = "Damage Increase 2"
+ShortName = "Da₂"
+Description = "Increases player's bullet damage by [color=orange]20%.[/color]"
+Value1 = 0.2
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_8g2fn"]
+script = ExtResource("1_w5vlj")
+Level = 3
+Name = "Damage Increase 3"
+ShortName = "Da₃"
+Description = "Increases player's bullet damage by [color=orange]30%.[/color]"
+Value1 = 0.3
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_w1ykm"]
+script = ExtResource("1_w5vlj")
+Type = 1
+Name = "Accuracy Increase 1"
+ShortName = "Ac₁"
+Description = "Increases bullet accuracy by [color=orange]15%.[/color]"
+Value1 = 0.15
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_v7xbr"]
+script = ExtResource("1_w5vlj")
+Type = 1
+Level = 2
+Name = "Accuracy Increase 2"
+ShortName = "Ac₂"
+Description = "Increases bullet accuracy by [color=orange]25%.[/color]"
+Value1 = 0.25
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_6w2cv"]
+script = ExtResource("1_w5vlj")
+Type = 1
+Level = 3
+Name = "Accuracy Increase 3"
+ShortName = "Ac₃"
+Description = "Increases bullet accuracy by [color=orange]40%.[/color]"
+Value1 = 0.4
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_m8f3a"]
+script = ExtResource("1_w5vlj")
+Type = 2
+Name = "Max HP Increase 1"
+ShortName = "Hp₁"
+Description = "Increases maximum health by [color=orange]5%.[/color]"
+Value1 = 0.05
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_2w1cx"]
+script = ExtResource("1_w5vlj")
+Type = 2
+Level = 2
+Name = "Max HP Increase 2"
+ShortName = "Hp₂"
+Description = "Increases maximum health by [color=orange]10%.[/color]"
+Value1 = 0.1
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_j4y7h"]
+script = ExtResource("1_w5vlj")
+Type = 2
+Level = 3
+Name = "Max HP Increase 3"
+ShortName = "Hp₃"
+Description = "Increases maximum health by [color=orange]30%.[/color]"
+Value1 = 0.3
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_k0d2c"]
+script = ExtResource("1_w5vlj")
+Type = 3
+Name = "Ammunition Expansion 1"
+ShortName = "Am₁"
+Description = "Increases magazine capacity by [color=orange]15%.[/color]"
+Value1 = 0.15
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_3a3b1"]
+script = ExtResource("1_w5vlj")
+Type = 3
+Level = 2
+Name = "Ammunition Expansion 2"
+ShortName = "Am₂"
+Description = "Increases magazine capacity by [color=orange]25%.[/color]"
+Value1 = 0.25
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_s5q1f"]
+script = ExtResource("1_w5vlj")
+Type = 3
+Level = 3
+Name = "Ammunition Expansion 3"
+ShortName = "Am₃"
+Description = "Increases magazine capacity by [color=orange]50%.[/color]"
+Value1 = 0.5
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_x6y8g"]
+script = ExtResource("1_w5vlj")
+Type = 4
+Name = "Fire Rate Increase 1"
+ShortName = "Fr₁"
+Description = "Increases fire rate by [color=orange]15%.[/color]"
+Value1 = 0.15
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_c2h3j"]
+script = ExtResource("1_w5vlj")
+Type = 4
+Level = 2
+Name = "Fire Rate Increase 2"
+ShortName = "Fr₂"
+Description = "Increases fire rate by [color=orange]25%.[/color]"
+Value1 = 0.25
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_n5k4l"]
+script = ExtResource("1_w5vlj")
+Type = 4
+Level = 3
+Name = "Fire Rate Increase 3"
+ShortName = "Fr₃"
+Description = "Increases fire rate by [color=orange]50%.[/color]"
+Value1 = 0.5
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_a1b2c"]
+script = ExtResource("1_w5vlj")
+Type = 5
+Name = "Reload Speed Increase 1"
+ShortName = "Rs₁"
+Description = "Increases reload speed by [color=orange]20%.[/color]"
+Value1 = 0.2
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_d3e4f"]
+script = ExtResource("1_w5vlj")
+Type = 5
+Level = 2
+Name = "Reload Speed Increase 2"
+ShortName = "Rs₂"
+Description = "Increases reload speed by [color=orange]40%.[/color]"
+Value1 = 0.4
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_g5h6i"]
+script = ExtResource("1_w5vlj")
+Type = 5
+Level = 3
+Name = "Reload Speed Increase 3"
+ShortName = "Rs₃"
+Description = "Increases reload speed by [color=orange]100%.[/color]"
+Value1 = 1
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_j7k8l"]
+script = ExtResource("1_w5vlj")
+Type = 6
+Name = "Mobile Firearm Specialist 1"
+ShortName = "Mf₁"
+Description = "Increases accuracy by up to [color=orange]20%[/color] at high speed, but decreases it by up to [color=orange]10%[/color] at low speed."
+Value1 = 0.2
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_m9n0o"]
+script = ExtResource("1_w5vlj")
+Type = 6
+Level = 2
+Name = "Mobile Firearm Specialist 2"
+ShortName = "Mf₂"
+Description = "Increases accuracy by up to [color=orange]40%[/color] at high speed, but decreases it by up to [color=orange]20%[/color] at low speed."
+Value1 = 0.4
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_p1q2r"]
+script = ExtResource("1_w5vlj")
+Type = 6
+Level = 3
+Name = "Mobile Firearm Specialist 3"
+ShortName = "Mf₃"
+Description = "Increases accuracy by up to [color=orange]100%[/color] at high speed, but decreases it by up to [color=orange]40%[/color] at low speed."
+Value1 = 1
+Value2 = 0.4
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_s3t4u"]
+script = ExtResource("1_w5vlj")
+Type = 7
+Name = "Grazing Area Radius Increase 1"
+ShortName = "Ga₁"
+Description = "Increases the bullet grazing detection radius by [color=orange]15%.[/color]"
+Value1 = 0.15
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_v5w6x"]
+script = ExtResource("1_w5vlj")
+Type = 7
+Level = 2
+Name = "Grazing Area Radius Increase 2"
+ShortName = "Ga₂"
+Description = "Increases the bullet grazing detection radius by [color=orange]25%.[/color]"
+Value1 = 0.25
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_y7z8a"]
+script = ExtResource("1_w5vlj")
+Type = 7
+Level = 3
+Name = "Grazing Area Radius Increase 3"
+ShortName = "Ga₃"
+Description = "Increases the bullet grazing detection radius by [color=orange]50%.[/color]"
+Value1 = 0.5
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_b9c0d"]
+script = ExtResource("1_w5vlj")
+Type = 8
+Name = "Grazing Bonus Increase 1"
+ShortName = "Gb₁"
+Description = "Increases the reward gained from grazing bullets by [color=orange]20%.[/color]"
+Value1 = 0.2
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_e1f2g"]
+script = ExtResource("1_w5vlj")
+Type = 8
+Level = 2
+Name = "Grazing Bonus Increase 2"
+ShortName = "Gb₂"
+Description = "Increases the reward gained from grazing bullets by [color=orange]40%.[/color]"
+Value1 = 0.4
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_h3i4j"]
+script = ExtResource("1_w5vlj")
+Type = 8
+Level = 3
+Name = "Grazing Bonus Increase 3"
+ShortName = "Gb₃"
+Description = "Increases the reward gained from grazing bullets by [color=orange]100%.[/color]"
+Value1 = 1
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_k5l6m"]
+script = ExtResource("1_w5vlj")
+Type = 9
+Name = "Adrenaline 1"
+ShortName = "Ad₁"
+Description = "Increases damage by [color=orange](0.2 * x^2 * 100)%[/color], where x is the ratio of missing health to max health (0 <= x <= 1)."
+Value1 = 0.2
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_n7o8p"]
+script = ExtResource("1_w5vlj")
+Type = 9
+Level = 2
+Name = "Adrenaline 2"
+ShortName = "Ad₂"
+Description = "Increases damage by [color=orange](0.5 * x^2 * 100)%[/color], where x is the ratio of missing health to max health (0 <= x <= 1)."
+Value1 = 0.5
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_q9r0s"]
+script = ExtResource("1_w5vlj")
+Type = 9
+Level = 3
+Name = "Adrenaline 3"
+ShortName = "Ad₃"
+Description = "Increases damage by [color=orange](x^2 * 100)%[/color], where x is the ratio of missing health to max health (0 <= x <= 1)."
+Value1 = 1
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[resource]
+script = ExtResource("1_ofy8g")
+AllUpgrades = Array[Object]([SubResource("Resource_q7gbs"), SubResource("Resource_p25qj"), SubResource("Resource_8g2fn"), SubResource("Resource_w1ykm"), SubResource("Resource_v7xbr"), SubResource("Resource_6w2cv"), SubResource("Resource_m8f3a"), SubResource("Resource_2w1cx"), SubResource("Resource_j4y7h"), SubResource("Resource_k0d2c"), SubResource("Resource_3a3b1"), SubResource("Resource_s5q1f"), SubResource("Resource_x6y8g"), SubResource("Resource_c2h3j"), SubResource("Resource_n5k4l"), SubResource("Resource_a1b2c"), SubResource("Resource_d3e4f"), SubResource("Resource_g5h6i"), SubResource("Resource_j7k8l"), SubResource("Resource_m9n0o"), SubResource("Resource_p1q2r"), SubResource("Resource_s3t4u"), SubResource("Resource_v5w6x"), SubResource("Resource_y7z8a"), SubResource("Resource_b9c0d"), SubResource("Resource_e1f2g"), SubResource("Resource_h3i4j"), SubResource("Resource_k5l6m"), SubResource("Resource_n7o8p"), SubResource("Resource_q9r0s")])
+metadata/_custom_type_script = "uid://ckupbr8ve0t0k"

@@ -1,10 +1,11 @@
-[gd_scene load_steps=20 format=3 uid="uid://wngnk3v6gahp"]
+[gd_scene load_steps=21 format=3 uid="uid://wngnk3v6gahp"]
 
 [ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="1_xj5yv"]
 [ext_resource type="Script" uid="uid://u4t27m71rfwv" path="res://scripts/Room/Combat.cs" id="1_y7vi5"]
 [ext_resource type="PackedScene" uid="uid://da40nomxihqtm" path="res://ui/pause_menu.tscn" id="2_i2rhi"]
 [ext_resource type="Script" uid="uid://d1if7b56ademj" path="res://scripts/MapGenerator.cs" id="3_bxsma"]
 [ext_resource type="PackedScene" uid="uid://c366ntgyj6v6m" path="res://portal.tscn" id="3_wsm0g"]
+[ext_resource type="PackedScene" uid="uid://mmihcj1vjj6v" path="res://ui/upgrade_menu.tscn" id="4_iplkw"]
 [ext_resource type="Script" uid="uid://ddv4ypiw0mqcp" path="res://scripts/Enemy/EnemySpawner.cs" id="4_lkrbl"]
 [ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="4_soos4"]
 [ext_resource type="Resource" uid="uid://bavwyb1080vsp" path="res://enemies/simple_enemy_1.tres" id="5_8tlgu"]
@@ -24,6 +25,9 @@
 script = ExtResource("1_y7vi5")
 PauseMenuScene = ExtResource("2_i2rhi")
 PortalScene = ExtResource("3_wsm0g")
+UpgradeMenuScene = ExtResource("4_iplkw")
+MapMenuScenePath = "uid://bto53p17w4ixu"
+TitleScenePath = "uid://bqtbfjrfe5x52"
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
