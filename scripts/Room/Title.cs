@@ -1,5 +1,6 @@
 using Godot;
 using Rewind;
+using UI;
 
 namespace Room;
 
@@ -15,7 +16,7 @@ public partial class Title : Node {
   public PackedScene DifficultyMenuScene { get; set; }
 
   [Export(PropertyHint.File, "*.tscn")]
-  public string MapMenuScenePath { get; set; }
+  public string InterLevelMenuScenePath { get; set; }
 
   public override void _Ready() {
     GameRootProvider.CurrentGameRoot = this;
@@ -51,13 +52,13 @@ public partial class Title : Node {
   }
 
   private void OnDifficultySelected(DifficultySetting difficulty) {
-    if (string.IsNullOrEmpty(MapMenuScenePath)) {
+    if (string.IsNullOrEmpty(InterLevelMenuScenePath)) {
       GD.PrintErr("MapMenuScenePath is not set in the Title scene inspector.");
       return;
     }
 
     GameManager.Instance.InitializeNewRun(difficulty);
-    GetTree().ChangeSceneToFile(MapMenuScenePath);
+    GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
   }
 
   public override void _Process(double delta) {

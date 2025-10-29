@@ -10,7 +10,7 @@
 radius = 100.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hqtel"]
-radius = 40.0
+radius = 50.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hqtel"]
 
@@ -174,9 +174,6 @@ collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_onrkg")
 Bullet = ExtResource("2_hqtel")
-BulletDamage = 100.0
-MaxAmmo = 999
-ReloadTime = 1.0
 GrazeTimeShard = ExtResource("3_sweqy")
 
 [node name="InteractionArea" type="Area2D" parent="."]
@@ -217,6 +214,7 @@ animation = &"idle"
 [node name="HitPointSprite" type="AnimatedSprite3D" parent="Visualizer"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 sorting_offset = 61.0
+billboard = 1
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_7ahtn")
 

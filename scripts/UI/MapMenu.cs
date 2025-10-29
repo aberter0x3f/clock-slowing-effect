@@ -1,12 +1,12 @@
-// ./scripts/UI/MapMenu.cs
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
+namespace UI;
+
 [GlobalClass]
-public partial class MapMenu : Control {
+public partial class MapMenu : Control, IMenuPanel {
   [Export(PropertyHint.File, "*.tscn")]
   public string CombatScenePath { get; set; }
 
@@ -20,7 +20,7 @@ public partial class MapMenu : Control {
   private Label _levelScoreLabel;
   private Control _mapContainer;
 
-  private Dictionary<Vector2I, TextureButton> _nodeButtons = new();
+  private readonly Dictionary<Vector2I, TextureButton> _nodeButtons = new();
   private Vector2I _selectedPosition;
 
   public override void _Ready() {
@@ -35,7 +35,6 @@ public partial class MapMenu : Control {
 
     _clearedLevelsLabel.Text = GameManager.Instance.LevelsCleared.ToString();
     GenerateMapView();
-    UpdateSelection();
   }
 
   private void GenerateMapView() {
@@ -92,6 +91,8 @@ public partial class MapMenu : Control {
   }
 
   public override void _Input(InputEvent @event) {
+    if (!Visible) return;
+
     if (_nodeButtons.Count == 0) return;
 
     Vector2I direction = Vector2I.Zero;
@@ -141,6 +142,8 @@ public partial class MapMenu : Control {
   }
 
   private void UpdateSelection() {
+    if (!_nodeButtons.ContainsKey(_selectedPosition)) return;
+
     _nodeButtons[_selectedPosition].GrabFocus();
     switch (GameManager.Instance.GameMap.Nodes[_selectedPosition].Score) {
       case HexMap.ClearScore.NotCleared:
@@ -175,5 +178,13 @@ public partial class MapMenu : Control {
       // 可选：在这里添加一个音效或视觉提示，表示该节点不可进入
       GD.Print($"Node {mapPosition} is not accessible.");
     }
+  }
+
+  /// <summary>
+  /// 实现 IMenuPanel 接口的方法．
+  /// </summary>
+  public void GrabInitialFocus() {
+    // 当此面板变为可见时，确保正确的节点获得焦点．
+    UpdateSelection();
   }
 }

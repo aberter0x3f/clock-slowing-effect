@@ -9,11 +9,11 @@ public partial class PlayerBaseStats : Resource {
   [Export]
   public float SlowMovementSpeedScale { get; set; } = 0.45f;
   [Export]
-  public float ShootCooldown { get; set; } = 0.03f;
+  public float ShootCooldown { get; set; } = 0.05f;
   [Export]
-  public float BulletSpreadNormal { get; set; } = float.Pi / 24.0f;
+  public float BulletSpreadNormal { get; set; } = 0.13f; // PI / 24
   [Export]
-  public float BulletSpreadSlow { get; set; } = float.Pi / 60.0f;
+  public float BulletSpreadSlow { get; set; } = 0.05236f; // PI / 60
   [Export]
   public float BulletDamage { get; set; } = 0.5f;
   [Export]

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 // 定义强化的类型，便于管理和扩展
@@ -16,6 +17,12 @@ public enum UpgradeType {
 
 [GlobalClass]
 public partial class Upgrade : Resource {
+  public static readonly Dictionary<int, Color> LevelColors = new Dictionary<int, Color> {
+    { 1, new Color("a0a0a0")}, // 灰色
+    { 2, new Color("608ee6")}, // 蓝色
+    { 3, new Color("e6b760")}, // 橙色
+  };
+
   [Export]
   public UpgradeType Type { get; set; }
 

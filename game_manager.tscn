@@ -6,8 +6,7 @@
 
 [sub_resource type="Resource" id="Resource_d5upp"]
 script = ExtResource("3_o2178")
-BulletDamage = 999.0
-MaxAmmo = 999.0
+GrazeRadius = 50.0
 metadata/_custom_type_script = "uid://btsh8o314e538"
 
 [node name="GameManager" type="Node"]

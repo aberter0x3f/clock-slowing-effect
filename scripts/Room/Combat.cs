@@ -1,6 +1,7 @@
 using System.Linq;
 using Godot;
 using Rewind;
+using UI;
 
 namespace Room;
 
@@ -27,7 +28,7 @@ public partial class Combat : Node {
   public PackedScene UpgradeMenuScene { get; set; }
 
   [Export(PropertyHint.File, "*.tscn")]
-  public string MapMenuScenePath { get; set; }
+  public string InterLevelMenuScenePath { get; set; }
 
   [Export(PropertyHint.File, "*.tscn")]
   public string TitleScenePath { get; set; }
@@ -103,18 +104,24 @@ public partial class Combat : Node {
 
     // 根据分数决定奖励
     int picks = 0;
-    int maxLevel = 0;
+    int minLevel = 1;
+    int maxLevel = 1;
     switch (score) {
-      case HexMap.ClearScore.NoMiss:
+      case HexMap.ClearScore.StandardClear:
         picks = 1;
         maxLevel = 1;
         break;
-      case HexMap.ClearScore.NoMissNoSkill:
+      case HexMap.ClearScore.NoMiss:
         picks = 1;
+        maxLevel = 2;
+        break;
+      case HexMap.ClearScore.NoMissNoSkill:
+        picks = 2;
         maxLevel = 2;
         break;
       case HexMap.ClearScore.Perfect:
         picks = 2;
+        minLevel = 2;
         maxLevel = 2;
         break;
     }
@@ -125,11 +132,11 @@ public partial class Combat : Node {
       GD.Print("Congratulations! Run completed. Returning to title screen.");
       GetTree().ChangeSceneToFile(TitleScenePath);
     } else if (picks > 0 && UpgradeMenuScene != null) {
-      var upgradeMenu = UpgradeMenuScene.Instantiate<UpgradeMenu>();
+      var upgradeMenu = UpgradeMenuScene.Instantiate<UpgradeSelectionMenu>();
       AddChild(upgradeMenu);
       upgradeMenu.UpgradeSelectionFinished += OnUpgradeSelectionFinished;
       // 传入本关专用的 RNG，以确保重玩时强化选项不变
-      upgradeMenu.StartUpgradeSelection(picks, 1, maxLevel, _upgradeRng);
+      upgradeMenu.StartUpgradeSelection(picks, minLevel, maxLevel, _upgradeRng);
     } else {
       // 没有奖励，直接切换场景
       OnUpgradeSelectionFinished();
@@ -137,10 +144,10 @@ public partial class Combat : Node {
   }
 
   /// <summary>
-  /// 当强化选择结束后，切换到地图菜单．
+  /// 当强化选择结束后，切换到关间菜单．
   /// </summary>
   private void OnUpgradeSelectionFinished() {
-    GetTree().ChangeSceneToFile(MapMenuScenePath);
+    GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
   }
 
   private void OnPlayerDiedPermanently() {
@@ -172,6 +179,10 @@ public partial class Combat : Node {
       _spawnedPortal = null;
     }
 
+    _player.ResetState();
+    _rewindManager.ResetHistory();
+    _enemySpawner.ResetSpawner();
+
     foreach (var node in GetTree().GetNodesInGroup("enemies").ToList()) {
       node.QueueFree();
     }
@@ -182,9 +193,6 @@ public partial class Combat : Node {
       node.QueueFree();
     }
 
-    _player.ResetState();
-    _rewindManager.ResetHistory();
-    _enemySpawner.ResetSpawner();
     TimeManager.Instance.SetCurrentGameTime(0.0);
 
     // 使用之前保存的种子重新初始化 RNG，以保证强化选项不变

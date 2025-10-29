@@ -1,5 +1,7 @@
 using Godot;
 
+namespace UI;
+
 public partial class MapMenuNode : TextureButton {
   // 在 Godot 编辑器中暴露这些属性，方便调整
   [Export]

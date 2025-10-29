@@ -39,7 +39,7 @@ public partial class FallingBullet : BaseBullet {
   [Export]
   public float GravitySigma { get; set; } = 100.0f;
   [Export]
-  public float CollisionActivationHeight { get; set; } = 1.0f;
+  public float CollisionActivationHeight { get; set; } = 0.3f;
   [Export]
   public float LifetimeOnGround { get; set; } = 0.5f;
 
@@ -88,7 +88,7 @@ public partial class FallingBullet : BaseBullet {
         UpdateLandingIndicator();
 
         // 检查是否「落地」
-        if (_currentHeight <= CollisionActivationHeight) {
+        if (_currentHeight <= CollisionActivationHeight + GameConstants.GamePlaneY) {
           _currentHeight = 0;
           _currentState = State.Landed;
 

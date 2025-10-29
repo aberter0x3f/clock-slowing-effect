@@ -7,6 +7,7 @@
 [node name="Sprite" type="Sprite3D" parent="."]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 sorting_offset = 80.0
+billboard = 1
 texture_filter = 0
 texture = ExtResource("2_m3i3u")
 region_enabled = true

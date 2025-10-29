@@ -69,7 +69,7 @@ public abstract partial class BaseBullet : RewindableArea2D {
         GameConstants.GamePlaneY,
         GlobalPosition.Y * GameConstants.WorldScaleFactor
       );
-      _visualizer.Rotation = new Vector3(0, 0, -GlobalRotation);
+      _visualizer.Rotation = new Vector3(0, -GlobalRotation, 0);
     }
   }
 

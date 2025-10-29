@@ -1,10 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://mmihcj1vjj6v"]
+[gd_scene load_steps=3 format=3 uid="uid://bfl1nrtfgvq5m"]
 
 [ext_resource type="PackedScene" uid="uid://b8ut676kxyydg" path="res://ui/upgrade_card.tscn" id="1_82rw7"]
-[ext_resource type="Script" uid="uid://ooqlhfcg4t4b" path="res://scripts/UI/UpgradeMenu.cs" id="1_ppotq"]
+[ext_resource type="Script" uid="uid://bgawina76gwxo" path="res://scripts/UI/UpgradeSelectionMenu.cs" id="1_vqtoy"]
 
-[node name="UpgradeMenu" type="CanvasLayer"]
-script = ExtResource("1_ppotq")
+[node name="UpgradeSelectionMenu" type="CanvasLayer"]
+script = ExtResource("1_vqtoy")
 UpgradeCardScene = ExtResource("1_82rw7")
 
 [node name="CenterContainer" type="CenterContainer" parent="."]

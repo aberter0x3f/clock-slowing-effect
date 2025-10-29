@@ -29,6 +29,7 @@ shape = SubResource("CircleShape2D_fkmd6")
 
 [node name="Sprite" type="Sprite3D" parent="Visualizer"]
 sorting_offset = 80.0
+billboard = 1
 texture_filter = 0
 texture = ExtResource("2_5bcpw")
 region_enabled = true

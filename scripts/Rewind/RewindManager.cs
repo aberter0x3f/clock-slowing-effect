@@ -9,10 +9,10 @@ public partial class RewindManager : Node {
   public static RewindManager Instance { get; private set; }
 
   [Export(PropertyHint.Range, "1, 120, 1")]
-  public int RecordFps { get; set; } = 30;
+  public int RecordFps { get; set; } = 60;
 
   [Export(PropertyHint.Range, "1, 120, 1")]
-  public float MaxRecordTime { get; set; } = 60.0f;
+  public float MaxRecordTime { get; set; } = 30.0f;
 
   public bool IsRewinding { get; private set; } = false;
   public bool IsPreviewing { get; private set; } = false;

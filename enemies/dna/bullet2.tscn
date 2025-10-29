@@ -26,6 +26,7 @@ shape = SubResource("RectangleShape2D_oln2u")
 
 [node name="Sprite" type="Sprite3D" parent="Visualizer"]
 sorting_offset = 80.0
+axis = 1
 texture_filter = 0
 texture = ExtResource("2_fjwou")
 region_enabled = true

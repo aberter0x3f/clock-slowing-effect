@@ -29,6 +29,7 @@ shape = SubResource("CircleShape2D_fkmd6")
 [node name="Sprite" type="Sprite3D" parent="Visualizer"]
 transform = Transform3D(-1, 8.742278e-08, 0, -8.742278e-08, -1, 0, 0, 0, 1, -0.05, 0, 0)
 sorting_offset = 80.0
+axis = 1
 texture_filter = 0
 texture = ExtResource("2_o8xv3")
 region_enabled = true

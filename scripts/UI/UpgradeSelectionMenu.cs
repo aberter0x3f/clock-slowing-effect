@@ -1,9 +1,10 @@
-using System;
 using System.Collections.Generic;
 using Godot;
 
+namespace UI;
+
 [GlobalClass]
-public partial class UpgradeMenu : CanvasLayer {
+public partial class UpgradeSelectionMenu : CanvasLayer {
   [Signal]
   public delegate void UpgradeSelectionFinishedEventHandler();
 
@@ -19,10 +20,6 @@ public partial class UpgradeMenu : CanvasLayer {
   private int _minLevel = 1;
   private int _maxLevel = 1;
   private RandomNumberGenerator _rng;
-
-  private static readonly Color Level1Color = new Color("a0a0a0");
-  private static readonly Color Level2Color = new Color("608ee6");
-  private static readonly Color Level3Color = new Color("e6b760");
 
   public override void _Ready() {
     ProcessMode = ProcessModeEnum.Always; // 暂停时也能响应
@@ -89,12 +86,7 @@ public partial class UpgradeMenu : CanvasLayer {
       nameLabel.Text = upgrade.Name;
       descLabel.Text = upgrade.Description;
 
-      var nameColor = upgrade.Level switch {
-        1 => Level1Color,
-        2 => Level2Color,
-        3 => Level3Color,
-        _ => throw new ArgumentOutOfRangeException(nameof(upgrade.Level), upgrade.Level, null)
-      };
+      var nameColor = Upgrade.LevelColors[upgrade.Level];
 
       shortNameLabel.Modulate = nameColor;
       nameLabel.Modulate = nameColor;
