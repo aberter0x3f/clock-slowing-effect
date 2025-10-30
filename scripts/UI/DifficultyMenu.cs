@@ -3,7 +3,6 @@ using Godot;
 
 namespace UI;
 
-[GlobalClass]
 public partial class DifficultyMenu : CanvasLayer { // 继承 CanvasLayer
   [Signal]
   public delegate void DifficultySelectedEventHandler(DifficultySetting difficulty);

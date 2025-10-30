@@ -171,7 +171,6 @@ Level = 3
 Name = "Reload Speed Increase 3"
 ShortName = "Rs₃"
 Description = "Increases reload speed by [color=orange]100%.[/color]"
-Value1 = 1
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_j7k8l"]
@@ -200,7 +199,6 @@ Level = 3
 Name = "Mobile Firearm Specialist 3"
 ShortName = "Mf₃"
 Description = "Increases accuracy by up to [color=orange]100%[/color] at high speed, but decreases it by up to [color=orange]40%[/color] at low speed."
-Value1 = 1
 Value2 = 0.4
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
@@ -259,7 +257,6 @@ Level = 3
 Name = "Grazing Bonus Increase 3"
 ShortName = "Gb₃"
 Description = "Increases the reward gained from grazing bullets by [color=orange]100%.[/color]"
-Value1 = 1
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_k5l6m"]
@@ -288,7 +285,6 @@ Level = 3
 Name = "Adrenaline 3"
 ShortName = "Ad₃"
 Description = "Increases damage by [color=orange](x^2 * 100)%[/color], where x is the ratio of missing health to max health (0 <= x <= 1)."
-Value1 = 1
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [resource]

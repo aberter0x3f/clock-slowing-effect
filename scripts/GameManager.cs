@@ -20,8 +20,13 @@ public partial class GameManager : Node {
   public PlayerBaseStats PlayerBaseStats { get; private set; }
   public PlayerStats PlayerStats { get; set; }
   public float CurrentPlayerHealth { get; set; }
-  public List<Upgrade> AcquiredUpgrades { get; } = new();
-  public List<Upgrade> PendingUpgrades { get; } = new();
+  public HashSet<Upgrade> AcquiredUpgrades { get; } = new();
+  public HashSet<Upgrade> PendingUpgradesAdditions { get; } = new();
+  public HashSet<Upgrade> PendingUpgradesRemovals { get; } = new();
+
+  // 时间债券属性
+  public float CurrentTimeBond { get; set; } // 当前关卡生效的债券
+  public float PendingTimeBond { get; private set; } // 待处理的债券，下一关生效
 
   // 当前关卡表现
   public bool UsedSlowThisLevel { get; set; }
@@ -53,17 +58,22 @@ public partial class GameManager : Node {
   /// </summary>
   public void ResetPlayerStats() {
     AcquiredUpgrades.Clear();
-    PendingUpgrades.Clear();
+    PendingUpgradesAdditions.Clear();
+    PendingUpgradesRemovals.Clear();
     CurrentPlayerHealth = PlayerBaseStats.MaxHealth;
     PlayerStats = new PlayerStats(PlayerBaseStats);
     PlayerStats.RecalculateStats(AcquiredUpgrades, CurrentPlayerHealth);
+    CurrentTimeBond = 0f;
+    PendingTimeBond = 0f;
   }
 
   /// <summary>
   /// 在重开一个关卡时调用．
   /// </summary>
   public void RestartLevel() {
-    PendingUpgrades.Clear();
+    PendingUpgradesAdditions.Clear();
+    PendingUpgradesRemovals.Clear();
+    PendingTimeBond = 0f;
     StartLevel();
   }
 
@@ -74,7 +84,7 @@ public partial class GameManager : Node {
     UsedSlowThisLevel = false;
     UsedSkillThisLevel = false;
     HadMissThisLevel = false;
-    CommitPendingUpgrades();
+    CommitPendingUpgradesAndBonds();
   }
 
   /// <summary>
@@ -88,6 +98,7 @@ public partial class GameManager : Node {
       completedNode.Score = score;
       ++LevelsCleared;
       DifficultyMultiplier *= CurrentDifficulty.PerLevelDifficultyMultiplier;
+      ApplyEndOfLevelBondPenalty(); // 在增加难度后，计算债券利息
       GD.Print($"Level at {SelectedMapPosition} completed. Levels cleared: {LevelsCleared}. New difficulty multiplier: {DifficultyMultiplier:F2}.");
     }
     // 更新玩家当前所在的节点
@@ -98,19 +109,58 @@ public partial class GameManager : Node {
   /// 将一个新强化添加到待定列表．它将在下一关开始时生效．
   /// </summary>
   public void AddUpgrade(Upgrade upgrade) {
-    // 确保强化在已获得和待定列表中都是唯一的
-    if (upgrade == null || AcquiredUpgrades.Contains(upgrade) || PendingUpgrades.Contains(upgrade)) return;
-    PendingUpgrades.Add(upgrade);
+    if (upgrade == null) return;
+    // 如果此强化正等待被移除，则取消移除操作
+    if (PendingUpgradesRemovals.Contains(upgrade)) {
+      PendingUpgradesRemovals.Remove(upgrade);
+      return;
+    }
+    // 确保强化在已获得和待定添加列表中都是唯一的
+    if (AcquiredUpgrades.Contains(upgrade) || PendingUpgradesAdditions.Contains(upgrade)) return;
+    PendingUpgradesAdditions.Add(upgrade);
   }
 
   /// <summary>
-  /// 将所有待定强化正式应用，并重新计算玩家属性．
+  /// 将一个强化添加到待移除列表．
   /// </summary>
-  public void CommitPendingUpgrades() {
-    if (PendingUpgrades.Count == 0) return;
+  public void RemoveUpgrade(Upgrade upgrade) {
+    if (upgrade == null) return;
+    // 如果它是一个在本关卡中刚添加的待定强化，直接从待定添加列表中移除即可
+    if (PendingUpgradesAdditions.Contains(upgrade)) {
+      PendingUpgradesAdditions.Remove(upgrade);
+      return;
+    }
+    // 如果它是一个已获得的强化，且尚未被标记为待移除，则添加到待移除列表
+    if (AcquiredUpgrades.Contains(upgrade) && !PendingUpgradesRemovals.Contains(upgrade)) {
+      PendingUpgradesRemovals.Add(upgrade);
+    }
+  }
 
-    AcquiredUpgrades.AddRange(PendingUpgrades);
-    PendingUpgrades.Clear();
+  /// <summary>
+  /// 添加待处理的时间债券．
+  /// </summary>
+  public void AddPendingTimeBond(float amount) {
+    if (amount > 0) {
+      PendingTimeBond += amount;
+    }
+  }
+
+  /// <summary>
+  /// 将所有待定强化和债券正式应用，并重新计算玩家属性．
+  /// </summary>
+  public void CommitPendingUpgradesAndBonds() {
+    // 应用待定债券
+    if (PendingTimeBond > 0) {
+      CurrentTimeBond += PendingTimeBond;
+      PendingTimeBond = 0;
+    }
+
+    if (PendingUpgradesAdditions.Count == 0 && PendingUpgradesRemovals.Count == 0) return;
+
+    AcquiredUpgrades.UnionWith(PendingUpgradesAdditions);
+    AcquiredUpgrades.ExceptWith(PendingUpgradesRemovals);
+    PendingUpgradesAdditions.Clear();
+    PendingUpgradesRemovals.Clear();
 
     // 立即重新计算属性，特别是血量上限
     PlayerStats.RecalculateStats(AcquiredUpgrades, CurrentPlayerHealth);
@@ -119,15 +169,36 @@ public partial class GameManager : Node {
   }
 
   /// <summary>
+  /// 在关卡结束时，对未偿还的债券施加惩罚性利率．
+  /// </summary>
+  private void ApplyEndOfLevelBondPenalty() {
+    if (CurrentTimeBond > 0) {
+      CurrentTimeBond *= CurrentDifficulty.TimeBondInterestRate;
+      GD.Print($"End of level. Unpaid time bond increased to {CurrentTimeBond:F2}.");
+    }
+  }
+
+  /// <summary>
+  /// 获取玩家当前生效的所有强化（已获得 + 待定）．
+  /// </summary>
+  public HashSet<Upgrade> GetCurrentAndPendingUpgrades() {
+    var currentUpgrades = new HashSet<Upgrade>(AcquiredUpgrades);
+    currentUpgrades.UnionWith(PendingUpgradesAdditions);
+    currentUpgrades.ExceptWith(PendingUpgradesRemovals);
+    return currentUpgrades;
+  }
+
+  /// <summary>
   /// 根据规则获取一批可供选择的强化．
   /// </summary>
   public List<Upgrade> GetUpgradeChoices(int minLevel, int maxLevel, int count, RandomNumberGenerator rnd) {
     var availableUpgrades = new List<Upgrade>();
+    var currentlyOwned = GetCurrentAndPendingUpgrades();
 
     // 从高到低遍历等级，填充候选列表
     for (int level = minLevel; level <= maxLevel; ++level) {
       var candidates = UpgradeDb.AllUpgrades
-        .Where(u => u.Level == level && !AcquiredUpgrades.Contains(u) && !PendingUpgrades.Contains(u))
+        .Where(u => u.Level == level && !currentlyOwned.Contains(u))
         .ToList();
       availableUpgrades.AddRange(candidates);
     }
@@ -136,7 +207,7 @@ public partial class GameManager : Node {
     if (availableUpgrades.Count < count) {
       for (int level = minLevel - 1; level >= 1; --level) {
         var candidates = UpgradeDb.AllUpgrades
-          .Where(u => u.Level == level && !AcquiredUpgrades.Contains(u) && !PendingUpgrades.Contains(u))
+          .Where(u => u.Level == level && !currentlyOwned.Contains(u))
           .ToList();
         if (availableUpgrades.Count + candidates.Count <= count) {
           availableUpgrades.AddRange(candidates);

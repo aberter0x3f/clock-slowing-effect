@@ -1,0 +1,119 @@
+[gd_scene load_steps=3 format=3 uid="uid://dlyqg6ebvfkov"]
+
+[ext_resource type="Script" uid="uid://4me6ki738m0e" path="res://scripts/UI/ShopMenu.cs" id="1_6evd7"]
+[ext_resource type="PackedScene" uid="uid://btis8qun0chso" path="res://ui/shop_icon.tscn" id="2_7t64a"]
+
+[node name="ShopMenu" type="CanvasLayer"]
+script = ExtResource("1_6evd7")
+ShopIconScene = ExtResource("2_7t64a")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Shop"
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="PurchasesRemaining" type="VBoxContainer" parent="VBoxContainer/Header"]
+layout_mode = 2
+
+[node name="ValueLabel" type="Label" parent="VBoxContainer/Header/PurchasesRemaining"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "N"
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer/Header/PurchasesRemaining"]
+layout_mode = 2
+text = "Remaining"
+horizontal_alignment = 1
+
+[node name="Main" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/Main"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.3
+
+[node name="Grid" type="GridContainer" parent="VBoxContainer/Main/ScrollContainer"]
+layout_mode = 2
+columns = 4
+
+[node name="ShopIcon" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon2" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon3" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon4" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon5" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon6" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon7" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon8" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon9" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon10" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon11" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon12" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon13" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="ShopIcon14" parent="VBoxContainer/Main/ScrollContainer/Grid" instance=ExtResource("2_7t64a")]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Main"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/Main/VBoxContainer"]
+layout_mode = 2
+text = "Some Upgrade One Two Three Four Five"
+
+[node name="CostLabel" type="Label" parent="VBoxContainer/Main/VBoxContainer"]
+layout_mode = 2
+text = "Cost: 998244353s Time Bond"
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="VBoxContainer/Main/VBoxContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "Long long long long long long long long long long long description"
+fit_content = true
+
+[node name="Footer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="CancelButton" type="Button" parent="VBoxContainer/Footer"]
+layout_mode = 2
+text = "Cancel"

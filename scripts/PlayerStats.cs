@@ -41,13 +41,13 @@ public class PlayerStats {
 
   public PlayerStats(PlayerBaseStats baseStats) {
     BaseStats = baseStats;
-    RecalculateStats(new List<Upgrade>(), BaseStats.MaxHealth);
+    RecalculateStats(new HashSet<Upgrade>(), BaseStats.MaxHealth);
   }
 
   /// <summary>
   /// 根据当前持有的强化列表，重新计算所有玩家属性．
   /// </summary>
-  public void RecalculateStats(List<Upgrade> activeUpgrades, float currentHealth) {
+  public void RecalculateStats(HashSet<Upgrade> activeUpgrades, float currentHealth) {
     // 重置为基础值
     MaxHealth = BaseStats.MaxHealth;
     MovementSpeed = BaseStats.MovementSpeed;

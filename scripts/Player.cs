@@ -12,6 +12,7 @@ public class PlayerState : RewindState {
   public bool IsReloading;
   public float TimeToReloaded;
   public float ShootTimer;
+  // Health 不能回溯，需要在回溯过程中也按照正常速率流失
 }
 
 public partial class Player : CharacterBody2D, IRewindable {
@@ -92,6 +93,23 @@ public partial class Player : CharacterBody2D, IRewindable {
     _hitPointSprite.Play();
 
     RewindManager.Instance.Register(this);
+  }
+
+  /// <summary>
+  /// 增加时间，优先偿还时间债券．
+  /// </summary>
+  /// <returns>一个元组，包含分别用于偿还债券和增加生命的时间量．</returns>
+  public (float appliedToBond, float appliedToHealth) AddTime(float amount) {
+    var gm = GameManager.Instance;
+    float toPayOff = Mathf.Min(amount, gm.CurrentTimeBond);
+    gm.CurrentTimeBond -= toPayOff;
+
+    float remainder = amount - toPayOff;
+    if (remainder > 0) {
+      Health += remainder; // 使用 Health 属性以处理上限
+    }
+
+    return (toPayOff, remainder);
   }
 
   public override void _Process(double delta) {
@@ -354,7 +372,6 @@ public partial class Player : CharacterBody2D, IRewindable {
         _sprite.Play("walk");
         break;
     }
-    _lastAnimationState = _currentAnimationState;
   }
 
   public RewindState CaptureState() {

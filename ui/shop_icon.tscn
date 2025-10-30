@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3 uid="uid://btis8qun0chso"]
+
+[ext_resource type="Script" uid="uid://dy201gtl8c18y" path="res://scripts/UI/ShopIcon.cs" id="1_mw1qb"]
+
+[node name="ShopIcon" type="VBoxContainer"]
+offset_right = 100.0
+offset_bottom = 100.0
+script = ExtResource("1_mw1qb")
+
+[node name="Button" type="Button" parent="."]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+
+[node name="ShortNameLabel" type="Label" parent="Button"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 32
+text = "Upₙ"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CostLabel" type="Label" parent="."]
+layout_mode = 2
+text = "Cost Text"
+horizontal_alignment = 1

@@ -218,7 +218,7 @@ public partial class Drummer : BaseEnemy {
         _jumpStartPosition = GlobalPosition;
         _jumpTargetPosition = targetPos;
         float distance = _jumpStartPosition.DistanceTo(_jumpTargetPosition);
-        _jumpDuration = distance / LungeSpeed;
+        _jumpDuration = float.Max(distance / LungeSpeed, 0.5f);
         _jumpTime = 0f;
         _attackSubState = AttackSubState.Jumping;
         SetCollisionsEnabled(false);

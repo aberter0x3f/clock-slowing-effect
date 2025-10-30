@@ -54,7 +54,7 @@ public partial class Combat : Node {
     _player.GlobalPosition = _playerSpawnPosition;
 
     // 初始化本关卡的随机种子和 RNG
-    _levelSeed = new RandomNumberGenerator().Randi();
+    _levelSeed = ((ulong) GD.Randi() << 32) | (ulong) GD.Randi();
     _upgradeRng = new RandomNumberGenerator();
     _upgradeRng.Seed = _levelSeed;
 
@@ -205,11 +205,13 @@ public partial class Combat : Node {
   private void UpdateUILabelText() {
     if (_player == null || _uiLabel == null) return;
     string ammoText = _player.IsReloading ? $"Reloading: {_player.TimeToReloaded:F1}s" : $"Ammo: {_player.CurrentAmmo} / {GameManager.Instance.PlayerStats.MaxAmmoInt}";
-    var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
     var rewindTimeLeft = _rewindManager.AvailableRewindTime;
+    var timeBondText = $"Time Bond: {GameManager.Instance.CurrentTimeBond:F1}s";
+    var pendingBondText = GameManager.Instance.PendingTimeBond > 0 ? $" (+{GameManager.Instance.PendingTimeBond:F1}s pending)" : "";
+    var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
 
     _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
-                    $"Time Scale: {TimeManager.Instance.TimeScale:F2}\n" +
+                    $"{timeBondText}{pendingBondText}\n" +
                     $"Rewind Left: {rewindTimeLeft:F1}s\n" +
                     $"{ammoText}\n" +
                     $"Bullet object count: {bulletObjectCount}";

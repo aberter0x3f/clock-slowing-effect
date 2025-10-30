@@ -102,7 +102,7 @@ public partial class RewindManager : Node {
     }
 
     if (Input.IsActionPressed("time_slow")) {
-      TimeManager.Instance.TimeScale = 0.333f;
+      TimeManager.Instance.TimeScale = 0.5f;
       if (GameManager.Instance != null) GameManager.Instance.UsedSlowThisLevel = true;
     } else {
       TimeManager.Instance.TimeScale = 1.0f;

@@ -3,7 +3,6 @@ using Godot;
 
 namespace UI;
 
-[GlobalClass]
 public partial class UpgradeSelectionMenu : CanvasLayer {
   [Signal]
   public delegate void UpgradeSelectionFinishedEventHandler();

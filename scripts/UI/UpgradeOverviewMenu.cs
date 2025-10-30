@@ -7,7 +7,6 @@ namespace UI;
 /// <summary>
 /// 强化总览菜单，用于显示玩家已获得和待定的所有强化．
 /// </summary>
-[GlobalClass]
 public partial class UpgradeOverviewMenu : Control, IMenuPanel { // 实现 IMenuPanel 接口
   [Export]
   public PackedScene UpgradeIconScene { get; set; } // 用于网格中每个图标的场景
@@ -36,6 +35,7 @@ public partial class UpgradeOverviewMenu : Control, IMenuPanel { // 实现 IMenu
       icon.QueueFree();
     }
     _icons.Clear();
+
     // 清理旧选项
     foreach (Node child in _grid.GetChildren()) {
       child.QueueFree();
@@ -44,9 +44,8 @@ public partial class UpgradeOverviewMenu : Control, IMenuPanel { // 实现 IMenu
     var gm = GameManager.Instance;
     if (gm == null) return;
 
-    // 填充已获得的强化
-    // 由于触发 UpgradeOverviewMenu 一定是通关之后开始选择下一关，所以 PendingUpgrades 也算是已获得的强化
-    foreach (var upgrade in gm.AcquiredUpgrades.Concat(gm.PendingUpgrades).OrderBy(u => u.Name)) {
+    // 填充玩家当前生效的所有强化
+    foreach (var upgrade in gm.GetCurrentAndPendingUpgrades().OrderBy(u => u.Name)) {
       AddIconToGrid(_grid, upgrade);
     }
 

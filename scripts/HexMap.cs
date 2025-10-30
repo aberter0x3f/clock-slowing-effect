@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 public class HexMap {
@@ -11,9 +12,16 @@ public class HexMap {
     Perfect = 3 // ℕ³
   }
 
+  // 新增：节点类型
+  public enum NodeType {
+    Combat,
+    Shop,
+    Transmuter
+  }
+
   public class MapNode {
     public Vector2I Position { get; } // Axial coordinates (q,r)
-    public bool IsStart { get; set; } = false;
+    public NodeType Type { get; set; } = NodeType.Combat; // 默认为战斗
     public ClearScore Score { get; set; } = ClearScore.NotCleared;
 
     public MapNode(Vector2I position) {
@@ -25,8 +33,8 @@ public class HexMap {
   public Vector2I StartPosition { get; private set; }
   public Vector2I TargetPosition { get; private set; }
 
-  // 方向向量
   /*
+   * 方向向量
    *  2 1
    * 3 X 0
    *  4 5
@@ -64,7 +72,29 @@ public class HexMap {
     StartPosition = new Vector2I(-centerColumn, 0);
     TargetPosition = new Vector2I(centerColumn, 0);
 
-    Nodes[StartPosition].IsStart = true;
+    Nodes[StartPosition].Type = NodeType.Combat;
+    Nodes[TargetPosition].Type = NodeType.Combat;
+
+    // 随机分配特殊房间
+    var potentialSpecialNodes = Nodes.Values
+      .Where(n => n.Position != StartPosition && n.Position != TargetPosition)
+      .ToList();
+    var rnd = new RandomNumberGenerator();
+    rnd.Randomize();
+
+    const int SHOP_COUNT = 2, TRANSMUTER_COUNT = 2;
+
+    for (int i = 0; i < SHOP_COUNT; i++) {
+      int shopIndex = rnd.RandiRange(0, potentialSpecialNodes.Count - 1);
+      potentialSpecialNodes[shopIndex].Type = NodeType.Shop;
+      potentialSpecialNodes.RemoveAt(shopIndex);
+    }
+
+    for (int i = 0; i < TRANSMUTER_COUNT; i++) {
+      int transmuterIndex = rnd.RandiRange(0, potentialSpecialNodes.Count - 1);
+      potentialSpecialNodes[transmuterIndex].Type = NodeType.Transmuter;
+      potentialSpecialNodes.RemoveAt(transmuterIndex);
+    }
   }
 
   public MapNode GetNode(Vector2I position) {

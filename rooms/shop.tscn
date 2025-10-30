@@ -1,0 +1,50 @@
+[gd_scene load_steps=12 format=3 uid="uid://b1oabnpn3oiwj"]
+
+[ext_resource type="Script" uid="uid://dpywvgi4s0v2" path="res://scripts/Room/Shop.cs" id="1_ctc3m"]
+[ext_resource type="PackedScene" uid="uid://da40nomxihqtm" path="res://ui/pause_menu.tscn" id="2_mwi7v"]
+[ext_resource type="PackedScene" uid="uid://c366ntgyj6v6m" path="res://portal.tscn" id="3_h4pvb"]
+[ext_resource type="PackedScene" uid="uid://l8i1kyvcsra6" path="res://shop_device.tscn" id="4_mwi7v"]
+[ext_resource type="PackedScene" uid="uid://dlyqg6ebvfkov" path="res://ui/shop_menu.tscn" id="5_h4pvb"]
+[ext_resource type="Script" uid="uid://d1if7b56ademj" path="res://scripts/MapGenerator.cs" id="6_2idtq"]
+[ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="7_cmayy"]
+[ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="8_wq0iu"]
+[ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="9_pksvi"]
+[ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="10_ivrbv"]
+[ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="11_by0cv"]
+
+[node name="GameRoot" type="Node3D"]
+script = ExtResource("1_ctc3m")
+PauseMenuScene = ExtResource("2_mwi7v")
+PortalScene = ExtResource("3_h4pvb")
+ShopDeviceScene = ExtResource("4_mwi7v")
+ShopMenuScene = ExtResource("5_h4pvb")
+InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_mode = 1
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+offset_right = 40.0
+offset_bottom = 23.0
+metadata/_edit_use_anchors_ = true
+
+[node name="MapGenerator" type="Node" parent="."]
+script = ExtResource("6_2idtq")
+MapWidth = 30
+MapHeight = 20
+ObstacleProbability = 0.0
+ObstacleScene = ExtResource("7_cmayy")
+FloorTileScene1 = ExtResource("8_wq0iu")
+FloorTileScene2 = ExtResource("9_pksvi")
+metadata/_custom_type_script = "uid://d1if7b56ademj"
+
+[node name="RewindManager" type="Node" parent="."]
+script = ExtResource("10_ivrbv")
+metadata/_custom_type_script = "uid://vn61cc2q0j34"
+
+[node name="Player" parent="." instance=ExtResource("11_by0cv")]
+position = Vector2(0, 0.3)

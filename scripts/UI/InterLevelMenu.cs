@@ -3,7 +3,6 @@ using Godot;
 
 namespace UI;
 
-[GlobalClass]
 public partial class InterLevelMenu : Control {
   private readonly List<Control> _menuPanels = new();
   private int _currentPanelIndex = 0;

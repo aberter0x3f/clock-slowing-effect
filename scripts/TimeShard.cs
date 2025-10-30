@@ -7,6 +7,8 @@ public class TimeShardState : RewindState {
   public float CurrentHeight;
   public float LifetimeTimer;
   public float AnimationTimer;
+  public float TimeAppliedToHealth;
+  public float TimeAppliedToBond;
 }
 
 /// <summary>
@@ -30,6 +32,8 @@ public partial class TimeShard : RewindableArea2D {
   private float _currentHeight;
   private float _lifetimeTimer;
   private float _animationTimer = 0.0f; // 用于手动控制生成动画的计时器
+  private float _timeAppliedToHealth;
+  private float _timeAppliedToBond;
 
   [ExportGroup("Shard Properties")]
   [Export]
@@ -152,7 +156,7 @@ public partial class TimeShard : RewindableArea2D {
 
   private void OnBodyEntered(Node2D body) {
     if (IsDestroyed) return;
-    // Spawning 和 Idle 状态都可以被拾取 ---
+    // Spawning 和 Idle 状态都可以被拾取
     if ((_currentState == State.Spawning || _currentState == State.Idle) && body is Player player) {
       CollectByPlayer(player);
     }
@@ -161,7 +165,10 @@ public partial class TimeShard : RewindableArea2D {
   private void CollectByPlayer(Player player) {
     if (_currentState == State.Collected) return;
 
-    player.Health += TimeBonus;
+    var (appliedToBond, appliedToHealth) = player.AddTime(TimeBonus);
+    _timeAppliedToBond = appliedToBond;
+    _timeAppliedToHealth = appliedToHealth;
+
     _currentState = State.Collected;
     _targetPlayer = player;
     _collisionShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
@@ -195,7 +202,9 @@ public partial class TimeShard : RewindableArea2D {
       GlobalPosition = this.GlobalPosition,
       CurrentHeight = this._currentHeight,
       LifetimeTimer = this._lifetimeTimer,
-      AnimationTimer = this._animationTimer
+      AnimationTimer = this._animationTimer,
+      TimeAppliedToBond = this._timeAppliedToBond,
+      TimeAppliedToHealth = this._timeAppliedToHealth
     };
   }
 
@@ -206,7 +215,9 @@ public partial class TimeShard : RewindableArea2D {
     bool isNowIdleOrSpawning = (tss.CurrentState == State.Idle || tss.CurrentState == State.Spawning);
 
     if (wasCollected && isNowIdleOrSpawning) {
-      _targetPlayer.Health -= TimeBonus;
+      // 精确地撤销时间和债券的增加
+      _targetPlayer.Health -= tss.TimeAppliedToHealth;
+      GameManager.Instance.CurrentTimeBond += tss.TimeAppliedToBond;
       _targetPlayer = null;
     }
 
@@ -215,6 +226,8 @@ public partial class TimeShard : RewindableArea2D {
     this._currentHeight = tss.CurrentHeight;
     this._lifetimeTimer = tss.LifetimeTimer;
     this._animationTimer = tss.AnimationTimer;
+    this._timeAppliedToBond = tss.TimeAppliedToBond;
+    this._timeAppliedToHealth = tss.TimeAppliedToHealth;
 
     _collisionShape.Disabled = _currentState == State.Collected;
   }

@@ -17,6 +17,9 @@ public partial class DifficultySetting : Resource {
   [Export(PropertyHint.Range, "1.0, 2.0, 0.01")]
   public float PerLevelDifficultyMultiplier { get; set; } = 1.05f;
 
+  [Export(PropertyHint.Range, "1.0, 2.0, 0.01")]
+  public float TimeBondInterestRate { get; set; } = 1.2f;
+
   [Export]
   public int EnemyRank { get; set; } = 5;
 }

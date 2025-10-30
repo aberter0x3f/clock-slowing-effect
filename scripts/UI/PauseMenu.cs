@@ -3,7 +3,6 @@ using Godot;
 
 namespace UI;
 
-[GlobalClass]
 public partial class PauseMenu : CanvasLayer {
   [Signal]
   public delegate void RestartRequestedEventHandler();

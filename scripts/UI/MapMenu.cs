@@ -5,14 +5,18 @@ using Godot;
 
 namespace UI;
 
-[GlobalClass]
 public partial class MapMenu : Control, IMenuPanel {
+  [ExportGroup("Scene Paths")]
   [Export(PropertyHint.File, "*.tscn")]
   public string CombatScenePath { get; set; }
+  [Export(PropertyHint.File, "*.tscn")]
+  public string ShopScenePath { get; set; }
+  [Export(PropertyHint.File, "*.tscn")]
+  public string TransmuterScenePath { get; set; }
 
+  [ExportGroup("UI Configuration")]
   [Export]
   public PackedScene MapMenuNodeScene { get; set; } // 一个代表地图节点的场景
-
   [Export]
   public float HexagonSize { get; set; } = 50f; // 六边形的大小，用于计算位置
 
@@ -54,7 +58,13 @@ public partial class MapMenu : Control, IMenuPanel {
       _mapContainer.AddChild(mapNode);
       var label = mapNode.GetNode<Label>("CenterContainer/Label");
 
-      label.Text = "C";
+      // 根据节点类型设置标签
+      label.Text = nodeData.Type switch {
+        HexMap.NodeType.Combat => "C",
+        HexMap.NodeType.Shop => "S",
+        HexMap.NodeType.Transmuter => "T",
+        _ => throw new ArgumentException("Invalid node type")
+      };
 
       // 根据节点状态设置图标外观
       if (gm.PlayerMapPosition.HasValue && pos == gm.PlayerMapPosition.Value) {
@@ -95,6 +105,7 @@ public partial class MapMenu : Control, IMenuPanel {
 
     if (_nodeButtons.Count == 0) return;
 
+    // 沿着六边形网格的 axial coordinates 移动，可以证明这种移动方式一定可以到达地图上的任意位置
     Vector2I direction = Vector2I.Zero;
     if (@event.IsActionPressed("ui_right")) direction = Vector2I.Right;
     else if (@event.IsActionPressed("ui_left")) direction = Vector2I.Left;
@@ -119,26 +130,6 @@ public partial class MapMenu : Control, IMenuPanel {
       UpdateSelection();
       return;
     }
-
-    // 如果直接移动失败，则执行循环逻辑
-    if (direction.X != 0) { // 水平移动
-      var rowNodes = _nodeButtons.Keys
-        .Where(p => p.Y == _selectedPosition.Y)
-        .OrderBy(p => p.X)
-        .ToList();
-      if (rowNodes.Count > 1) {
-        _selectedPosition = (direction.X > 0) ? rowNodes.First() : rowNodes.Last();
-      }
-    } else if (direction.Y != 0) { // 垂直移动
-      var colNodes = _nodeButtons.Keys
-        .Where(p => p.X == _selectedPosition.X)
-        .OrderBy(p => p.Y)
-        .ToList();
-      if (colNodes.Count > 1) {
-        _selectedPosition = (direction.Y > 0) ? colNodes.First() : colNodes.Last();
-      }
-    }
-    UpdateSelection();
   }
 
   private void UpdateSelection() {
@@ -170,10 +161,24 @@ public partial class MapMenu : Control, IMenuPanel {
     var gm = GameManager.Instance;
     var accessibleNodes = new HashSet<Vector2I>(gm.GetAccessibleNodes());
 
-    // 只有当选中的节点是可访问的时，才加载战斗场景
+    // 只有当选中的节点是可访问的时，才加载场景
     if (accessibleNodes.Contains(mapPosition)) {
       gm.SelectedMapPosition = mapPosition;
-      GetTree().ChangeSceneToFile(CombatScenePath);
+      var nodeType = gm.GameMap.GetNode(mapPosition).Type;
+
+      string scenePath = nodeType switch {
+        HexMap.NodeType.Combat => CombatScenePath,
+        HexMap.NodeType.Shop => ShopScenePath,
+        HexMap.NodeType.Transmuter => TransmuterScenePath,
+        _ => throw new ArgumentOutOfRangeException(nameof(nodeType), $"Unsupported node type: {nodeType}")
+      };
+
+      if (string.IsNullOrEmpty(scenePath)) {
+        GD.PrintErr($"Scene path for node type '{nodeType}' is not set in MapMenu.");
+        return;
+      }
+
+      GetTree().ChangeSceneToFile(scenePath);
     } else {
       // 可选：在这里添加一个音效或视觉提示，表示该节点不可进入
       GD.Print($"Node {mapPosition} is not accessible.");
