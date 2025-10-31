@@ -155,7 +155,7 @@ public partial class TimeShard : RewindableArea2D {
   }
 
   private void OnBodyEntered(Node2D body) {
-    if (IsDestroyed) return;
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
     // Spawning 和 Idle 状态都可以被拾取
     if ((_currentState == State.Spawning || _currentState == State.Idle) && body is Player player) {
       CollectByPlayer(player);
@@ -165,7 +165,7 @@ public partial class TimeShard : RewindableArea2D {
   private void CollectByPlayer(Player player) {
     if (_currentState == State.Collected) return;
 
-    var (appliedToBond, appliedToHealth) = player.AddTime(TimeBonus);
+    var (appliedToBond, appliedToHealth) = GameManager.Instance.AddTime(TimeBonus);
     _timeAppliedToBond = appliedToBond;
     _timeAppliedToHealth = appliedToHealth;
 
@@ -215,9 +215,10 @@ public partial class TimeShard : RewindableArea2D {
     bool isNowIdleOrSpawning = (tss.CurrentState == State.Idle || tss.CurrentState == State.Spawning);
 
     if (wasCollected && isNowIdleOrSpawning) {
+      var gm = GameManager.Instance;
       // 精确地撤销时间和债券的增加
-      _targetPlayer.Health -= tss.TimeAppliedToHealth;
-      GameManager.Instance.CurrentTimeBond += tss.TimeAppliedToBond;
+      gm.CurrentPlayerHealth -= _timeAppliedToHealth;
+      gm.TimeBond += _timeAppliedToBond;
       _targetPlayer = null;
     }
 

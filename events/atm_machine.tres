@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="ATMMachineEvent" load_steps=2 format=3 uid="uid://dn8mfwbqq43fe"]
+
+[ext_resource type="Script" uid="uid://bkm3lh76m8ro8" path="res://scripts/Event/ATMMachineEvent.cs" id="1_dg438"]
+
+[resource]
+script = ExtResource("1_dg438")
+metadata/_custom_type_script = "uid://bkm3lh76m8ro8"

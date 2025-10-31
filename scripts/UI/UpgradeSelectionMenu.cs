@@ -4,26 +4,37 @@ using Godot;
 namespace UI;
 
 public partial class UpgradeSelectionMenu : CanvasLayer {
+  public enum Mode {
+    Gain,
+    Lose
+  }
+
   [Signal]
   public delegate void UpgradeSelectionFinishedEventHandler();
 
   [Export]
   public PackedScene UpgradeCardScene { get; set; } // 用于显示单个强化选项的场景
 
+  private Panel _panel;
+  private Label _titleLabel;
   private HBoxContainer _cardContainer;
   private ConfirmationDialog _skipConfirmationDialog;
   private readonly List<Button> _cards = new();
   private readonly List<Upgrade> _currentChoices = new();
   private int _selectedIndex = 0;
+  private Mode _currentMode = Mode.Gain;
   private int _picksRemaining = 0;
-  private int _minLevel = 1;
-  private int _maxLevel = 1;
+  private int _minLevel;
+  private int _maxLevel;
+  private int _choiceCount;
   private RandomNumberGenerator _rng;
 
   public override void _Ready() {
     ProcessMode = ProcessModeEnum.Always; // 暂停时也能响应
 
-    _cardContainer = GetNode<HBoxContainer>("CenterContainer/VBoxContainer/ScrollContainer/UpgradeCardContainer");
+    _panel = GetNode<Panel>("Panel");
+    _titleLabel = _panel.GetNode<Label>("CenterContainer/VBoxContainer/TitleLabel");
+    _cardContainer = _panel.GetNode<HBoxContainer>("CenterContainer/VBoxContainer/ScrollContainer/UpgradeCardContainer");
     _skipConfirmationDialog = GetNode<ConfirmationDialog>("SkipConfirmationDialog");
     _skipConfirmationDialog.Confirmed += OnSkipConfirmed;
 
@@ -37,11 +48,28 @@ public partial class UpgradeSelectionMenu : CanvasLayer {
   /// <param name="minLevel">可供选择的强化最低等级．</param>
   /// <param name="maxLevel">可供选择的强化最高等级．</param>
   /// <param name="rng">用于随机选择的随机数生成器．</param>
-  public void StartUpgradeSelection(int picks, int minLevel, int maxLevel, RandomNumberGenerator rng) {
+  public void StartUpgradeSelection(
+      Mode mode,
+      int picks,
+      int minLevel,
+      int maxLevel,
+      int choiceCount,
+      RandomNumberGenerator rng) {
+    _currentMode = mode;
     _picksRemaining = picks;
     _minLevel = minLevel;
     _maxLevel = maxLevel;
+    _choiceCount = choiceCount;
     _rng = rng;
+
+    if (_currentMode == Mode.Gain) {
+      _titleLabel.Text = "Select an Upgrade";
+      _skipConfirmationDialog.DialogText = "Are you sure you want to skip this upgrade choice?";
+    } else {
+      _titleLabel.Text = "Choose an Upgrade to discard";
+      _panel.SelfModulate = Colors.Red;
+    }
+
     GetTree().Paused = true;
     ShowNextChoice();
   }
@@ -61,8 +89,14 @@ public partial class UpgradeSelectionMenu : CanvasLayer {
     _cards.Clear();
     _currentChoices.Clear();
 
-    // 从 GameManager 获取选项，传入本关专用的 RNG
-    var choices = GameManager.Instance.GetUpgradeChoices(_minLevel, _maxLevel, 3, _rng);
+    List<Upgrade> choices;
+    if (_currentMode == Mode.Gain) {
+      // 从 GameManager 获取选项，传入本关专用的 RNG
+      choices = GameManager.Instance.GetUpgradeToGain(_minLevel, _maxLevel, _choiceCount, _rng);
+    } else {
+      // 获取要丢弃的选项
+      choices = GameManager.Instance.GetUpgradesToLose(_minLevel, _maxLevel, _choiceCount, _rng);
+    }
     _currentChoices.AddRange(choices);
 
     if (_currentChoices.Count == 0) {
@@ -113,7 +147,11 @@ public partial class UpgradeSelectionMenu : CanvasLayer {
     } else if (@event.IsActionPressed("ui_accept")) {
       OnCardSelected(_selectedIndex);
     } else if (@event.IsActionPressed("ui_cancel")) {
-      _skipConfirmationDialog.PopupCentered();
+      if (_currentMode == Mode.Gain) {
+        _skipConfirmationDialog.PopupCentered();
+      } else {
+        // 失去模式下不允许跳过
+      }
     }
   }
 
@@ -126,15 +164,19 @@ public partial class UpgradeSelectionMenu : CanvasLayer {
   private void OnCardSelected(int index) {
     if (index < 0 || index >= _currentChoices.Count) return;
 
-    var selectedUpgrade = _currentChoices[index];
-    GameManager.Instance.AddUpgrade(selectedUpgrade);
-    GD.Print($"Upgrade selected: {selectedUpgrade.Name}");
+    if (_currentMode == Mode.Gain) {
+      var selectedUpgrade = _currentChoices[index];
+      GameManager.Instance.AddUpgrade(selectedUpgrade);
+    } else {
+      var discardedUpgrade = _currentChoices[index];
+      GameManager.Instance.RemoveUpgrade(discardedUpgrade);
+    }
 
     ShowNextChoice();
   }
 
   private void OnSkipConfirmed() {
-    GD.Print("Upgrade choice skipped.");
+    if (_currentMode == Mode.Lose) return;
     ShowNextChoice();
   }
 

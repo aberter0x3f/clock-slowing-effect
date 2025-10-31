@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="AhaStuffedToyEvent" load_steps=2 format=3 uid="uid://c3l74pxsuanrb"]
+
+[ext_resource type="Script" uid="uid://6kso3j3lsa03" path="res://scripts/Event/AhaStuffedToyEvent.cs" id="1_uifp1"]
+
+[resource]
+script = ExtResource("1_uifp1")
+metadata/_custom_type_script = "uid://6kso3j3lsa03"

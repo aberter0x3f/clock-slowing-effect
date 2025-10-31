@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="RobotSalesTerminalEvent" load_steps=2 format=3 uid="uid://d4lvgsve0mgio"]
+
+[ext_resource type="Script" uid="uid://osrf36bte4xr" path="res://scripts/Event/RobotSalesTerminalEvent.cs" id="1_kxgrt"]
+
+[resource]
+script = ExtResource("1_kxgrt")
+metadata/_custom_type_script = "uid://osrf36bte4xr"

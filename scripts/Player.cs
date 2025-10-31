@@ -40,6 +40,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   private readonly List<IInteractable> _nearbyInteractables = new();
   private IInteractable _closestInteractable = null;
   private float _beginningHealth;
+  private float _beginningTimeBond;
 
   private PlayerStats Stats => GameManager.Instance.PlayerStats;
 
@@ -86,6 +87,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
 
     _beginningHealth = Health;
+    _beginningTimeBond = GameManager.Instance.TimeBond;
 
     ResetState();
 
@@ -93,23 +95,6 @@ public partial class Player : CharacterBody2D, IRewindable {
     _hitPointSprite.Play();
 
     RewindManager.Instance.Register(this);
-  }
-
-  /// <summary>
-  /// 增加时间，优先偿还时间债券．
-  /// </summary>
-  /// <returns>一个元组，包含分别用于偿还债券和增加生命的时间量．</returns>
-  public (float appliedToBond, float appliedToHealth) AddTime(float amount) {
-    var gm = GameManager.Instance;
-    float toPayOff = Mathf.Min(amount, gm.CurrentTimeBond);
-    gm.CurrentTimeBond -= toPayOff;
-
-    float remainder = amount - toPayOff;
-    if (remainder > 0) {
-      Health += remainder; // 使用 Health 属性以处理上限
-    }
-
-    return (toPayOff, remainder);
   }
 
   public override void _Process(double delta) {
@@ -333,6 +318,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     GlobalPosition = SpawnPosition;
     Velocity = Vector2.Zero;
     Health = _beginningHealth;
+    GameManager.Instance.TimeBond = _beginningTimeBond;
     Stats.ApplyDynamicBonuses(Health);
     (_grazeAreaShape.Shape as CircleShape2D).Radius = Stats.GrazeRadius;
     IsReloading = false;

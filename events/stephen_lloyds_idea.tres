@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="StephenLloydsIdeaEvent" load_steps=2 format=3 uid="uid://ky447xerj24x"]
+
+[ext_resource type="Script" uid="uid://b7k50utf30qax" path="res://scripts/Event/StephenLloydsIdeaEvent.cs" id="1_yoex7"]
+
+[resource]
+script = ExtResource("1_yoex7")
+metadata/_custom_type_script = "uid://b7k50utf30qax"

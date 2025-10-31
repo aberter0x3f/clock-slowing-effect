@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="CheatCodeEvent" load_steps=2 format=3 uid="uid://dp0fcl1bugelh"]
+
+[ext_resource type="Script" uid="uid://da52s8y1glpyv" path="res://scripts/Event/CheatCodeEvent.cs" id="1_qigaa"]
+
+[resource]
+script = ExtResource("1_qigaa")
+metadata/_custom_type_script = "uid://da52s8y1glpyv"

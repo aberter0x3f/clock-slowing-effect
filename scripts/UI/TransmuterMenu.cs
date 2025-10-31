@@ -26,13 +26,13 @@ public partial class TransmuterMenu : CanvasLayer {
 
   public override void _Ready() {
     ProcessMode = ProcessModeEnum.Always;
-    _actionsRemainingLabel = GetNode<Label>("VBoxContainer/Header/ActionsRemaining/ValueLabel");
-    _grid = GetNode<GridContainer>("VBoxContainer/Main/ScrollContainer/Grid");
-    _previewName = GetNode<Label>("VBoxContainer/Main/VBoxContainer/NameLabel");
-    _previewDescription = GetNode<RichTextLabel>("VBoxContainer/Main/VBoxContainer/DescriptionLabel");
-    _transmuteButton = GetNode<Button>("VBoxContainer/Footer/TransmuteButton");
-    _cancelButton = GetNode<Button>("VBoxContainer/Footer/CancelButton");
-    _infoLabel = GetNode<Label>("VBoxContainer/Footer/InfoLabel");
+    _actionsRemainingLabel = GetNode<Label>("Panel/VBoxContainer/Header/ActionsRemaining/ValueLabel");
+    _grid = GetNode<GridContainer>("Panel/VBoxContainer/Main/ScrollContainer/Grid");
+    _previewName = GetNode<Label>("Panel/VBoxContainer/Main/VBoxContainer/NameLabel");
+    _previewDescription = GetNode<RichTextLabel>("Panel/VBoxContainer/Main/VBoxContainer/DescriptionLabel");
+    _transmuteButton = GetNode<Button>("Panel/VBoxContainer/Footer/TransmuteButton");
+    _cancelButton = GetNode<Button>("Panel/VBoxContainer/Footer/CancelButton");
+    _infoLabel = GetNode<Label>("Panel/VBoxContainer/Footer/InfoLabel");
 
     _transmuteButton.Pressed += OnTransmutePressed;
     _cancelButton.Pressed += OnCancelPressed;

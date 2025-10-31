@@ -30,12 +30,12 @@ public partial class ShopMenu : CanvasLayer {
     ProcessMode = ProcessModeEnum.Always;
 
     // 获取所有 UI 节点的引用
-    _purchasesRemainingLabel = GetNode<Label>("VBoxContainer/Header/PurchasesRemaining/ValueLabel");
-    _grid = GetNode<GridContainer>("VBoxContainer/Main/ScrollContainer/Grid");
-    _previewName = GetNode<Label>("VBoxContainer/Main/VBoxContainer/NameLabel");
-    _previewDescription = GetNode<RichTextLabel>("VBoxContainer/Main/VBoxContainer/DescriptionLabel");
-    _previewCost = GetNode<Label>("VBoxContainer/Main/VBoxContainer/CostLabel");
-    _cancelButton = GetNode<Button>("VBoxContainer/Footer/CancelButton");
+    _purchasesRemainingLabel = GetNode<Label>("Panel/VBoxContainer/Header/PurchasesRemaining/ValueLabel");
+    _grid = GetNode<GridContainer>("Panel/VBoxContainer/Main/ScrollContainer/Grid");
+    _previewName = GetNode<Label>("Panel/VBoxContainer/Main/VBoxContainer/NameLabel");
+    _previewDescription = GetNode<RichTextLabel>("Panel/VBoxContainer/Main/VBoxContainer/DescriptionLabel");
+    _previewCost = GetNode<Label>("Panel/VBoxContainer/Main/VBoxContainer/CostLabel");
+    _cancelButton = GetNode<Button>("Panel/VBoxContainer/Footer/CancelButton");
 
     _cancelButton.Pressed += OnCancelPressed;
 
@@ -152,7 +152,7 @@ public partial class ShopMenu : CanvasLayer {
       currentlyOwned.Contains(_selectedUpgrade)) return;
 
     gm.AddUpgrade(_selectedUpgrade);
-    gm.AddPendingTimeBond(_selectedCost);
+    gm.TimeBond += _selectedCost;
     GD.Print($"Purchased '{_selectedUpgrade.Name}' for {_selectedCost} time bond.");
 
     EmitSignal(SignalName.PurchaseMade, _selectedUpgrade, _selectedCost);

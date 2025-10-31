@@ -13,6 +13,8 @@ public partial class MapMenu : Control, IMenuPanel {
   public string ShopScenePath { get; set; }
   [Export(PropertyHint.File, "*.tscn")]
   public string TransmuterScenePath { get; set; }
+  [Export(PropertyHint.File, "*.tscn")]
+  public string EventScenePath { get; set; }
 
   [ExportGroup("UI Configuration")]
   [Export]
@@ -63,6 +65,7 @@ public partial class MapMenu : Control, IMenuPanel {
         HexMap.NodeType.Combat => "C",
         HexMap.NodeType.Shop => "S",
         HexMap.NodeType.Transmuter => "T",
+        HexMap.NodeType.Event => "E",
         _ => throw new ArgumentException("Invalid node type")
       };
 
@@ -170,6 +173,7 @@ public partial class MapMenu : Control, IMenuPanel {
         HexMap.NodeType.Combat => CombatScenePath,
         HexMap.NodeType.Shop => ShopScenePath,
         HexMap.NodeType.Transmuter => TransmuterScenePath,
+        HexMap.NodeType.Event => EventScenePath,
         _ => throw new ArgumentOutOfRangeException(nameof(nodeType), $"Unsupported node type: {nodeType}")
       };
 

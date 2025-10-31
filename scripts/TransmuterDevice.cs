@@ -63,7 +63,7 @@ public partial class TransmuterDevice : Area2D, IInteractable {
       // 结束后，重新计算玩家属性
       gm.PlayerStats.RecalculateStats(gm.GetCurrentAndPendingUpgrades(), gm.CurrentPlayerHealth);
     };
-    upgradeMenu.StartUpgradeSelection(1, targetLevel, targetLevel, rng);
+    upgradeMenu.StartUpgradeSelection(UpgradeSelectionMenu.Mode.Gain, 1, targetLevel, targetLevel, 3, rng);
   }
 
   private ulong ExpandHash(uint hash) {

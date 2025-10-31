@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="CosmicCrescendoEvent" load_steps=2 format=3 uid="uid://b3ia8q31u34ng"]
+
+[ext_resource type="Script" uid="uid://b5f06v55y5ndd" path="res://scripts/Event/CosmicCrescendoEvent.cs" id="1_rpc52"]
+
+[resource]
+script = ExtResource("1_rpc52")
+metadata/_custom_type_script = "uid://b5f06v55y5ndd"

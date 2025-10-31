@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="RockPaperScissorsEvent" load_steps=2 format=3 uid="uid://c52apo36cfvro"]
+
+[ext_resource type="Script" uid="uid://rjvcy6q70hhc" path="res://scripts/Event/RockPaperScissorsEvent.cs" id="1_bueiv"]
+
+[resource]
+script = ExtResource("1_bueiv")
+metadata/_custom_type_script = "uid://rjvcy6q70hhc"

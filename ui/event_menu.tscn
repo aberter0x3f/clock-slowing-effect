@@ -1,0 +1,77 @@
+[gd_scene load_steps=3 format=3 uid="uid://bsqrnfeldhm7s"]
+
+[ext_resource type="Script" uid="uid://cl303s4arkno" path="res://scripts/UI/EventMenu.cs" id="1_ym1pl"]
+[ext_resource type="PackedScene" uid="uid://wlubg7jrercb" path="res://ui/event_option_button.tscn" id="2_ym1pl"]
+
+[node name="EventMenu" type="CanvasLayer"]
+script = ExtResource("1_ym1pl")
+OptionButtonScene = ExtResource("2_ym1pl")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Event"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="Panel/VBoxContainer/HBoxContainer"]
+clip_contents = false
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "Long long long long long long long long long long long description"
+fit_content = true
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 3
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer/HBoxContainer/MarginContainer"]
+clip_contents = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="OptionsContainer" type="VBoxContainer" parent="Panel/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="EventOptionButton" parent="Panel/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer/OptionsContainer" instance=ExtResource("2_ym1pl")]
+layout_mode = 2
+
+[node name="EventOptionButton2" parent="Panel/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer/OptionsContainer" instance=ExtResource("2_ym1pl")]
+layout_mode = 2
+
+[node name="EventOptionButton3" parent="Panel/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer/OptionsContainer" instance=ExtResource("2_ym1pl")]
+layout_mode = 2
+
+[node name="EventOptionButton4" parent="Panel/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer/OptionsContainer" instance=ExtResource("2_ym1pl")]
+layout_mode = 2
+
+[node name="EventOptionButton5" parent="Panel/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer/OptionsContainer" instance=ExtResource("2_ym1pl")]
+layout_mode = 2
+
+[node name="EventOptionButton6" parent="Panel/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer/OptionsContainer" instance=ExtResource("2_ym1pl")]
+layout_mode = 2

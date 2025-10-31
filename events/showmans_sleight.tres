@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="ShowmansSleightEvent" load_steps=2 format=3 uid="uid://cukw30rf2l0rb"]
+
+[ext_resource type="Script" uid="uid://d3pixk66re3td" path="res://scripts/Event/ShowmansSleightEvent.cs" id="1_7qld1"]
+
+[resource]
+script = ExtResource("1_7qld1")
+metadata/_custom_type_script = "uid://d3pixk66re3td"

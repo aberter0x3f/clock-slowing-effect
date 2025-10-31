@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="WeAreCowboysEvent" load_steps=2 format=3 uid="uid://r5qh2hapxqtn"]
+
+[ext_resource type="Script" uid="uid://c6wynvt20h86g" path="res://scripts/Event/WeAreCowboysEvent.cs" id="1_4420l"]
+
+[resource]
+script = ExtResource("1_4420l")
+metadata/_custom_type_script = "uid://c6wynvt20h86g"

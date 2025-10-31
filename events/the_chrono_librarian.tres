@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="TheChronoLibrarianEvent" load_steps=2 format=3 uid="uid://nlwasguy0882"]
+
+[ext_resource type="Script" uid="uid://bt5wua3oox7qp" path="res://scripts/Event/TheChronoLibrarianEvent.cs" id="1_hxw1x"]
+
+[resource]
+script = ExtResource("1_hxw1x")
+metadata/_custom_type_script = "uid://bt5wua3oox7qp"

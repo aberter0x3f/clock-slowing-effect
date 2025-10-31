@@ -13,6 +13,7 @@ script = ExtResource("1_plyx1")
 CombatScenePath = "uid://wngnk3v6gahp"
 ShopScenePath = "uid://b1oabnpn3oiwj"
 TransmuterScenePath = "uid://dqq1bbxmmdhss"
+EventScenePath = "uid://d1cmekk6b35t1"
 MapMenuNodeScene = ExtResource("2_njk23")
 
 [node name="Label" type="Label" parent="."]

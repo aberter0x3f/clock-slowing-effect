@@ -175,11 +175,10 @@ public partial class Shop : Node {
     if (_player == null || _uiLabel == null) return;
     string ammoText = _player.IsReloading ? $"Reloading: {_player.TimeToReloaded:F1}s" : $"Ammo: {_player.CurrentAmmo} / {GameManager.Instance.PlayerStats.MaxAmmoInt}";
     var rewindTimeLeft = _rewindManager.AvailableRewindTime;
-    var timeBondText = $"Time Bond: {GameManager.Instance.CurrentTimeBond:F1}s";
-    var pendingBondText = GameManager.Instance.PendingTimeBond > 0 ? $" (+{GameManager.Instance.PendingTimeBond:F1}s pending)" : "";
+    var timeBondText = $"Time Bond: {GameManager.Instance.TimeBond:F1}s";
 
     _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
-                    $"{timeBondText}{pendingBondText}\n" +
+                    $"{timeBondText}\n" +
                     $"Rewind Left: {rewindTimeLeft:F1}s\n" +
                     $"{ammoText}";
   }

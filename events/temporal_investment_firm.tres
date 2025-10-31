@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="TemporalInvestmentFirmEvent" load_steps=2 format=3 uid="uid://dwqep4nnlx6a0"]
+
+[ext_resource type="Script" uid="uid://daiytufqp6tcf" path="res://scripts/Event/TemporalInvestmentFirmEvent.cs" id="1_k30rk"]
+
+[resource]
+script = ExtResource("1_k30rk")
+metadata/_custom_type_script = "uid://daiytufqp6tcf"

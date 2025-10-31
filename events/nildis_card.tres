@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="NildisCardEvent" load_steps=2 format=3 uid="uid://cr16ht634pfj2"]
+
+[ext_resource type="Script" uid="uid://kda23b6jh5r" path="res://scripts/Event/NildisCardEvent.cs" id="1_ulrvp"]
+
+[resource]
+script = ExtResource("1_ulrvp")
+metadata/_custom_type_script = "uid://kda23b6jh5r"

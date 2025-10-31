@@ -58,6 +58,12 @@ public partial class Combat : Node {
     _upgradeRng = new RandomNumberGenerator();
     _upgradeRng.Seed = _levelSeed;
 
+    // 如果是从事件进入的子战斗，则使用返回场景路径
+    if (GameManager.Instance.InSubCombat) {
+      InterLevelMenuScenePath = GameManager.Instance.ReturnScenePath;
+      GD.Print($"This is a sub-combat. Will return to '{InterLevelMenuScenePath}' upon completion.");
+    }
+
     GameManager.Instance?.StartLevel();
     ConfigureEnemySpawner();
     _enemySpawner.StartSpawning(_mapGenerator, _player);
@@ -69,8 +75,16 @@ public partial class Combat : Node {
       return;
     }
     var gm = GameManager.Instance;
-    _enemySpawner.TotalDifficultyBudget = gm.CurrentDifficulty.InitialTotalDifficulty * gm.DifficultyMultiplier;
-    _enemySpawner.MaxConcurrentDifficulty = gm.CurrentDifficulty.InitialMaxConcurrentDifficulty * gm.DifficultyMultiplier;
+    var difficultyMultiplier = gm.DifficultyMultiplier * gm.SubCombatDifficultyMultiplier;
+    _enemySpawner.TotalDifficultyBudget = gm.CurrentDifficulty.InitialTotalDifficulty * difficultyMultiplier;
+    _enemySpawner.MaxConcurrentDifficulty = gm.CurrentDifficulty.InitialMaxConcurrentDifficulty * difficultyMultiplier;
+
+    // 处理 Tavern 事件的精英怪
+    if (gm.InSubCombat && gm.SubCombatEnemies != null && gm.SubCombatEnemies.Count > 0) {
+      _enemySpawner.EnemyDatabase = gm.SubCombatEnemies;
+      _enemySpawner.TotalDifficultyBudget = Mathf.Max(_enemySpawner.TotalDifficultyBudget, gm.SubCombatEnemies.Sum(e => e.Difficulty));
+      _enemySpawner.MaxConcurrentDifficulty = Mathf.Max(_enemySpawner.MaxConcurrentDifficulty, gm.SubCombatEnemies.Sum(e => e.Difficulty));
+    }
     GD.Print($"Configuring spawner. Total Budget: {_enemySpawner.TotalDifficultyBudget}, Max Concurrent: {_enemySpawner.MaxConcurrentDifficulty}");
   }
 
@@ -100,7 +114,6 @@ public partial class Combat : Node {
   /// 当玩家与传送门交互后，由此方法处理后续逻辑．
   /// </summary>
   private void OnLevelCompleted(HexMap.ClearScore score) {
-    GameManager.Instance.CompleteLevel(score);
 
     // 根据分数决定奖励
     int picks = 0;
@@ -126,7 +139,7 @@ public partial class Combat : Node {
         break;
     }
 
-    bool isTargetNode = GameManager.Instance.SelectedMapPosition == GameManager.Instance.GameMap.TargetPosition;
+    bool isTargetNode = !GameManager.Instance.InSubCombat && GameManager.Instance.SelectedMapPosition == GameManager.Instance.GameMap.TargetPosition;
 
     if (isTargetNode) {
       GD.Print("Congratulations! Run completed. Returning to title screen.");
@@ -134,19 +147,20 @@ public partial class Combat : Node {
     } else if (picks > 0 && UpgradeMenuScene != null) {
       var upgradeMenu = UpgradeMenuScene.Instantiate<UpgradeSelectionMenu>();
       AddChild(upgradeMenu);
-      upgradeMenu.UpgradeSelectionFinished += OnUpgradeSelectionFinished;
+      upgradeMenu.UpgradeSelectionFinished += () => OnUpgradeSelectionFinished(score);
       // 传入本关专用的 RNG，以确保重玩时强化选项不变
-      upgradeMenu.StartUpgradeSelection(picks, minLevel, maxLevel, _upgradeRng);
+      upgradeMenu.StartUpgradeSelection(UpgradeSelectionMenu.Mode.Gain, picks, minLevel, maxLevel, 3, _upgradeRng);
     } else {
       // 没有奖励，直接切换场景
-      OnUpgradeSelectionFinished();
+      OnUpgradeSelectionFinished(score);
     }
   }
 
   /// <summary>
   /// 当强化选择结束后，切换到关间菜单．
   /// </summary>
-  private void OnUpgradeSelectionFinished() {
+  private void OnUpgradeSelectionFinished(HexMap.ClearScore score) {
+    GameManager.Instance.CompleteLevel(score);
     GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
   }
 
@@ -206,12 +220,11 @@ public partial class Combat : Node {
     if (_player == null || _uiLabel == null) return;
     string ammoText = _player.IsReloading ? $"Reloading: {_player.TimeToReloaded:F1}s" : $"Ammo: {_player.CurrentAmmo} / {GameManager.Instance.PlayerStats.MaxAmmoInt}";
     var rewindTimeLeft = _rewindManager.AvailableRewindTime;
-    var timeBondText = $"Time Bond: {GameManager.Instance.CurrentTimeBond:F1}s";
-    var pendingBondText = GameManager.Instance.PendingTimeBond > 0 ? $" (+{GameManager.Instance.PendingTimeBond:F1}s pending)" : "";
+    var timeBondText = $"Time Bond: {GameManager.Instance.TimeBond:F1}s";
     var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
 
     _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
-                    $"{timeBondText}{pendingBondText}\n" +
+                    $"{timeBondText}\n" +
                     $"Rewind Left: {rewindTimeLeft:F1}s\n" +
                     $"{ammoText}\n" +
                     $"Bullet object count: {bulletObjectCount}";

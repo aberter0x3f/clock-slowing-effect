@@ -93,17 +93,6 @@ public partial class EnemySpawner : Node, IRewindable {
     TrySpawnNext();
   }
 
-  private void Shuffle<T>(IList<T> list) {
-    int n = list.Count;
-    while (n > 1) {
-      n--;
-      int k = _rnd.RandiRange(0, n);
-      T value = list[k];
-      list[k] = list[n];
-      list[n] = value;
-    }
-  }
-
   private void GenerateSpawnQueue() {
     _spawnQueue.Clear();
     _currentSpawnIndex = 0;
@@ -137,7 +126,7 @@ public partial class EnemySpawner : Node, IRewindable {
       }
     }
     // shuffle the spawn queue
-    Shuffle(_spawnQueue);
+    _spawnQueue.Shuffle(_rnd);
     GD.Print($"Generated spawn queue with {_spawnQueue.Count} enemies.");
   }
 

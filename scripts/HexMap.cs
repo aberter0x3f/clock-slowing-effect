@@ -12,11 +12,11 @@ public class HexMap {
     Perfect = 3 // ℕ³
   }
 
-  // 新增：节点类型
   public enum NodeType {
     Combat,
     Shop,
-    Transmuter
+    Transmuter,
+    Event,
   }
 
   public class MapNode {
@@ -57,11 +57,11 @@ public class HexMap {
     int totalColumns = rows.Length;
     int centerColumn = totalColumns / 2;
 
-    for (int q = -centerColumn; q <= centerColumn; q++) {
+    for (int q = -centerColumn; q <= centerColumn; ++q) {
       int colIndex = q + centerColumn;
       int rowCount = rows[colIndex];
       int startR = (q >= 0 ? 0 : -q) - centerColumn;
-      for (int i = 0; i < rowCount; i++) {
+      for (int i = 0; i < rowCount; ++i) {
         int r = startR + i;
         var pos = new Vector2I(q, r);
         Nodes.Add(pos, new MapNode(pos));
@@ -79,21 +79,27 @@ public class HexMap {
     var potentialSpecialNodes = Nodes.Values
       .Where(n => n.Position != StartPosition && n.Position != TargetPosition)
       .ToList();
-    var rnd = new RandomNumberGenerator();
-    rnd.Randomize();
 
     const int SHOP_COUNT = 2, TRANSMUTER_COUNT = 2;
 
-    for (int i = 0; i < SHOP_COUNT; i++) {
-      int shopIndex = rnd.RandiRange(0, potentialSpecialNodes.Count - 1);
+    for (int i = 0; i < SHOP_COUNT; ++i) {
+      if (potentialSpecialNodes.Count == 0) break;
+      int shopIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
       potentialSpecialNodes[shopIndex].Type = NodeType.Shop;
       potentialSpecialNodes.RemoveAt(shopIndex);
     }
 
-    for (int i = 0; i < TRANSMUTER_COUNT; i++) {
-      int transmuterIndex = rnd.RandiRange(0, potentialSpecialNodes.Count - 1);
+    for (int i = 0; i < TRANSMUTER_COUNT; ++i) {
+      if (potentialSpecialNodes.Count == 0) break;
+      int transmuterIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
       potentialSpecialNodes[transmuterIndex].Type = NodeType.Transmuter;
       potentialSpecialNodes.RemoveAt(transmuterIndex);
+    }
+    // 剩余的节点一半战斗，一半事件
+    int eventCount = (potentialSpecialNodes.Count + 1) / 2;
+    potentialSpecialNodes.Shuffle(new RandomNumberGenerator());
+    for (int i = 0; i < eventCount; ++i) {
+      potentialSpecialNodes[i].Type = NodeType.Event;
     }
   }
 

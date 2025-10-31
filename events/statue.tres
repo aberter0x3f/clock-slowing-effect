@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="StatueEvent" load_steps=2 format=3 uid="uid://6iaxtavc6xih"]
+
+[ext_resource type="Script" uid="uid://dla5avu68cuw" path="res://scripts/Event/StatueEvent.cs" id="1_3y1sx"]
+
+[resource]
+script = ExtResource("1_3y1sx")
+metadata/_custom_type_script = "uid://dla5avu68cuw"

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="LotteryMachineEvent" load_steps=2 format=3 uid="uid://ca0d5xdl2vsp4"]
+
+[ext_resource type="Script" uid="uid://dph1goywblq4t" path="res://scripts/Event/LotteryMachineEvent.cs" id="1_s4t1e"]
+
+[resource]
+script = ExtResource("1_s4t1e")
+metadata/_custom_type_script = "uid://dph1goywblq4t"

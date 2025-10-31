@@ -20,6 +20,7 @@ shape = SubResource("RectangleShape2D_oxuh6")
 
 [node name="Sprite" type="Sprite3D" parent="Visualizer"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.00056415796, 0)
+axis = 1
 texture_filter = 0
 texture = ExtResource("2_oxuh6")
 region_enabled = true

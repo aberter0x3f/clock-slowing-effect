@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TavernEvent" load_steps=4 format=3 uid="uid://dx66ydggfgef5"]
+
+[ext_resource type="Resource" uid="uid://c32pgymbawkmy" path="res://enemies/drummer.tres" id="1_bui7i"]
+[ext_resource type="Script" uid="uid://qcvs30oju6xg" path="res://scripts/Event/TavernEvent.cs" id="1_knjv1"]
+[ext_resource type="Resource" uid="uid://buj1ymolwiapl" path="res://enemies/violinist.tres" id="2_hlmlo"]
+
+[resource]
+script = ExtResource("1_knjv1")
+EliteEnemies = Array[Object]([ExtResource("1_bui7i"), ExtResource("2_hlmlo")])
+metadata/_custom_type_script = "uid://qcvs30oju6xg"

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="TheCrematorsEvent" load_steps=2 format=3 uid="uid://cpcni7g0gdgmn"]
+
+[ext_resource type="Script" uid="uid://bi8bm7d1c75ag" path="res://scripts/Event/TheCrematorsEvent.cs" id="1_t0w4a"]
+
+[resource]
+script = ExtResource("1_t0w4a")
+metadata/_custom_type_script = "uid://bi8bm7d1c75ag"
