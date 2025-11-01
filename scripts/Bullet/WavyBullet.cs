@@ -18,9 +18,11 @@ public partial class WavyBullet : BaseBullet {
   [Export]
   public bool InvertSine { get; set; } = false; // 用于创建镜像弹道（DNA 的另一条链）
 
-  [ExportGroup("Lifetime")]
+  [ExportGroup("Time")]
   [Export]
   public float MaxLifetime { get; set; } = 10.0f;
+  [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
+  public float TimeScaleSensitivity { get; set; } = 1.0f; // 时间缩放敏感度．0=完全忽略, 1=完全受影响．
 
   private float _timeAlive = 0.0f;
   private Vector2 _initialPosition;
@@ -78,7 +80,8 @@ public partial class WavyBullet : BaseBullet {
   public override void _Process(double delta) {
     base._Process(delta);
 
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
+    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
+    var scaledDelta = (float) delta * effectiveTimeScale;
 
     _timeAlive += scaledDelta;
     if (_timeAlive > MaxLifetime) {

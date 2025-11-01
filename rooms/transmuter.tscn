@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://dqq1bbxmmdhss"]
+[gd_scene load_steps=15 format=3 uid="uid://dqq1bbxmmdhss"]
 
 [ext_resource type="Script" uid="uid://b2xfc8r8hqj4y" path="res://scripts/Room/Transmuter.cs" id="1_n8sg3"]
 [ext_resource type="PackedScene" uid="uid://da40nomxihqtm" path="res://ui/pause_menu.tscn" id="2_n8sg3"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://d1if7b56ademj" path="res://scripts/MapGenerator.cs" id="6_u0hhn"]
 [ext_resource type="PackedScene" uid="uid://bfl1nrtfgvq5m" path="res://ui/upgrade_selection_menu.tscn" id="6_vuv77"]
 [ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="7_8jhj1"]
+[ext_resource type="PackedScene" uid="uid://c6vnywdveemsw" path="res://world_environment.tscn" id="7_ogdo2"]
+[ext_resource type="PackedScene" uid="uid://dynj33onwm4qh" path="res://rewind_label.tscn" id="8_lxp1w"]
 [ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="8_xwl7f"]
 [ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="9_c056d"]
 [ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="10_fic3c"]
@@ -22,6 +24,8 @@ TransmuterMenuScene = ExtResource("5_lxp1w")
 UpgradeSelectionMenuScene = ExtResource("6_vuv77")
 InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
 
+[node name="WorldEnvironment" parent="." instance=ExtResource("7_ogdo2")]
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
 shadow_enabled = true
@@ -33,6 +37,8 @@ directional_shadow_mode = 1
 offset_right = 40.0
 offset_bottom = 23.0
 metadata/_edit_use_anchors_ = true
+
+[node name="RewindLabel" parent="CanvasLayer" instance=ExtResource("8_lxp1w")]
 
 [node name="MapGenerator" type="Node" parent="."]
 script = ExtResource("6_u0hhn")

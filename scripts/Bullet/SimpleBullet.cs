@@ -26,12 +26,14 @@ public partial class SimpleBullet : BaseBullet {
   [Export]
   public float AngularAcceleration { get; set; } = 0.0f; // 角加速度
 
-  [ExportGroup("Lifetime")]
+  [ExportGroup("Time")]
   [Export]
   public float MaxLifetime { get; set; } = 10.0f;
+  [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
+  public float TimeScaleSensitivity { get; set; } = 1.0f; // 时间缩放敏感度．0=完全忽略, 1=完全受影响．
 
   public Vector2 Velocity { get; set; }
-  private float _timeAlive = 0.0f;
+  protected float _timeAlive = 0.0f;
 
   // 用于边界检查的变量
   private Rect2 _despawnBounds;
@@ -80,7 +82,8 @@ public partial class SimpleBullet : BaseBullet {
   public override void _Process(double delta) {
     base._Process(delta);
 
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
+    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
+    var scaledDelta = (float) delta * effectiveTimeScale;
 
     // --- Lifetime Check ---
     _timeAlive += scaledDelta;

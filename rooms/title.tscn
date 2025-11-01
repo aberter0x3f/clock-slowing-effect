@@ -1,11 +1,13 @@
-[gd_scene load_steps=13 format=3 uid="uid://bqtbfjrfe5x52"]
+[gd_scene load_steps=15 format=3 uid="uid://bqtbfjrfe5x52"]
 
 [ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="1_7vrkn"]
 [ext_resource type="Script" uid="uid://bvjdkwu2pid2q" path="res://scripts/Room/Title.cs" id="1_8qtwp"]
 [ext_resource type="Script" uid="uid://d1if7b56ademj" path="res://scripts/MapGenerator.cs" id="1_qe12f"]
 [ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="2_fu7sn"]
 [ext_resource type="PackedScene" uid="uid://br6keneknyhnm" path="res://ui/difficulty_menu.tscn" id="2_npp43"]
+[ext_resource type="PackedScene" uid="uid://c6vnywdveemsw" path="res://world_environment.tscn" id="3_bn480"]
 [ext_resource type="PackedScene" uid="uid://3fjshysy5akb" path="res://title_menu_interactable/start_game.tscn" id="3_nlkkf"]
+[ext_resource type="PackedScene" uid="uid://dynj33onwm4qh" path="res://rewind_label.tscn" id="4_hb045"]
 [ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="4_j5v2v"]
 [ext_resource type="PackedScene" uid="uid://b4na7v3y56t7w" path="res://title_menu_interactable/change_character.tscn" id="4_qe12f"]
 [ext_resource type="PackedScene" uid="uid://cddiolkpjm4i2" path="res://title_menu_interactable/settings.tscn" id="5_8qtwp"]
@@ -18,6 +20,8 @@ script = ExtResource("1_8qtwp")
 DifficultyMenuScene = ExtResource("2_npp43")
 InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
 
+[node name="WorldEnvironment" parent="." instance=ExtResource("3_bn480")]
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
 shadow_enabled = true
@@ -28,6 +32,8 @@ directional_shadow_mode = 1
 [node name="Label" type="Label" parent="CanvasLayer"]
 offset_right = 40.0
 offset_bottom = 23.0
+
+[node name="RewindLabel" parent="CanvasLayer" instance=ExtResource("4_hb045")]
 
 [node name="MapGenerator" type="Node" parent="."]
 script = ExtResource("1_qe12f")

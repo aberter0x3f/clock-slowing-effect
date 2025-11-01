@@ -43,6 +43,10 @@ public partial class FallingBullet : BaseBullet {
   [Export]
   public float LifetimeOnGround { get; set; } = 0.5f;
 
+  [ExportGroup("Time")]
+  [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
+  public float TimeScaleSensitivity { get; set; } = 1.0f; // 时间缩放敏感度．0=完全忽略, 1=完全受影响．
+
   public override void _Ready() {
     base._Ready();
 
@@ -77,7 +81,8 @@ public partial class FallingBullet : BaseBullet {
   public override void _Process(double delta) {
     base._Process(delta);
 
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
+    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
+    var scaledDelta = (float) delta * effectiveTimeScale;
 
     switch (_currentState) {
       case State.Falling:

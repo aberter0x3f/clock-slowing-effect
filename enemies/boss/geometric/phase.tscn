@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://cbuqyyg43op63"]
+
+[ext_resource type="Script" uid="uid://brixx2rnv217f" path="res://scripts/Enemy/Boss/PhaseGeometric.cs" id="1_10jxs"]
+[ext_resource type="PackedScene" uid="uid://7eg4vvpnmfrg" path="res://enemies/boss/geometric/bullet1.tscn" id="2_kcq67"]
+
+[node name="PhaseGeometric" type="Node"]
+script = ExtResource("1_10jxs")
+BulletScene = ExtResource("2_kcq67")

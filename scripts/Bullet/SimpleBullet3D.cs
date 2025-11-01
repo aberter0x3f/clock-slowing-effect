@@ -18,9 +18,7 @@ public partial class SimpleBullet3D : BaseBullet3D {
   [Export]
   public float MaxSpeedXY { get; set; } = -1.0f; // 负数表示无限制
 
-  protected override void UpdatePosition(double delta) {
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
-
+  protected override void UpdatePosition(float scaledDelta) {
     // Update Velocity & Position
     Velocity += Acceleration * scaledDelta;
     if (!Velocity.IsZeroApprox()) {

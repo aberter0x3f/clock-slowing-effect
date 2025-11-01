@@ -40,7 +40,7 @@ public partial class Boss : BaseEnemy {
 
   [ExportGroup("Phase Transition")]
   [Export]
-  public float RestDuration { get; set; } = 3f; // 阶段间的休息时间
+  public float RestDuration { get; set; } = 5f; // 阶段间的休息时间
 
   private int _currentPhaseIndex = 0;
   private BasePhase _activePhaseInstance;
@@ -53,7 +53,7 @@ public partial class Boss : BaseEnemy {
     base._Ready();
     _startPosition = GlobalPosition;
     _collisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
-    _restTimerLeft = RestDuration;
+    _restTimerLeft = RestDuration / 2; // 首次休息时间
 
     SetCollisionEnabled(false);
   }
@@ -109,7 +109,7 @@ public partial class Boss : BaseEnemy {
     ClearAllBullets();
     ClearAllPickups();
     // 将 Boss 移回中心
-    GlobalPosition = _startPosition;
+    SetDeferred(PropertyName.GlobalPosition, _startPosition);
     // 重新开始当前阶段的准备流程
     OnPhaseStarted();
   }

@@ -19,13 +19,6 @@ texture = ExtResource("2_7m1mc")
 region_enabled = true
 region_rect = Rect2(2, 105, 20, 7)
 
-[node name="LandingIndicator1" type="Sprite2D" parent="."]
-visible = false
-scale = Vector2(0.4, 0.4)
-texture = ExtResource("3_7m1mc")
-region_enabled = true
-region_rect = Rect2(386, 98, 20, 20)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_fkmd6")
 

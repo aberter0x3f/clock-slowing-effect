@@ -219,7 +219,7 @@ texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_7ahtn")
 
 [node name="Camera3D" type="Camera3D" parent="Visualizer"]
-transform = Transform3D(1, 0, 0, 0, 0.8660253, 0.49999997, 0, -0.49999997, 0.8660253, 0, 2.5, 3)
+transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 0, 2.5, 3)
 
 [connection signal="area_entered" from="GrazeArea" to="." method="OnGrazeAreaBodyEntered"]
 [connection signal="area_exited" from="GrazeArea" to="." method="OnGrazeAreaBodyExited"]

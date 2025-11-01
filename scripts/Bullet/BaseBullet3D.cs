@@ -29,6 +29,10 @@ public abstract partial class BaseBullet3D : BaseBullet {
   [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
   public float IndicatorMinScale { get; set; } = 0.2f; // 指示器的最小缩放比例．
 
+  [ExportGroup("Time")]
+  [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
+  public float TimeScaleSensitivity { get; set; } = 1.0f; // 时间缩放敏感度．0=完全忽略, 1=完全受影响．
+
   protected float _timeAlive = 0.0f;
   protected Rect2 _despawnBounds;
   protected bool _boundsInitialized = false;
@@ -73,7 +77,7 @@ public abstract partial class BaseBullet3D : BaseBullet {
     }
   }
 
-  protected abstract void UpdatePosition(double delta);
+  protected abstract void UpdatePosition(float scaledDelta);
 
   public override void _Process(double delta) {
     if (RewindManager.Instance.IsPreviewing) {
@@ -84,7 +88,8 @@ public abstract partial class BaseBullet3D : BaseBullet {
     }
     if (RewindManager.Instance.IsRewinding) return;
 
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
+    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
+    var scaledDelta = (float) delta * effectiveTimeScale;
 
     // Lifetime Check
     _timeAlive += scaledDelta;
@@ -93,7 +98,7 @@ public abstract partial class BaseBullet3D : BaseBullet {
       return;
     }
 
-    UpdatePosition(delta);
+    UpdatePosition(scaledDelta);
 
     // 更新 2D 位置以用于碰撞和其他 2D 系统
     this.GlobalPosition = new Vector2(RawPosition.X, RawPosition.Y);
@@ -169,7 +174,7 @@ public abstract partial class BaseBullet3D : BaseBullet {
 
   public override void RestoreState(RewindState state) {
     base.RestoreState(state);
-    if (state is not SimpleBullet3DState b3s) return;
+    if (state is not BaseBullet3DState b3s) return;
     this.RawPosition = b3s.RawPosition;
     this._timeAlive = b3s.TimeAlive;
     // 恢复指示器状态

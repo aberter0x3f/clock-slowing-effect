@@ -62,10 +62,10 @@ public partial class PauseMenu : CanvasLayer {
     } else if (@event.IsActionPressed("ui_accept")) {
       _activeButtons[_selectedIndex].EmitSignal(Button.SignalName.Pressed);
     } else if (@event.IsActionPressed("ui_cancel")) {
-      // 如果是暂停菜单，「取消」意味着「继续」．
-      // 如果是死亡菜单，「取消」意味着「重新开始」（默认选项）．
       if (_continueButton.Visible) {
         OnContinuePressed();
+      } else if (EnablePhaseRestart) {
+        OnRestartFromPhasePressed();
       } else {
         OnRestartPressed();
       }
@@ -84,7 +84,7 @@ public partial class PauseMenu : CanvasLayer {
     _restartFromPhaseButton.Visible = EnablePhaseRestart;
 
     if (isDeathMenu) {
-      _titleLabel.Text = "YOU DIED";
+      _titleLabel.Text = "GAME OVER";
       _continueButton.Visible = false;
       _selectedIndex = 0; // 默认选择「重新开始」
     } else {

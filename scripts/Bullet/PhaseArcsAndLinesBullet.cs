@@ -44,10 +44,7 @@ public partial class PhaseArcsAndLinesBullet : BaseBullet3D {
     _phase4EndTime = _phase3EndTime + SecondaryArcDuration;
   }
 
-  protected override void UpdatePosition(double delta) {
-    // 位置完全由 _timeAlive 决定，以确保回溯的准确性
-    // delta 参数在此处不被使用
-
+  protected override void UpdatePosition(float scaledDelta) {
     Vector2 posInPlane;
     bool useVerticalPlane = true;
 

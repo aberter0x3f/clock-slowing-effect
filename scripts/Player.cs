@@ -42,6 +42,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   private IInteractable _closestInteractable = null;
   private float _beginningHealth;
   private float _beginningTimeBond;
+  private Camera3D _camera;
 
   private PlayerStats Stats => GameManager.Instance.PlayerStats;
 
@@ -64,6 +65,16 @@ public partial class Player : CharacterBody2D, IRewindable {
   [Export]
   public float AutoRewindOnHitDuration { get; set; } = 3.0f;  // 被击中时自动回溯的时长
 
+  [ExportGroup("Camera")]
+  [Export]
+  private Vector3 _normalCameraPosition = new Vector3(0, 2.5f, 3.0f);
+  private Vector3 _normalCameraRotationDegrees = new Vector3(-45f, 0, 0);
+  [Export]
+  private Vector3 _slowCameraPosition = new Vector3(0, 2f, 1.5f);
+  private Vector3 _slowCameraRotationDegrees = new Vector3(-60f, 0, 0);
+  [Export(PropertyHint.Range, "0.1, 20.0, 0.1")]
+  private float _cameraSmoothingSpeed = 10.0f;
+
   public float ShootTimer { get; set; } = 0.0f;
   public int CurrentAmmo { get; private set; }
   public bool IsReloading { get; private set; } = false;
@@ -82,6 +93,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     _interactionArea = GetNode<Area2D>("InteractionArea");
     _interactionArea.AreaEntered += OnInteractionAreaEntered;
     _interactionArea.AreaExited += OnInteractionAreaExited;
+    _camera = _visualizer.GetNode<Camera3D>("Camera3D");
 
     _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
     if (_mapGenerator == null) {
@@ -101,6 +113,10 @@ public partial class Player : CharacterBody2D, IRewindable {
 
   public override void _Process(double delta) {
     if (IsPermanentlyDead) return;
+
+    _timeSlowPressed = Input.IsActionPressed("time_slow");
+
+    UpdateCameraTransform((float) delta);
 
     if (RewindManager.Instance.IsPreviewing) {
       // 在预览时，我们只更新 3D 可视化对象的位置，不做任何逻辑
@@ -134,8 +150,6 @@ public partial class Player : CharacterBody2D, IRewindable {
     FindAndAimTarget();
     HandleMovement();
 
-    _timeSlowPressed = Input.IsActionPressed("time_slow");
-
     if (Input.IsActionPressed("shoot")) {
       if (!IsReloading && CurrentAmmo <= 0) {
         StartReload(); // 没子弹时自动换弹
@@ -149,6 +163,16 @@ public partial class Player : CharacterBody2D, IRewindable {
     UpdateAnimationState();
 
     UpdateVisualizer();
+  }
+
+
+  private void UpdateCameraTransform(float delta) {
+    if (_camera == null) return;
+
+    Vector3 targetPosition = _timeSlowPressed ? _slowCameraPosition : _normalCameraPosition;
+    Vector3 targetRotationDegrees = _timeSlowPressed ? _slowCameraRotationDegrees : _normalCameraRotationDegrees;
+    _camera.Position = _camera.Position.Lerp(targetPosition, _cameraSmoothingSpeed * delta);
+    _camera.RotationDegrees = _camera.RotationDegrees.Lerp(targetRotationDegrees, _cameraSmoothingSpeed * delta);
   }
 
   private void UpdateVisualizer() {

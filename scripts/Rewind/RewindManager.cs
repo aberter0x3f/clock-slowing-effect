@@ -14,16 +14,15 @@ public partial class RewindManager : Node {
   [Export(PropertyHint.Range, "1, 120, 1")]
   public float MaxRecordTime { get; set; } = 15.0f;
 
-  [Export(PropertyHint.Range, "1.0, 10.0, 0.5")]
-  public float PurgeInterval { get; set; } = 2.0f; // 每隔多少秒清理一次对象池
-
   public bool IsRewinding { get; private set; } = false;
   public bool IsPreviewing { get; private set; } = false;
+  public double PreviewRewindTime => IsPreviewing ? _history.Last.Value.Timestamp - _rewindTargetTimestamp : 0;
+  public double AutoRewindRemainingTime => IsPreviewing && IsAutoRewinding ? _rewindTargetTimestamp - _autoRewindCommitTimestamp : 0;
 
   public int TrackedObjectCount => _objectPool.Count;
 
   // 用于自动回溯的状态
-  private bool _isAutoRewinding = false;
+  public bool IsAutoRewinding { get; private set; } = false;
   private double _autoRewindCommitTimestamp;
 
   /// <summary>
@@ -54,7 +53,7 @@ public partial class RewindManager : Node {
   // 高效的引用计数器，用于对象池清理
   private readonly Dictionary<ulong, int> _idReferenceCounts = new();
 
-  private float _recordTimer;
+  private double _recordTimer;
   private double _rewindTargetTimestamp;
   private LinkedListNode<RewindFrame> _currentPreviewNode;
 
@@ -71,12 +70,12 @@ public partial class RewindManager : Node {
       _rewindTargetTimestamp -= delta * TimeManager.Instance.TimeScale;
       ApplyPreview();
 
-      if (_isAutoRewinding && _rewindTargetTimestamp <= _autoRewindCommitTimestamp) {
+      if (IsAutoRewinding && _rewindTargetTimestamp <= _autoRewindCommitTimestamp) {
         CommitRewind();
       }
     } else {
       // 正常记录
-      _recordTimer -= (float) delta;
+      _recordTimer -= delta;
       if (_recordTimer <= 0) {
         RecordFrame();
         _recordTimer = 1.0f / RecordFps;
@@ -109,7 +108,7 @@ public partial class RewindManager : Node {
 
     IsRewinding = false;
     IsPreviewing = false;
-    _isAutoRewinding = false;
+    IsAutoRewinding = false;
     _recordTimer = 1.0f / RecordFps;
   }
 
@@ -127,7 +126,7 @@ public partial class RewindManager : Node {
     }
 
     // 自动回溯期间，禁用玩家手动控制
-    if (!_isAutoRewinding) {
+    if (!IsAutoRewinding) {
       if (Input.IsActionJustPressed("time_rewind")) {
         if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;
         StartRewindPreview();
@@ -151,7 +150,7 @@ public partial class RewindManager : Node {
     GD.Print($"Triggering auto-rewind for {duration} seconds.");
     if (GameManager.Instance != null) GameManager.Instance.HadMissThisLevel = true;
 
-    _isAutoRewinding = true;
+    IsAutoRewinding = true;
     StartRewindPreview(); // 启动预览模式
 
     // 计算回溯预览结束并提交状态的时间点
@@ -307,7 +306,7 @@ public partial class RewindManager : Node {
 
     IsPreviewing = false;
     IsRewinding = false; // 恢复完成
-    _isAutoRewinding = false; // 确保重置自动回溯状态
+    IsAutoRewinding = false; // 确保重置自动回溯状态
   }
 
   private void RestoreFromFrame(RewindFrame frame) {
