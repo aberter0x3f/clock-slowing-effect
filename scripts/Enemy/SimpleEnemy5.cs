@@ -8,19 +8,29 @@ public class SimpleEnemy5State : BaseEnemyState {
   public SimpleEnemy5.State CurrentState;
   public float StateTimer;
   public float ShootTimer;
-  public Vector2 AttackMoveDirection;
+  public Vector2 JumpStartPosition;
+  public Vector2 JumpTargetPosition;
+  public float JumpDuration;
+  public float JumpTime;
+  public float CurrentJumpHeight;
 }
 
 public partial class SimpleEnemy5 : BaseEnemy {
   public enum State {
     RandomWalk,
-    Attacking
+    Jumping
   }
 
   private State _currentState;
   private float _stateTimer; // 当前状态的剩余时间
   private float _shootTimer; // 攻击状态下，距离下次射击的时间
-  private Vector2 _attackMoveDirection; // 攻击状态下的扫射移动方向
+
+  // --- 跳跃状态变量 ---
+  private Vector2 _jumpStartPosition;
+  private Vector2 _jumpTargetPosition;
+  private float _jumpDuration;
+  private float _jumpTime;
+  private float _currentJumpHeight = 0f;
 
   private RandomWalkComponent _randomWalkComponent;
   private readonly RandomNumberGenerator _rnd = new();
@@ -28,16 +38,20 @@ public partial class SimpleEnemy5 : BaseEnemy {
   [ExportGroup("State Durations")]
   [Export(PropertyHint.Range, "0.1, 20.0, 0.1")]
   public float RandomWalkDuration { get; set; } = 4.0f;
-  [Export(PropertyHint.Range, "0.1, 20.0, 0.1")]
-  public float AttackDuration { get; set; } = 1.0f;
 
   [ExportGroup("Attack Behavior")]
   [Export]
-  public PackedScene Bullet { get; set; }
+  public PackedScene BulletScene { get; set; }
   [Export(PropertyHint.Range, "50, 500, 5")]
-  public float AttackMoveSpeed { get; set; } = 600.0f;
-  [Export(PropertyHint.Range, "0.1, 5.0, 0.05")]
+  public float JumpSpeed { get; set; } = 400.0f;
+  [Export(PropertyHint.Range, "0.01, 2.0, 0.01")]
   public float ShootInterval { get; set; } = 0.08f;
+  [Export(PropertyHint.Range, "50, 500, 10")]
+  public float JumpHeight { get; set; } = 150.0f;
+  [Export(PropertyHint.Range, "50, 1000, 10")]
+  public float MinJumpDistance { get; set; } = 300.0f;
+  [Export(PropertyHint.Range, "50, 1000, 10")]
+  public float MinPlayerAvoidanceDistance { get; set; } = 200.0f;
 
   public override void _Ready() {
     base._Ready();
@@ -45,7 +59,7 @@ public partial class SimpleEnemy5 : BaseEnemy {
 
     // 初始化状态机，并为第一次随机游走设置一个随机时长
     _currentState = State.RandomWalk;
-    _stateTimer = (float) _rnd.RandfRange(RandomWalkDuration / 5, RandomWalkDuration * 1.2f);
+    _stateTimer = (float) _rnd.RandfRange(RandomWalkDuration / 5, RandomWalkDuration);
     _shootTimer = ShootInterval;
   }
 
@@ -61,8 +75,8 @@ public partial class SimpleEnemy5 : BaseEnemy {
       case State.RandomWalk:
         HandleRandomWalkState();
         break;
-      case State.Attacking:
-        HandleAttackingState(scaledDelta);
+      case State.Jumping:
+        HandleJumpingState(scaledDelta);
         break;
     }
 
@@ -73,12 +87,19 @@ public partial class SimpleEnemy5 : BaseEnemy {
     base._PhysicsProcess(delta);
     if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
 
-    MoveAndSlide();
-
-    // 根据当前状态处理撞墙逻辑
-    if (_currentState == State.Attacking && IsOnWall()) {
-      _attackMoveDirection *= -1; // 攻击时撞墙则反向移动
+    // 仅在游走时移动．跳跃移动在 _Process 中处理．
+    if (_currentState == State.RandomWalk) {
+      MoveAndSlide();
     }
+  }
+
+  protected override void UpdateVisualizer() {
+    var position3D = new Vector3(
+      GlobalPosition.X * GameConstants.WorldScaleFactor,
+      GameConstants.GamePlaneY + _currentJumpHeight * GameConstants.WorldScaleFactor,
+      GlobalPosition.Y * GameConstants.WorldScaleFactor
+    );
+    _visualizer.GlobalPosition = position3D;
   }
 
   private void HandleRandomWalkState() {
@@ -87,13 +108,17 @@ public partial class SimpleEnemy5 : BaseEnemy {
 
     // 检查是否需要切换到攻击状态
     if (_stateTimer <= 0) {
-      SwitchToAttackingState();
+      SwitchToJumpingState();
     }
   }
 
-  private void HandleAttackingState(float scaledDelta) {
-    // 沿垂直于玩家的方向移动
-    Velocity = _attackMoveDirection * AttackMoveSpeed * TimeManager.Instance.TimeScale;
+  private void HandleJumpingState(float scaledDelta) {
+    Velocity = Vector2.Zero; // 移动由 Lerp 处理
+    _jumpTime += scaledDelta;
+    float progress = Mathf.Min(1.0f, _jumpTime / _jumpDuration);
+
+    GlobalPosition = _jumpStartPosition.Lerp(_jumpTargetPosition, progress);
+    _currentJumpHeight = Mathf.Sin(progress * Mathf.Pi) * JumpHeight;
 
     // 处理射击逻辑
     _shootTimer -= scaledDelta;
@@ -102,23 +127,50 @@ public partial class SimpleEnemy5 : BaseEnemy {
       _shootTimer = ShootInterval;
     }
 
-    // 检查是否需要切换回随机游走状态
-    if (_stateTimer <= 0) {
+    // 检查跳跃是否结束
+    if (progress >= 1.0f) {
+      GlobalPosition = _jumpTargetPosition;
+      _currentJumpHeight = 0f;
       SwitchToRandomWalkState();
     }
   }
 
-  private void SwitchToAttackingState() {
-    _currentState = State.Attacking;
-    _stateTimer = AttackDuration;
-    _shootTimer = ShootInterval; // 为新的攻击阶段重置射击计时器
+  private void SwitchToJumpingState() {
+    if (_mapGenerator == null || _player == null || !IsInstanceValid(_player)) {
+      // 无法跳跃，继续游走
+      _stateTimer = RandomWalkDuration;
+      return;
+    }
 
-    if (_player == null || !IsInstanceValid(_player)) return;
+    Vector2 targetPos = Vector2.Zero;
+    bool foundTarget = false;
+    int attempts = 0;
+    while (attempts < 50 && !foundTarget) {
+      ++attempts;
+      int randomIndex = _rnd.RandiRange(0, _mapGenerator.WalkableTiles.Count - 1);
+      Vector2I cell = _mapGenerator.WalkableTiles[randomIndex];
+      Vector2 worldPos = _mapGenerator.MapToWorld(cell);
 
-    // 随机选择一个与玩家连线垂直的方向
-    Vector2 toPlayer = (_player.GlobalPosition - GlobalPosition).Normalized();
-    Vector2 perpendicular = toPlayer.Rotated(Mathf.Pi / 2.0f);
-    _attackMoveDirection = _rnd.Randf() > 0.5f ? perpendicular : -perpendicular;
+      if (worldPos.DistanceTo(GlobalPosition) >= MinJumpDistance &&
+          worldPos.DistanceTo(_player.GlobalPosition) >= MinPlayerAvoidanceDistance) {
+        targetPos = worldPos;
+        foundTarget = true;
+      }
+    }
+
+    if (!foundTarget) {
+      // 找不到合适的落点，继续游走
+      _stateTimer = RandomWalkDuration;
+      return;
+    }
+
+    _currentState = State.Jumping;
+    _jumpStartPosition = GlobalPosition;
+    _jumpTargetPosition = targetPos;
+    float distance = _jumpStartPosition.DistanceTo(_jumpTargetPosition);
+    _jumpDuration = Mathf.Max(distance / JumpSpeed, 0.5f);
+    _jumpTime = 0f;
+    _shootTimer = 0; // 立即射击
   }
 
   private void SwitchToRandomWalkState() {
@@ -128,15 +180,19 @@ public partial class SimpleEnemy5 : BaseEnemy {
   }
 
   private void Shoot() {
-    if (_player == null || !IsInstanceValid(_player) || Bullet == null) return;
+    if (_player == null || !IsInstanceValid(_player) || BulletScene == null) return;
 
-    var bullet = Bullet.Instantiate<SimpleBullet>();
-    // 每次射击都重新瞄准玩家当前位置
-    var direction = (_player.GlobalPosition - GlobalPosition).Normalized();
+    var bullet = BulletScene.Instantiate<Bullet.SimpleBullet3D>();
 
-    bullet.GlobalPosition = GlobalPosition;
-    bullet.Rotation = direction.Angle();
-    // 子弹的 _Ready() 函数会根据其 Rotation 和 InitialSpeed 设置初始速度
+    // 敌人的当前 3D 位置（在子弹的坐标系中）
+    var enemyPos3D = new Vector3(GlobalPosition.X, GlobalPosition.Y, _currentJumpHeight);
+    // 玩家的 3D 位置（在游戏平面上，Z=0）
+    var playerPos3D = new Vector3(_player.GlobalPosition.X, _player.GlobalPosition.Y, 0);
+
+    var direction = (playerPos3D - enemyPos3D).Normalized();
+
+    bullet.RawPosition = enemyPos3D;
+    bullet.Velocity = direction;
 
     GameRootProvider.CurrentGameRoot.AddChild(bullet);
   }
@@ -152,7 +208,11 @@ public partial class SimpleEnemy5 : BaseEnemy {
       CurrentState = this._currentState,
       StateTimer = this._stateTimer,
       ShootTimer = this._shootTimer,
-      AttackMoveDirection = this._attackMoveDirection
+      JumpStartPosition = this._jumpStartPosition,
+      JumpTargetPosition = this._jumpTargetPosition,
+      JumpDuration = this._jumpDuration,
+      JumpTime = this._jumpTime,
+      CurrentJumpHeight = this._currentJumpHeight
     };
   }
 
@@ -162,6 +222,10 @@ public partial class SimpleEnemy5 : BaseEnemy {
     this._currentState = ses.CurrentState;
     this._stateTimer = ses.StateTimer;
     this._shootTimer = ses.ShootTimer;
-    this._attackMoveDirection = ses.AttackMoveDirection;
+    this._jumpStartPosition = ses.JumpStartPosition;
+    this._jumpTargetPosition = ses.JumpTargetPosition;
+    this._jumpDuration = ses.JumpDuration;
+    this._jumpTime = ses.JumpTime;
+    this._currentJumpHeight = ses.CurrentJumpHeight;
   }
 }

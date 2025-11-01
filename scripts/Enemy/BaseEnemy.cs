@@ -15,17 +15,17 @@ public class BaseEnemyState : RewindState {
 public abstract partial class BaseEnemy : RewindableCharacterBody2D {
   public static readonly Color HIT_COLOR = new Color(1.0f, 0.5f, 0.5f);
 
+  private Color _originalColor;
+  private float _health;
   protected Player _player;
   protected Timer _hitTimer;
-  protected Color _originalColor;
-  protected float _health;
   protected Label3D _healthLabel;
   protected Node3D _visualizer;
   protected SpriteBase3D _sprite;
-  private MapGenerator _mapGenerator; // 添加对地图生成器的引用
+  protected MapGenerator _mapGenerator;
 
   [Export]
-  public float MaxHealth { get; set; } = 20.0f;
+  public virtual float MaxHealth { get; protected set; } = 20.0f;
 
   [ExportGroup("Death Drops")]
   [Export]
@@ -36,14 +36,17 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
   [Signal]
   public delegate void DiedEventHandler(float difficulty);
 
-  public float Health {
+  public virtual float Health {
     get => _health;
-    set {
+    protected set {
       if (value <= 0) {
         _health = 0;
-        Die();
+        var rm = RewindManager.Instance;
+        if (!rm.IsPreviewing && !rm.IsRewinding) {
+          Die();
+        }
       } else {
-        _health = value;
+        _health = float.Min(MaxHealth, value);
       }
       UpdateHealthLabel();
     }
@@ -51,9 +54,9 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
 
   public float Difficulty;
 
-  public virtual void Die() {
+  protected virtual void Die() {
     if (IsDestroyed) return; // 使用基类的 IsDestroyed 属性检查
-    SpawnTimeShards();
+    SpawnTimeShards(TimeShardCount);
     Destroy();
     EmitSignal(SignalName.Died, Difficulty); // 发射信号
   }
@@ -89,7 +92,7 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
     UpdateVisualizer();
   }
 
-  public void TakeDamage(float damage) {
+  public virtual void TakeDamage(float damage) {
     Health -= damage;
     _sprite.Modulate = HIT_COLOR;
     _hitTimer.Start();
@@ -99,7 +102,7 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
     _sprite.Modulate = _originalColor;
   }
 
-  private void UpdateHealthLabel() {
+  protected void UpdateHealthLabel() {
     if (_healthLabel != null) {
       _healthLabel.Text = Mathf.Ceil(Health).ToString();
     }
@@ -116,13 +119,13 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
   /// <summary>
   /// 在敌人死亡的位置生成一堆时间碎片．
   /// </summary>
-  private void SpawnTimeShards() {
+  protected void SpawnTimeShards(int count) {
     if (TimeShardScene == null) {
       GD.PrintErr($"Enemy '{Name}' has no TimeShardScene assigned. Cannot spawn shards.");
       return;
     }
 
-    for (int i = 0; i < TimeShardCount; i++) {
+    for (int i = 0; i < count; ++i) {
       var shard = TimeShardScene.Instantiate<TimeShard>();
 
       // 在添加到场景前，设置好初始化所需的属性
@@ -148,8 +151,7 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
     if (state is not BaseEnemyState bes) return;
     this.GlobalPosition = bes.GlobalPosition;
     this.Velocity = bes.Velocity;
-    // 直接赋值 _health 而不是 Health 属性，避免在恢复状态时触发 Die()
-    this._health = bes.Health;
+    this.Health = bes.Health;
     _sprite.Modulate = bes.SpriteModulate;
     if (bes.HitTimerLeft > 0) {
       _hitTimer.Start(bes.HitTimerLeft);

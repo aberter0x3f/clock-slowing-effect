@@ -7,12 +7,14 @@ using Rewind;
 public class PlayerState : RewindState {
   public Vector2 GlobalPosition;
   public Vector2 Velocity;
-  public Player.AnimationState CurrentState;
+  public Player.AnimationState CurrentAnimationState;
   public int CurrentAmmo;
   public bool IsReloading;
   public float TimeToReloaded;
   public float ShootTimer;
-  // Health 不能回溯，需要在回溯过程中也按照正常速率流失
+  // 以下字段仅用于「从当前阶段重来」，回溯系统会忽略它们
+  public float Health;
+  public float TimeBond;
 }
 
 public partial class Player : CharacterBody2D, IRewindable {
@@ -178,6 +180,7 @@ public partial class Player : CharacterBody2D, IRewindable {
       if (bullet.WasGrazed) return;
       bullet.WasGrazed = true;
       var shard = GrazeTimeShard.Instantiate<TimeShard>();
+      shard.TimeBonus = Stats.GrazeTimeBonus;
       shard.SpawnCenter = bullet.GlobalPosition;
       shard.MapGeneratorRef = _mapGenerator;
       GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, shard);
@@ -201,7 +204,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
     if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
-      Die();
+      // Die();
       return;
     }
   }
@@ -266,6 +269,13 @@ public partial class Player : CharacterBody2D, IRewindable {
     var enemies = GetTree().GetNodesInGroup("enemies");
     foreach (BaseEnemy enemy in enemies) {
       if (enemy.IsDestroyed) {
+        continue;
+      }
+      if (enemy.IsDestroyed) {
+        continue;
+      }
+      var collider = enemy.GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
+      if (collider == null || collider.Disabled) {
         continue;
       }
       float distance = GlobalPosition.DistanceSquaredTo(enemy.GlobalPosition);
@@ -364,11 +374,14 @@ public partial class Player : CharacterBody2D, IRewindable {
     return new PlayerState {
       GlobalPosition = this.GlobalPosition,
       Velocity = this.Velocity,
-      CurrentState = this._currentAnimationState,
+      CurrentAnimationState = this._currentAnimationState,
       CurrentAmmo = this.CurrentAmmo,
       IsReloading = this.IsReloading,
       TimeToReloaded = this.TimeToReloaded,
-      ShootTimer = this.ShootTimer
+      ShootTimer = this.ShootTimer,
+      // Health 和 TimeBond 仅用于阶段重启，回溯系统不会使用它们
+      Health = this.Health,
+      TimeBond = GameManager.Instance.TimeBond
     };
   }
 
@@ -377,11 +390,14 @@ public partial class Player : CharacterBody2D, IRewindable {
 
     this.GlobalPosition = ps.GlobalPosition;
     this.Velocity = ps.Velocity;
-    this._currentAnimationState = ps.CurrentState;
+    this._currentAnimationState = ps.CurrentAnimationState;
     this.CurrentAmmo = ps.CurrentAmmo;
     this.IsReloading = ps.IsReloading;
     this.TimeToReloaded = ps.TimeToReloaded;
     this.ShootTimer = ps.ShootTimer;
+
+    // 注意：回溯系统不应该恢复 Health 和 TimeBond，
+    // 但「从当前阶段重来」功能会手动恢复它们．
 
     // 恢复状态后可能需要更新一些依赖状态的视觉效果
     UpdateAnimationState();

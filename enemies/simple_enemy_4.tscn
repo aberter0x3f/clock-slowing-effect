@@ -26,12 +26,9 @@ texture = ExtResource("3_46c1e")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_qi2p4")
 
-[node name="ShootTimer" type="Timer" parent="."]
-wait_time = 0.3
-autostart = true
-
 [node name="HitTimer" type="Timer" parent="."]
 wait_time = 0.1
+one_shot = true
 
 [node name="RandomWalkComponent" type="Node" parent="."]
 script = ExtResource("4_djkac")
@@ -67,5 +64,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
 billboard = 2
 text = "Health"
 
-[connection signal="timeout" from="ShootTimer" to="." method="OnShootTimerTimeout"]
 [connection signal="timeout" from="HitTimer" to="." method="OnHitTimerTimeout"]

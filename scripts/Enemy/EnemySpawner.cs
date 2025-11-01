@@ -24,7 +24,7 @@ public partial class EnemySpawner : Node, IRewindable {
   [Export]
   public float MaxConcurrentDifficulty { get; set; } = 30.0f;
   [Export]
-  public float MinPlayerSpawnDistance { get; set; } = 500.0f;
+  public float MinPlayerSpawnDistance { get; set; } = 300.0f;
 
   private List<EnemyData> _spawnQueue = new();
   private float _currentConcurrentDifficulty = 0.0f;

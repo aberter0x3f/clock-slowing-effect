@@ -15,6 +15,8 @@ public partial class MapMenu : Control, IMenuPanel {
   public string TransmuterScenePath { get; set; }
   [Export(PropertyHint.File, "*.tscn")]
   public string EventScenePath { get; set; }
+  [Export(PropertyHint.File, "*.tscn")]
+  public string BossScenePath { get; set; }
 
   [ExportGroup("UI Configuration")]
   [Export]
@@ -22,6 +24,7 @@ public partial class MapMenu : Control, IMenuPanel {
   [Export]
   public float HexagonSize { get; set; } = 50f; // 六边形的大小，用于计算位置
 
+  private Label _planeLabel;
   private Label _clearedLevelsLabel;
   private Label _levelScoreLabel;
   private Control _mapContainer;
@@ -30,6 +33,7 @@ public partial class MapMenu : Control, IMenuPanel {
   private Vector2I _selectedPosition;
 
   public override void _Ready() {
+    _planeLabel = GetNode<Label>("HBoxContainer/Plane/ValueLabel");
     _clearedLevelsLabel = GetNode<Label>("HBoxContainer/ClearedLevels/ValueLabel");
     _levelScoreLabel = GetNode<Label>("HBoxContainer/LevelScore/ValueLabel");
     _mapContainer = GetNode<Control>("MapContainer");
@@ -39,6 +43,7 @@ public partial class MapMenu : Control, IMenuPanel {
       return;
     }
 
+    _planeLabel.Text = GameManager.Instance.CurrentPlane.ToString();
     _clearedLevelsLabel.Text = GameManager.Instance.LevelsCleared.ToString();
     GenerateMapView();
   }
@@ -66,6 +71,7 @@ public partial class MapMenu : Control, IMenuPanel {
         HexMap.NodeType.Shop => "S",
         HexMap.NodeType.Transmuter => "T",
         HexMap.NodeType.Event => "E",
+        HexMap.NodeType.Boss => "B",
         _ => throw new ArgumentException("Invalid node type")
       };
 
@@ -174,6 +180,7 @@ public partial class MapMenu : Control, IMenuPanel {
         HexMap.NodeType.Shop => ShopScenePath,
         HexMap.NodeType.Transmuter => TransmuterScenePath,
         HexMap.NodeType.Event => EventScenePath,
+        HexMap.NodeType.Boss => BossScenePath,
         _ => throw new ArgumentOutOfRangeException(nameof(nodeType), $"Unsupported node type: {nodeType}")
       };
 

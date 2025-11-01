@@ -12,10 +12,12 @@ public partial class RewindManager : Node {
   public int RecordFps { get; set; } = 60;
 
   [Export(PropertyHint.Range, "1, 120, 1")]
-  public float MaxRecordTime { get; set; } = 30.0f;
+  public float MaxRecordTime { get; set; } = 15.0f;
 
   public bool IsRewinding { get; private set; } = false;
   public bool IsPreviewing { get; private set; } = false;
+
+  public int TrackedObjectCount => _trackedObjects.Count;
 
   // 用于自动回溯的状态
   private bool _isAutoRewinding = false;
@@ -42,7 +44,7 @@ public partial class RewindManager : Node {
   private readonly List<RewindFrame> _history = new();
   private readonly Dictionary<ulong, IRewindable> _trackedObjects = new();
   private readonly HashSet<ulong> _deadObjectIds = new(); // 存放已调用 Destroy() 的对象 ID
-  private readonly Dictionary<ulong, Node> _objectPool = new(); // 存放已禁用的节点实例
+  private readonly Dictionary<ulong, Node> _objectPool = new();
 
   // 高效的引用计数器，用于对象池清理
   private readonly Dictionary<ulong, int> _idReferenceCounts = new();
@@ -78,9 +80,20 @@ public partial class RewindManager : Node {
   }
 
   /// <summary>
-  /// 清空所有历史记录和内部状态，用于关卡重置．
+  /// 清空所有历史记录和内部状态，用于关卡重置或 Boss 阶段切换．
   /// </summary>
   public void ResetHistory() {
+    foreach (var (id, obj) in _objectPool) {
+      if (!_deadObjectIds.Contains(id)) {
+        continue;
+      }
+
+      if (obj is IRewindable rewindable) {
+        Unregister(rewindable);
+      }
+      obj.QueueFree();
+    }
+
     _history.Clear();
     _deadObjectIds.Clear();
     _idReferenceCounts.Clear();
@@ -205,22 +218,24 @@ public partial class RewindManager : Node {
   private void CleanupObjectPool(List<RewindFrame> removedFrames) {
     var potentialPurgeIds = new HashSet<ulong>();
 
-    // 1. 遍历被移除的帧，减少对应 ID 的引用计数
+    // 遍历被移除的帧，减少对应 ID 的引用计数
     foreach (var frame in removedFrames) {
       foreach (var id in frame.States.Keys) {
         if (_idReferenceCounts.ContainsKey(id)) {
-          _idReferenceCounts[id]--;
+          --_idReferenceCounts[id];
           if (_idReferenceCounts[id] <= 0) {
             // 此 ID 的引用计数已降为 0，意味着它不再存在于任何历史快照中．
             // 将其从计数器中移除，并加入待清理候选列表．
             _idReferenceCounts.Remove(id);
             potentialPurgeIds.Add(id);
           }
+        } else {
+          potentialPurgeIds.Add(id);
         }
       }
     }
 
-    // 2. 遍历候选列表，检查哪些对象可以被真正销毁
+    // 遍历候选列表，检查哪些对象可以被真正销毁
     foreach (var id in potentialPurgeIds) {
       // 清理条件：对象的引用计数为 0，并且它已经被标记为死亡．
       if (_deadObjectIds.Contains(id)) {

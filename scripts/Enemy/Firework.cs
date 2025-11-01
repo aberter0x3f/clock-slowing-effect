@@ -62,7 +62,7 @@ public partial class Firework : BaseEnemy {
     _attackCooldown = (float) _rnd.RandfRange(1.0f, AttackInterval);
   }
 
-  public override void Die() {
+  protected override void Die() {
     if (IsDestroyed) return;
     if (IsInstanceValid(_activeProjectileVisualizer)) {
       _activeProjectileVisualizer.QueueFree();

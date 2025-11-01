@@ -40,11 +40,7 @@ public partial class RandomWalkComponent : Node {
 
     _moveTimer -= scaledDelta;
 
-    if (_parentBody.IsOnWall()) {
-      _currentMoveDirection *= -1;
-    }
-
-    if (_moveTimer <= 0) {
+    if (_parentBody.IsOnWall() || _moveTimer <= 0) {
       PickNewMovement();
     }
 

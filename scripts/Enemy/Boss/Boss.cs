@@ -1,0 +1,245 @@
+using Godot;
+using Rewind;
+
+namespace Enemy.Boss;
+
+public class BossState : BaseEnemyState {
+  public Boss.BossInternalState InternalState;
+  public float RestTimerLeft;
+  public RewindState ActivePhaseState;
+}
+
+public partial class Boss : BaseEnemy {
+  [Signal]
+  public delegate void FightingPhaseStartedEventHandler();
+  [Signal]
+  public delegate void FightingPhaseEndedEventHandler();
+
+  public enum BossInternalState {
+    Resting,
+    Fighting,
+    Finished,
+  }
+
+  public BossInternalState InternalState { get; private set; } = BossInternalState.Resting;
+
+  public override float MaxHealth { get => _activePhaseInstance?.MaxHealth ?? float.MaxValue; protected set { } }
+
+  public override float Health {
+    get => _activePhaseInstance?.Health ?? float.MaxValue;
+    protected set {
+      if (IsInstanceValid(_activePhaseInstance)) {
+        _activePhaseInstance.Health = value;
+      }
+      UpdateHealthLabel();
+    }
+  }
+
+  [Export]
+  public Godot.Collections.Array<PackedScene> Phases { get; set; }
+
+  [ExportGroup("Phase Transition")]
+  [Export]
+  public float RestDuration { get; set; } = 3f; // 阶段间的休息时间
+
+  private int _currentPhaseIndex = 0;
+  private BasePhase _activePhaseInstance;
+  private float _restTimerLeft;
+  private PlayerState _playerPhaseStartState;
+  private CollisionShape2D _collisionShape;
+  private Vector2 _startPosition;
+
+  public override void _Ready() {
+    base._Ready();
+    _startPosition = GlobalPosition;
+    _collisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
+    _restTimerLeft = RestDuration;
+
+    SetCollisionEnabled(false);
+  }
+
+  public override void _Process(double delta) {
+    base._Process(delta);
+    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+
+    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
+
+    // 手动处理休息计时器
+    if (InternalState == BossInternalState.Resting) {
+      _restTimerLeft -= scaledDelta;
+      if (_restTimerLeft <= 0) {
+        OnPhaseStarted();
+      }
+    }
+
+    UpdateVisualizer();
+  }
+
+  /// <summary>
+  /// 玩家请求从当前阶段重新开始．正常情况下玩家只能在 Fighting 状态下重新开始．
+  /// </summary>
+  public void RestartFromCurrentPhase() {
+    if (InternalState == BossInternalState.Resting) {
+      // 正常情况下不可能在 Resting 状态下重新开始．
+      GD.PrintErr("Could not restart from phase while resting.");
+      return;
+    }
+
+    if (_playerPhaseStartState == null) {
+      GD.PrintErr("Cannot restart from phase: No saved state found.");
+      return;
+    }
+
+    GD.Print($"Restarting from phase {_currentPhaseIndex}.");
+
+    // 清理当前阶段
+    if (IsInstanceValid(_activePhaseInstance)) {
+      _activePhaseInstance.QueueFree();
+      _activePhaseInstance = null;
+    }
+
+    // 恢复玩家状态
+    _player.RestoreState(_playerPhaseStartState);
+    GameManager.Instance.CurrentPlayerHealth = _playerPhaseStartState.Health;
+    GameManager.Instance.TimeBond = _playerPhaseStartState.TimeBond;
+
+    // 清理场上所有子弹和掉落物
+    ClearAllBullets();
+    ClearAllPickups();
+    // 将 Boss 移回中心
+    GlobalPosition = _startPosition;
+    // 重新开始当前阶段的准备流程
+    OnPhaseStarted();
+  }
+
+  /// <summary>
+  /// 从头开始重来
+  /// </summary>
+  public void RestartFromStart() {
+    GD.Print("Restarting from start.");
+
+    // 清理当前阶段
+    if (IsInstanceValid(_activePhaseInstance)) {
+      _activePhaseInstance.QueueFree();
+    }
+    _activePhaseInstance = null;
+
+    // 将 Boss 移回中心
+    GlobalPosition = _startPosition;
+    SetCollisionEnabled(false);
+
+    // 重新会到第一次准备流程
+    InternalState = BossInternalState.Resting;
+    _currentPhaseIndex = 0;
+    _restTimerLeft = RestDuration;
+  }
+
+  private void OnPhaseStarted() {
+    GD.Print($"Starting Boss Phase {_currentPhaseIndex}.");
+
+    // 实例化并启动新阶段
+    var phaseScene = Phases[_currentPhaseIndex];
+    _activePhaseInstance = phaseScene.Instantiate<BasePhase>();
+    AddChild(_activePhaseInstance);
+    _activePhaseInstance.PhaseCompleted += OnPhaseEnded;
+    _activePhaseInstance.StartPhase(this);
+
+    // 重置回溯历史，防止跨阶段回溯引起状态混乱
+    RewindManager.Instance.ResetHistory();
+
+    // 启用碰撞，让玩家可以攻击
+    SetCollisionEnabled(true);
+    InternalState = BossInternalState.Fighting;
+
+    // 保存玩家状态，用于「从当前阶段重来」
+    _playerPhaseStartState = (PlayerState) _player.CaptureState();
+    _playerPhaseStartState.Health = _player.Health;
+    _playerPhaseStartState.TimeBond = GameManager.Instance.TimeBond;
+
+    EmitSignal(SignalName.FightingPhaseStarted);
+  }
+
+  private void OnPhaseEnded() {
+    GD.Print($"Boss Phase {_currentPhaseIndex} completed!");
+
+    CallDeferred(nameof(SetCollisionEnabled), false);
+    ClearAllBullets();
+    SpawnTimeShards(_activePhaseInstance.TimeShardsOnCompletion);
+
+    // 清理当前阶段的实例
+    if (IsInstanceValid(_activePhaseInstance)) {
+      _activePhaseInstance.QueueFree();
+    }
+    _activePhaseInstance = null;
+
+    // 重置回溯历史，防止跨阶段回溯引起状态混乱
+    RewindManager.Instance.ResetHistory();
+
+    ++_currentPhaseIndex;
+
+    GlobalPosition = _startPosition;
+    InternalState = BossInternalState.Resting;
+    _restTimerLeft = RestDuration;
+
+    EmitSignal(SignalName.FightingPhaseEnded);
+
+    if (_currentPhaseIndex >= Phases.Count) {
+      GD.Print("Boss defeated!");
+      InternalState = BossInternalState.Finished;
+      // 调用基类的 Die，这会触发 Died 信号，让 BossRoom 生成传送门
+      Die();
+    }
+  }
+
+  private void ClearAllBullets() {
+    foreach (IRewindable bullet in GetTree().GetNodesInGroup("bullets")) {
+      bullet.Destroy();
+    }
+  }
+
+  private void ClearAllPickups() {
+    foreach (IRewindable bullet in GetTree().GetNodesInGroup("pickups")) {
+      bullet.Destroy();
+    }
+  }
+
+  protected void SetCollisionEnabled(bool enabled) {
+    _collisionShape.Disabled = !enabled;
+  }
+
+  public override void TakeDamage(float damage) {
+    // 这里不调用基类的 TakeDamage，因为 Boss 的生命值由其阶段控制
+    // 将伤害传递给当前激活的阶段
+    _sprite.Modulate = HIT_COLOR;
+    _hitTimer.Start();
+    if (_activePhaseInstance != null && !IsDestroyed) {
+      _activePhaseInstance.TakeDamage(damage);
+    }
+  }
+
+  public override RewindState CaptureState() {
+    var baseState = (BaseEnemyState) base.CaptureState();
+    return new BossState {
+      GlobalPosition = baseState.GlobalPosition,
+      Velocity = baseState.Velocity,
+      Health = baseState.Health,
+      HitTimerLeft = baseState.HitTimerLeft,
+      SpriteModulate = baseState.SpriteModulate,
+      InternalState = this.InternalState,
+      RestTimerLeft = this._restTimerLeft,
+      ActivePhaseState = _activePhaseInstance?.CaptureInternalState(),
+    };
+  }
+
+  public override void RestoreState(RewindState state) {
+    base.RestoreState(state);
+    if (state is not BossState bs) return;
+
+    this.InternalState = bs.InternalState;
+    this._restTimerLeft = bs.RestTimerLeft;
+
+    if (_activePhaseInstance != null && IsInstanceValid(_activePhaseInstance)) {
+      _activePhaseInstance.RestoreInternalState(bs.ActivePhaseState);
+    }
+  }
+}

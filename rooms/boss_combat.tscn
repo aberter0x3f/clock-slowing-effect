@@ -1,0 +1,47 @@
+[gd_scene load_steps=12 format=3 uid="uid://d312i4tukca50"]
+
+[ext_resource type="Script" uid="uid://clxppjn3dpyf8" path="res://scripts/Room/BossCombat.cs" id="1_eja48"]
+[ext_resource type="Script" uid="uid://d1if7b56ademj" path="res://scripts/MapGenerator.cs" id="2_cnar5"]
+[ext_resource type="PackedScene" uid="uid://da40nomxihqtm" path="res://ui/pause_menu.tscn" id="2_youth"]
+[ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="3_0yc7o"]
+[ext_resource type="PackedScene" uid="uid://c366ntgyj6v6m" path="res://portal.tscn" id="3_jbn53"]
+[ext_resource type="PackedScene" uid="uid://bfl1nrtfgvq5m" path="res://ui/upgrade_selection_menu.tscn" id="4_7g3sr"]
+[ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="4_youth"]
+[ext_resource type="PackedScene" uid="uid://c3ebr2hfny8mu" path="res://enemies/boss.tscn" id="5_7g3sr"]
+[ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="5_jbn53"]
+[ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="6_7g3sr"]
+[ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="7_sbsf0"]
+
+[node name="GameRoot" type="Node3D"]
+script = ExtResource("1_eja48")
+PauseMenuScene = ExtResource("2_youth")
+PortalScene = ExtResource("3_jbn53")
+UpgradeSelectionMenuScene = ExtResource("4_7g3sr")
+BossScene = ExtResource("5_7g3sr")
+InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_mode = 1
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="MapGenerator" type="Node" parent="."]
+script = ExtResource("2_cnar5")
+MapWidth = 30
+ObstacleProbability = 0.0
+ObstacleScene = ExtResource("3_0yc7o")
+FloorTileScene1 = ExtResource("4_youth")
+FloorTileScene2 = ExtResource("5_jbn53")
+metadata/_custom_type_script = "uid://d1if7b56ademj"
+
+[node name="RewindManager" type="Node" parent="."]
+script = ExtResource("6_7g3sr")
+metadata/_custom_type_script = "uid://vn61cc2q0j34"
+
+[node name="Player" parent="." instance=ExtResource("7_sbsf0")]

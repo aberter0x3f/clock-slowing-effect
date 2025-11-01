@@ -50,7 +50,6 @@ public partial class Drummer : BaseEnemy {
   private float _retreatTimer;
   private float _currentJumpHeight = 0f;
 
-  private MapGenerator _mapGenerator;
   private CollisionShape2D _bodyCollisionShape;
 
   [ExportGroup("Attack Configuration")]
@@ -82,10 +81,6 @@ public partial class Drummer : BaseEnemy {
   public override void _Ready() {
     base._Ready();
     _attackCooldown = (float) GD.RandRange(1.0f, 2 * AttackInterval);
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
-    if (_mapGenerator == null) {
-      GD.PrintErr("Drummer: MapGenerator not found! Jump validation will be disabled.");
-    }
     _bodyCollisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
   }
 

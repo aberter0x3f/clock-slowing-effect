@@ -17,6 +17,7 @@ public class HexMap {
     Shop,
     Transmuter,
     Event,
+    Boss
   }
 
   public class MapNode {
@@ -32,6 +33,7 @@ public class HexMap {
   public Dictionary<Vector2I, MapNode> Nodes { get; } = new();
   public Vector2I StartPosition { get; private set; }
   public Vector2I TargetPosition { get; private set; }
+  public int Plane { get; private set; } = 1;
 
   /*
    * 方向向量
@@ -52,7 +54,9 @@ public class HexMap {
     GenerateMap();
   }
 
-  private void GenerateMap() {
+  public void GenerateMap() {
+    Nodes.Clear(); // 清理旧节点，以便重新生成
+
     int[] rows = { 3, 4, 5, 4, 3 };
     int totalColumns = rows.Length;
     int centerColumn = totalColumns / 2;
@@ -72,35 +76,47 @@ public class HexMap {
     StartPosition = new Vector2I(-centerColumn, 0);
     TargetPosition = new Vector2I(centerColumn, 0);
 
-    Nodes[StartPosition].Type = NodeType.Combat;
-    Nodes[TargetPosition].Type = NodeType.Combat;
-
-    // 随机分配特殊房间
-    var potentialSpecialNodes = Nodes.Values
-      .Where(n => n.Position != StartPosition && n.Position != TargetPosition)
-      .ToList();
-
-    const int SHOP_COUNT = 2, TRANSMUTER_COUNT = 2;
-
-    for (int i = 0; i < SHOP_COUNT; ++i) {
-      if (potentialSpecialNodes.Count == 0) break;
-      int shopIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
-      potentialSpecialNodes[shopIndex].Type = NodeType.Shop;
-      potentialSpecialNodes.RemoveAt(shopIndex);
+    foreach (var node in Nodes.Values) {
+      node.Type = NodeType.Boss;
     }
 
-    for (int i = 0; i < TRANSMUTER_COUNT; ++i) {
-      if (potentialSpecialNodes.Count == 0) break;
-      int transmuterIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
-      potentialSpecialNodes[transmuterIndex].Type = NodeType.Transmuter;
-      potentialSpecialNodes.RemoveAt(transmuterIndex);
-    }
-    // 剩余的节点一半战斗，一半事件
-    int eventCount = (potentialSpecialNodes.Count + 1) / 2;
-    potentialSpecialNodes.Shuffle(new RandomNumberGenerator());
-    for (int i = 0; i < eventCount; ++i) {
-      potentialSpecialNodes[i].Type = NodeType.Event;
-    }
+    // Nodes[StartPosition].Type = NodeType.Combat;
+    // Nodes[TargetPosition].Type = NodeType.Boss;
+
+    // // 随机分配特殊房间
+    // var potentialSpecialNodes = Nodes.Values
+    //   .Where(n => n.Position != StartPosition && n.Position != TargetPosition)
+    //   .ToList();
+
+    // const int SHOP_COUNT = 2, TRANSMUTER_COUNT = 2;
+
+    // for (int i = 0; i < SHOP_COUNT; ++i) {
+    //   if (potentialSpecialNodes.Count == 0) break;
+    //   int shopIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
+    //   potentialSpecialNodes[shopIndex].Type = NodeType.Shop;
+    //   potentialSpecialNodes.RemoveAt(shopIndex);
+    // }
+
+    // for (int i = 0; i < TRANSMUTER_COUNT; ++i) {
+    //   if (potentialSpecialNodes.Count == 0) break;
+    //   int transmuterIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
+    //   potentialSpecialNodes[transmuterIndex].Type = NodeType.Transmuter;
+    //   potentialSpecialNodes.RemoveAt(transmuterIndex);
+    // }
+    // // 剩余的节点一半战斗，一半事件
+    // int eventCount = (potentialSpecialNodes.Count + 1) / 2;
+    // potentialSpecialNodes.Shuffle(new RandomNumberGenerator());
+    // for (int i = 0; i < eventCount; ++i) {
+    //   potentialSpecialNodes[i].Type = NodeType.Event;
+    // }
+  }
+
+  /// <summary>
+  /// 重置地图并进入下一个位面．
+  /// </summary>
+  public void ResetForNewPlane() {
+    ++Plane;
+    GenerateMap();
   }
 
   public MapNode GetNode(Vector2I position) {

@@ -47,4 +47,3 @@ script = ExtResource("10_ivrbv")
 metadata/_custom_type_script = "uid://vn61cc2q0j34"
 
 [node name="Player" parent="." instance=ExtResource("11_by0cv")]
-position = Vector2(0, 0.3)

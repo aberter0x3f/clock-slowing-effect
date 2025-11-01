@@ -16,6 +16,8 @@ public partial class GameManager : Node {
   public Vector2I? PlayerMapPosition { get; private set; }
   public int LevelsCleared { get; private set; }
   public float DifficultyMultiplier { get; private set; } = 1.0f;
+  public float EnemyRank { get; private set; } = -1;
+  public int CurrentPlane => GameMap?.Plane ?? -1;
 
   // 玩家状态和强化系统属性
   [Export]
@@ -57,6 +59,7 @@ public partial class GameManager : Node {
     GameMap = new HexMap();
     LevelsCleared = 0;
     DifficultyMultiplier = 1.0f;
+    EnemyRank = difficulty.EnemyRank;
     PlayerMapPosition = null; // 初始时玩家不在任何节点上
     ActiveEvent = null;
     ShuffleEventSequence();
@@ -125,10 +128,27 @@ public partial class GameManager : Node {
       DifficultyMultiplier *= CurrentDifficulty.PerLevelDifficultyMultiplier;
       GD.Print($"Level at {SelectedMapPosition} completed. Levels cleared: {LevelsCleared}. New difficulty multiplier: {DifficultyMultiplier:F2}.");
     }
-    // 更新玩家当前所在的节点
-    PlayerMapPosition = SelectedMapPosition;
+
+    // 检查是否是最后一个关卡
+    if (completedNode.Position == GameMap.TargetPosition) {
+      GD.Print($"Entering Plane {CurrentPlane + 1}.");
+      StartNewPlane();
+    } else {
+      // 更新玩家当前所在的节点
+      PlayerMapPosition = SelectedMapPosition;
+    }
+
     ActiveEvent = null;
     CommitPendingUpgrades();
+  }
+
+  /// <summary>
+  /// 重置地图，进入下一个位面．
+  /// </summary>
+  private void StartNewPlane() {
+    GameMap.ResetForNewPlane();
+    PlayerMapPosition = null; // 玩家回到地图外，只能选择起始节点
+    ++EnemyRank; // 每过一个位面，敌人等级提升
   }
 
   /// <summary>

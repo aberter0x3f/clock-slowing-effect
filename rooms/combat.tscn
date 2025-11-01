@@ -25,9 +25,8 @@
 script = ExtResource("1_y7vi5")
 PauseMenuScene = ExtResource("2_i2rhi")
 PortalScene = ExtResource("3_wsm0g")
-UpgradeMenuScene = ExtResource("4_iplkw")
+UpgradeSelectionMenuScene = ExtResource("4_iplkw")
 InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
-TitleScenePath = "uid://bqtbfjrfe5x52"
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
@@ -57,4 +56,3 @@ EnemyDatabase = Array[Object]([ExtResource("5_8tlgu"), ExtResource("6_soos4"), E
 metadata/_custom_type_script = "uid://ddv4ypiw0mqcp"
 
 [node name="Player" parent="." instance=ExtResource("1_xj5yv")]
-position = Vector2(0, 0.3)

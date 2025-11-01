@@ -28,6 +28,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Continue"
 
+[node name="RestartFromPhaseButton" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Restart from phase"
+
 [node name="RestartButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32

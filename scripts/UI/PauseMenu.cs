@@ -6,12 +6,12 @@ namespace UI;
 public partial class PauseMenu : CanvasLayer {
   [Signal]
   public delegate void RestartRequestedEventHandler();
-
-  [Export(PropertyHint.File, "*.tscn")]
-  public string TitleScenePath { get; set; }
+  [Signal]
+  public delegate void RestartFromPhaseRequestedEventHandler();
 
   private Label _titleLabel;
   private Button _continueButton;
+  private Button _restartFromPhaseButton;
   private Button _restartButton;
   private Button _settingsButton;
   private Button _returnToTitleButton;
@@ -19,17 +19,24 @@ public partial class PauseMenu : CanvasLayer {
   private readonly List<Button> _activeButtons = new();
   private int _selectedIndex = 0;
 
+  [Export(PropertyHint.File, "*.tscn")]
+  public string TitleScenePath { get; set; }
+
+  public bool EnablePhaseRestart { get; set; } = false;
+
   public override void _Ready() {
     // 此节点应在游戏暂停时也能处理输入．
     ProcessMode = ProcessModeEnum.Always;
 
     _titleLabel = GetNode<Label>("CenterContainer/VBoxContainer/TitleLabel");
     _continueButton = GetNode<Button>("CenterContainer/VBoxContainer/ContinueButton");
+    _restartFromPhaseButton = GetNode<Button>("CenterContainer/VBoxContainer/RestartFromPhaseButton");
     _restartButton = GetNode<Button>("CenterContainer/VBoxContainer/RestartButton");
     _settingsButton = GetNode<Button>("CenterContainer/VBoxContainer/SettingsButton");
     _returnToTitleButton = GetNode<Button>("CenterContainer/VBoxContainer/ReturnToTitleButton");
 
     _continueButton.Pressed += OnContinuePressed;
+    _restartFromPhaseButton.Pressed += OnRestartFromPhasePressed;
     _restartButton.Pressed += OnRestartPressed;
     // 「Settings」按钮是禁用的，所以不需要连接信号．
     _returnToTitleButton.Pressed += OnReturnToTitlePressed;
@@ -74,6 +81,7 @@ public partial class PauseMenu : CanvasLayer {
     GetTree().Paused = true;
 
     _activeButtons.Clear();
+    _restartFromPhaseButton.Visible = EnablePhaseRestart;
 
     if (isDeathMenu) {
       _titleLabel.Text = "YOU DIED";
@@ -86,6 +94,9 @@ public partial class PauseMenu : CanvasLayer {
       _selectedIndex = 0; // 默认选择「继续」
     }
 
+    if (EnablePhaseRestart) {
+      _activeButtons.Add(_restartFromPhaseButton);
+    }
     _activeButtons.Add(_restartButton);
     _activeButtons.Add(_settingsButton);
     _activeButtons.Add(_returnToTitleButton);
@@ -112,6 +123,11 @@ public partial class PauseMenu : CanvasLayer {
     // 在发出信号前取消暂停并隐藏菜单
     HideMenu();
     EmitSignal(SignalName.RestartRequested);
+  }
+
+  private void OnRestartFromPhasePressed() {
+    HideMenu();
+    EmitSignal(SignalName.RestartFromPhaseRequested);
   }
 
   private void OnReturnToTitlePressed() {

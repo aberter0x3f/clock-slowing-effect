@@ -12,7 +12,6 @@ public partial class Combat : Node {
   private EnemySpawner _enemySpawner;
   private RewindManager _rewindManager;
   private PauseMenu _pauseMenu;
-  private Vector2 _playerSpawnPosition;
   private Portal _spawnedPortal = null;
 
   private ulong _levelSeed;
@@ -25,13 +24,10 @@ public partial class Combat : Node {
   public PackedScene PortalScene { get; set; }
 
   [Export]
-  public PackedScene UpgradeMenuScene { get; set; }
+  public PackedScene UpgradeSelectionMenuScene { get; set; }
 
   [Export(PropertyHint.File, "*.tscn")]
   public string InterLevelMenuScenePath { get; set; }
-
-  [Export(PropertyHint.File, "*.tscn")]
-  public string TitleScenePath { get; set; }
 
   public override void _Ready() {
     GameRootProvider.CurrentGameRoot = this;
@@ -50,8 +46,8 @@ public partial class Combat : Node {
     _player.DiedPermanently += OnPlayerDiedPermanently;
     _enemySpawner.WaveCompleted += OnWaveCompleted;
 
-    _playerSpawnPosition = _mapGenerator.GenerateMap();
-    _player.GlobalPosition = _playerSpawnPosition;
+    _player.SpawnPosition = _mapGenerator.GenerateMap();
+    _player.GlobalPosition = _player.SpawnPosition;
 
     // 初始化本关卡的随机种子和 RNG
     _levelSeed = ((ulong) GD.Randi() << 32) | (ulong) GD.Randi();
@@ -97,7 +93,7 @@ public partial class Combat : Node {
     if (!IsInstanceValid(_spawnedPortal)) {
       Vector2I centerCell = new Vector2I(_mapGenerator.MapWidth / 2, _mapGenerator.MapHeight / 2);
       if (!_mapGenerator.IsWalkable(centerCell)) {
-        centerCell = _mapGenerator.WorldToMap(_playerSpawnPosition);
+        centerCell = _mapGenerator.WorldToMap(_player.SpawnPosition);
       }
       _spawnedPortal = PortalScene.Instantiate<Portal>();
       _spawnedPortal.GlobalPosition = _mapGenerator.MapToWorld(centerCell);
@@ -139,13 +135,8 @@ public partial class Combat : Node {
         break;
     }
 
-    bool isTargetNode = !GameManager.Instance.InSubCombat && GameManager.Instance.SelectedMapPosition == GameManager.Instance.GameMap.TargetPosition;
-
-    if (isTargetNode) {
-      GD.Print("Congratulations! Run completed. Returning to title screen.");
-      GetTree().ChangeSceneToFile(TitleScenePath);
-    } else if (picks > 0 && UpgradeMenuScene != null) {
-      var upgradeMenu = UpgradeMenuScene.Instantiate<UpgradeSelectionMenu>();
+    if (picks > 0 && UpgradeSelectionMenuScene != null) {
+      var upgradeMenu = UpgradeSelectionMenuScene.Instantiate<UpgradeSelectionMenu>();
       AddChild(upgradeMenu);
       upgradeMenu.UpgradeSelectionFinished += () => OnUpgradeSelectionFinished(score);
       // 传入本关专用的 RNG，以确保重玩时强化选项不变
