@@ -2,7 +2,7 @@ using Godot;
 
 namespace Bullet;
 
-public partial class ArcsAndLinesBullet : BaseBullet3D {
+public partial class PhaseArcsAndLinesBullet : BaseBullet3D {
   // --- 路径参数 ---
   public Vector3 BasePosition { get; set; }
   public float BaseAngle { get; set; }

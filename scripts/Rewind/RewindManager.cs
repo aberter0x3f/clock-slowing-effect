@@ -9,15 +9,18 @@ public partial class RewindManager : Node {
   public static RewindManager Instance { get; private set; }
 
   [Export(PropertyHint.Range, "1, 120, 1")]
-  public int RecordFps { get; set; } = 60;
+  public int RecordFps { get; set; } = 45;
 
   [Export(PropertyHint.Range, "1, 120, 1")]
   public float MaxRecordTime { get; set; } = 15.0f;
 
+  [Export(PropertyHint.Range, "1.0, 10.0, 0.5")]
+  public float PurgeInterval { get; set; } = 2.0f; // 每隔多少秒清理一次对象池
+
   public bool IsRewinding { get; private set; } = false;
   public bool IsPreviewing { get; private set; } = false;
 
-  public int TrackedObjectCount => _trackedObjects.Count;
+  public int TrackedObjectCount => _objectPool.Count;
 
   // 用于自动回溯的状态
   private bool _isAutoRewinding = false;
@@ -31,7 +34,8 @@ public partial class RewindManager : Node {
       if (_history.Count < 2) {
         return 0.0f;
       }
-      return (float) (_history.Last().Timestamp - _history.First().Timestamp);
+      // 使用 LinkedList 的 First 和 Last 属性来高效地访问两端
+      return (float) (_history.Last.Value.Timestamp - _history.First.Value.Timestamp);
     }
   }
 
@@ -41,9 +45,10 @@ public partial class RewindManager : Node {
     public Dictionary<ulong, RewindState> States = new();
   }
 
-  private readonly List<RewindFrame> _history = new();
-  private readonly Dictionary<ulong, IRewindable> _trackedObjects = new();
-  private readonly HashSet<ulong> _deadObjectIds = new(); // 存放已调用 Destroy() 的对象 ID
+  private readonly LinkedList<RewindFrame> _history = new();
+  // 只追踪当前存活的对象，以提高录制效率
+  private readonly Dictionary<ulong, IRewindable> _aliveObjects = new();
+  // 对象池，包含所有在历史记录中存在过的对象（无论死活）
   private readonly Dictionary<ulong, Node> _objectPool = new();
 
   // 高效的引用计数器，用于对象池清理
@@ -51,7 +56,7 @@ public partial class RewindManager : Node {
 
   private float _recordTimer;
   private double _rewindTargetTimestamp;
-  private int _currentPreviewFrameIndex;
+  private LinkedListNode<RewindFrame> _currentPreviewNode;
 
   public override void _Ready() {
     Instance = this;
@@ -83,8 +88,10 @@ public partial class RewindManager : Node {
   /// 清空所有历史记录和内部状态，用于关卡重置或 Boss 阶段切换．
   /// </summary>
   public void ResetHistory() {
-    foreach (var (id, obj) in _objectPool) {
-      if (!_deadObjectIds.Contains(id)) {
+    // 遍历对象池的副本，因为 Unregister 会修改原始集合
+    foreach (var (id, obj) in _objectPool.ToList()) {
+      // 只清理那些已经死亡的对象
+      if (_aliveObjects.ContainsKey(id)) {
         continue;
       }
 
@@ -95,12 +102,10 @@ public partial class RewindManager : Node {
     }
 
     _history.Clear();
-    _deadObjectIds.Clear();
     _idReferenceCounts.Clear();
 
-    // 注意：这里不清除 _trackedObjects 和 _objectPool，
-    // 因为动态对象被 QueueFree() 时，它们的 _ExitTree 会调用 Unregister() 来清理．
-    // 持久化对象（如 Player）仍然需要被追踪．
+    // 注意：这里不清除 _aliveObjects 和 _objectPool 中的持久化对象（如 Player）．
+    // 动态对象被 QueueFree() 时，它们的 _ExitTree 会调用 Unregister() 来清理．
 
     IsRewinding = false;
     IsPreviewing = false;
@@ -152,7 +157,7 @@ public partial class RewindManager : Node {
     // 计算回溯预览结束并提交状态的时间点
     _autoRewindCommitTimestamp = _rewindTargetTimestamp - duration;
     // 确保不会回溯到比历史记录还早的时间
-    _autoRewindCommitTimestamp = double.Max(_autoRewindCommitTimestamp, _history.First().Timestamp);
+    _autoRewindCommitTimestamp = double.Max(_autoRewindCommitTimestamp, _history.First.Value.Timestamp);
 
     return true;
   }
@@ -160,25 +165,27 @@ public partial class RewindManager : Node {
   public void Register(IRewindable obj) {
     if (obj is not Node node) return;
     ulong id = obj.InstanceId;
-    if (!_trackedObjects.ContainsKey(id)) {
-      _trackedObjects.Add(id, obj);
-      _objectPool.Add(id, node); // 添加到池中以便管理
+    // 一个被注册的对象总是被认为是存活的
+    if (!_aliveObjects.ContainsKey(id)) {
+      _aliveObjects.Add(id, obj);
     }
-    _deadObjectIds.Remove(id); // 如果是复活的对象，从死亡列表中移除
+    // 仅当对象是新的时候才添加到主对象池
+    if (!_objectPool.ContainsKey(id)) {
+      _objectPool.Add(id, node);
+    }
   }
 
   public void Unregister(IRewindable obj) {
     // 这是对象真正被 QueueFree 时调用的，通常在清理时
     ulong id = obj.InstanceId;
-    _trackedObjects.Remove(id);
+    _aliveObjects.Remove(id);
     _objectPool.Remove(id);
-    _deadObjectIds.Remove(id);
     _idReferenceCounts.Remove(id);
   }
 
   public void NotifyDestroyed(IRewindable obj) {
-    // 这是对象调用 Destroy() 时调用的
-    _deadObjectIds.Add(obj.InstanceId);
+    // 这是对象调用 Destroy() 时调用的，将其从存活列表中移除
+    _aliveObjects.Remove(obj.InstanceId);
   }
 
   private void RecordFrame() {
@@ -188,14 +195,12 @@ public partial class RewindManager : Node {
       Timestamp = TimeManager.Instance.CurrentGameTime
     };
 
-    // 捕获所有活动对象的状态
-    foreach (var (id, obj) in _trackedObjects) {
-      if (!_deadObjectIds.Contains(id)) {
-        frame.States.Add(id, obj.CaptureState());
-      }
+    // 只遍历并捕获所有当前存活对象的状态
+    foreach (var (id, obj) in _aliveObjects) {
+      frame.States.Add(id, obj.CaptureState());
     }
 
-    _history.Add(frame);
+    _history.AddLast(frame);
 
     // 为新帧中的所有对象增加引用计数
     foreach (var id in frame.States.Keys) {
@@ -207,11 +212,11 @@ public partial class RewindManager : Node {
 
   private void TrimHistory() {
     double cutoffTimestamp = TimeManager.Instance.CurrentGameTime - MaxRecordTime;
-    int removeCount = _history.FindIndex(f => f.Timestamp >= cutoffTimestamp);
-    if (removeCount > 0) {
-      var framesToRemove = _history.GetRange(0, removeCount);
-      _history.RemoveRange(0, removeCount);
-      CleanupObjectPool(framesToRemove);
+    while (_history.Count > 0 && _history.First.Value.Timestamp < cutoffTimestamp) {
+      var frameToRemove = _history.First.Value;
+      _history.RemoveFirst();
+      // 将单帧包装在列表中以复用清理逻辑
+      CleanupObjectPool(new List<RewindFrame> { frameToRemove });
     }
   }
 
@@ -237,8 +242,8 @@ public partial class RewindManager : Node {
 
     // 遍历候选列表，检查哪些对象可以被真正销毁
     foreach (var id in potentialPurgeIds) {
-      // 清理条件：对象的引用计数为 0，并且它已经被标记为死亡．
-      if (_deadObjectIds.Contains(id)) {
+      // 清理条件：对象的引用计数为 0，并且它当前不是存活状态．
+      if (!_aliveObjects.ContainsKey(id)) {
         if (_objectPool.TryGetValue(id, out var nodeToPurge) && IsInstanceValid(nodeToPurge)) {
           // 在 QueueFree 之前，必须从所有追踪系统中完全注销
           if (nodeToPurge is IRewindable rewindable) {
@@ -253,25 +258,25 @@ public partial class RewindManager : Node {
   private void StartRewindPreview() {
     if (_history.Count == 0) return;
     IsPreviewing = true;
-    _rewindTargetTimestamp = _history.Last().Timestamp;
-    _currentPreviewFrameIndex = _history.Count - 1;
+    _rewindTargetTimestamp = _history.Last.Value.Timestamp;
+    _currentPreviewNode = _history.Last;
   }
 
   private void ApplyPreview() {
-    if (_history.Count == 0) {
+    if (_currentPreviewNode == null) {
       CommitRewind();
       return;
     }
 
     // 找到最接近目标时间戳的帧
-    while (_currentPreviewFrameIndex > 0 && _history[_currentPreviewFrameIndex].Timestamp > _rewindTargetTimestamp) {
-      _currentPreviewFrameIndex--;
+    while (_currentPreviewNode.Previous != null && _currentPreviewNode.Value.Timestamp > _rewindTargetTimestamp) {
+      _currentPreviewNode = _currentPreviewNode.Previous;
     }
-    while (_currentPreviewFrameIndex < _history.Count - 1 && _history[_currentPreviewFrameIndex + 1].Timestamp < _rewindTargetTimestamp) {
-      _currentPreviewFrameIndex++;
+    while (_currentPreviewNode.Next != null && _currentPreviewNode.Next.Value.Timestamp < _rewindTargetTimestamp) {
+      _currentPreviewNode = _currentPreviewNode.Next;
     }
 
-    var frame = _history[_currentPreviewFrameIndex];
+    var frame = _currentPreviewNode.Value;
     RestoreFromFrame(frame);
   }
 
@@ -281,16 +286,21 @@ public partial class RewindManager : Node {
     IsRewinding = true; // 标记正在进行一次真正的状态恢复
 
     // 恢复到最终选择的帧
-    if (_currentPreviewFrameIndex >= 0 && _currentPreviewFrameIndex < _history.Count) {
-      var finalFrame = _history[_currentPreviewFrameIndex];
+    if (_currentPreviewNode != null) {
+      var finalFrame = _currentPreviewNode.Value;
       RestoreFromFrame(finalFrame);
       TimeManager.Instance.SetCurrentGameTime(finalFrame.Timestamp);
 
-      // 移除此帧之后的所有历史记录
-      int removeCount = _history.Count - 1 - _currentPreviewFrameIndex;
-      if (removeCount > 0) {
-        var framesToRemove = _history.GetRange(_currentPreviewFrameIndex + 1, removeCount);
-        _history.RemoveRange(_currentPreviewFrameIndex + 1, removeCount);
+      // 移除此节点之后的所有历史记录
+      var framesToRemove = new List<RewindFrame>();
+      var nodeToRemove = _currentPreviewNode.Next;
+      while (nodeToRemove != null) {
+        framesToRemove.Add(nodeToRemove.Value);
+        var nextNode = nodeToRemove.Next;
+        _history.Remove(nodeToRemove);
+        nodeToRemove = nextNode;
+      }
+      if (framesToRemove.Count > 0) {
         CleanupObjectPool(framesToRemove);
       }
     }
@@ -303,20 +313,24 @@ public partial class RewindManager : Node {
   private void RestoreFromFrame(RewindFrame frame) {
     var frameObjectIds = new HashSet<ulong>(frame.States.Keys);
 
-    // 遍历所有当前被追踪的对象
-    foreach (var (id, obj) in _trackedObjects) {
-      if (frameObjectIds.Contains(id)) {
-        // 这个对象在快照中存在，恢复它的状态
-        if (_deadObjectIds.Contains(id)) {
-          obj.Resurrect(); // 如果它之前是死的，现在复活
-        }
+    // 遍历所有可能存在的对象（无论死活）
+    foreach (var (id, node) in _objectPool) {
+      var obj = (IRewindable) node;
+      bool isCurrentlyAlive = _aliveObjects.ContainsKey(id);
+      bool shouldBeAlive = frameObjectIds.Contains(id);
+
+      if (shouldBeAlive && !isCurrentlyAlive) {
+        // 复活并恢复状态
+        obj.Resurrect();
         obj.RestoreState(frame.States[id]);
-      } else {
-        // 这个对象在快照中不存在，意味着它在那个时间点还没出生或已经死了
-        if (!_deadObjectIds.Contains(id)) {
-          obj.Destroy(); // 标记为死亡
-        }
+      } else if (!shouldBeAlive && isCurrentlyAlive) {
+        // 销毁
+        obj.Destroy();
+      } else if (shouldBeAlive && isCurrentlyAlive) {
+        // 仅恢复状态
+        obj.RestoreState(frame.States[id]);
       }
+      // 如果 !shouldBeAlive && !isCurrentlyAlive，则什么都不做．它已死，且应该保持死亡．
     }
   }
 }

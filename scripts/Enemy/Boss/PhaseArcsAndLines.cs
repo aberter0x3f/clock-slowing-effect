@@ -10,6 +10,7 @@ public class PhaseArcsAndLinesState : BasePhaseState {
   public int VolleyCounter;
   public bool IsCurrentPhaseInverted;
   public float Theta0;
+  public float DefenseTimer;
 }
 
 public partial class PhaseArcsAndLines : BasePhase {
@@ -43,25 +44,37 @@ public partial class PhaseArcsAndLines : BasePhase {
   [Export(PropertyHint.Range, "1, 20, 1")]
   public int VolleyCount { get; set; } = 10;
   [Export(PropertyHint.Range, "0.05, 1.0, 0.05")]
-  public float VolleyInterval { get; set; } = 0.05f;
+  public float VolleyInterval { get; set; } = 0.1f;
   [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
-  public float PhaseInterval { get; set; } = 0.05f;
+  public float PhaseInterval { get; set; } = 0.1f;
 
   [ExportGroup("Bullet Path")]
   [Export(PropertyHint.Range, "10, 500, 1")]
   public float PrimaryRadius { get; set; } = 300f;
   [Export(PropertyHint.Range, "10, 500, 1")]
-  public float SecondaryRadius { get; set; } = 300f;
+  public float SecondaryRadius { get; set; } = 250f;
   [Export(PropertyHint.Range, "0.1, 5.0, 0.05")]
   public float QuarterArcDuration { get; set; } = 0.8f;
   [Export(PropertyHint.Range, "0.1, 5.0, 0.05")]
-  public float SecondaryArcDuration { get; set; } = 0.8f;
+  public float SecondaryArcDuration { get; set; } = 1.2f;
   [Export(PropertyHint.Range, "100, 1000, 10")]
-  public float FinalLinearSpeed { get; set; } = 600f;
+  public float FinalLinearSpeed { get; set; } = 500f;
 
   [ExportGroup("Scene Reference")]
   [Export]
-  public PackedScene BulletScene { get; set; }
+  public PackedScene BulletScene1 { get; set; }
+  [Export]
+  public PackedScene BulletScene2 { get; set; }
+
+  [ExportGroup("Defense Mechanism")]
+  [Export]
+  public PackedScene DefenseBulletScene { get; set; }
+  [Export(PropertyHint.Range, "50, 500, 10")]
+  public float DefenseTriggerDistance { get; set; } = 400f;
+  [Export(PropertyHint.Range, "0, 10.0, 0.1")]
+  public float DefenseCooldown { get; set; } = 0.1f;
+  [Export(PropertyHint.Range, "1, 50, 1")]
+  public int DefenseBulletCount { get; set; } = 50;
 
   // 状态机变量
   private AttackState _currentState;
@@ -69,6 +82,7 @@ public partial class PhaseArcsAndLines : BasePhase {
   private int _volleyCounter;
   private bool _isCurrentPhaseInverted;
   private float _theta0;
+  private float _defenseTimer;
   private readonly RandomNumberGenerator _rng = new();
 
   public override void StartPhase(Boss parent) {
@@ -76,11 +90,17 @@ public partial class PhaseArcsAndLines : BasePhase {
 
     // 初始化状态机，首先进入移动状态
     _currentState = AttackState.MovingToPosition;
+    _defenseTimer = DefenseCooldown;
+
+    BulletCount = Mathf.RoundToInt(BulletCount * GameManager.Instance.EnemyRank / 5);
+    SecondaryArcDuration /= GameManager.Instance.EnemyRank / 5;
+    FinalLinearSpeed *= GameManager.Instance.EnemyRank / 5;
   }
 
   public override void _Process(double delta) {
     if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
+
 
     switch (_currentState) {
       case AttackState.MovingToPosition:
@@ -99,6 +119,9 @@ public partial class PhaseArcsAndLines : BasePhase {
         if (_timer > 0) {
           return;
         }
+
+        // 独立处理防近身机制
+        HandleDefenseMechanism(scaledDelta);
 
         if (_volleyCounter < VolleyCount) {
           // 当前阶段还有更多齐射
@@ -132,6 +155,39 @@ public partial class PhaseArcsAndLines : BasePhase {
     }
   }
 
+  private void HandleDefenseMechanism(float scaledDelta) {
+    _defenseTimer -= scaledDelta;
+    if (_defenseTimer > 0) {
+      return;
+    }
+
+    if (PlayerNode != null && IsInstanceValid(PlayerNode)) {
+      float distanceToPlayer = ParentBoss.GlobalPosition.DistanceTo(PlayerNode.GlobalPosition);
+      if (distanceToPlayer < DefenseTriggerDistance) {
+        FireDefensePattern();
+        _defenseTimer = DefenseCooldown;
+      }
+    }
+  }
+
+  private void FireDefensePattern() {
+    if (DefenseBulletScene == null) {
+      GD.PrintErr("PhaseArcsAndLines: DefenseBulletScene is not set!");
+      return;
+    }
+
+    float angleStep = Mathf.Tau / DefenseBulletCount;
+    for (int i = 0; i < DefenseBulletCount; ++i) {
+      var bullet = DefenseBulletScene.Instantiate<SimpleBullet>();
+      float angle = i * angleStep;
+      var direction = Vector2.Right.Rotated(angle);
+
+      bullet.GlobalPosition = ParentBoss.GlobalPosition;
+      bullet.Rotation = direction.Angle();
+      GameRootProvider.CurrentGameRoot.AddChild(bullet);
+    }
+  }
+
   /// <summary>
   /// 初始化攻击模式的状态并开始发射子弹．
   /// </summary>
@@ -150,14 +206,19 @@ public partial class PhaseArcsAndLines : BasePhase {
   }
 
   private void FireVolley() {
-    if (BulletScene == null) {
-      GD.PrintErr("PhaseArcsAndLines: BulletScene is not set!");
-      return;
+    PackedScene sceneToUse = _isCurrentPhaseInverted ? BulletScene2 : BulletScene1;
+    if (sceneToUse == null) {
+      GD.PrintErr($"PhaseArcsAndLines: Bullet scene for current phase (inverted={_isCurrentPhaseInverted}) is not set!");
+      // 如果一个场景为空，尝试使用另一个作为备用
+      sceneToUse = _isCurrentPhaseInverted ? BulletScene1 : BulletScene2;
+      if (sceneToUse == null) {
+        return; // 两个都为空，无法继续
+      }
     }
 
     for (int i = 0; i < BulletCount; ++i) {
       float baseAngle = (Mathf.Tau / BulletCount * i) + _theta0;
-      var bullet = BulletScene.Instantiate<ArcsAndLinesBullet>();
+      var bullet = sceneToUse.Instantiate<PhaseArcsAndLinesBullet>();
 
       // 初始化子弹的路径参数
       bullet.BasePosition = new Vector3(TargetPosition.X, TargetPosition.Y, 0);
@@ -180,7 +241,8 @@ public partial class PhaseArcsAndLines : BasePhase {
       Timer = this._timer,
       VolleyCounter = this._volleyCounter,
       IsCurrentPhaseInverted = this._isCurrentPhaseInverted,
-      Theta0 = this._theta0
+      Theta0 = this._theta0,
+      DefenseTimer = this._defenseTimer
     };
   }
 
@@ -192,5 +254,6 @@ public partial class PhaseArcsAndLines : BasePhase {
     this._volleyCounter = pals.VolleyCounter;
     this._isCurrentPhaseInverted = pals.IsCurrentPhaseInverted;
     this._theta0 = pals.Theta0;
+    this._defenseTimer = pals.DefenseTimer;
   }
 }

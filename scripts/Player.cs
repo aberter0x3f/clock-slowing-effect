@@ -36,7 +36,6 @@ public partial class Player : CharacterBody2D, IRewindable {
   private bool _timeSlowPressed = false;
   private RandomNumberGenerator _rnd = new RandomNumberGenerator();
   private Node3D _visualizer;
-  private bool _isPermanentlyDead = false;
   private MapGenerator _mapGenerator;
   private Area2D _interactionArea;
   private readonly List<IInteractable> _nearbyInteractables = new();
@@ -70,6 +69,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   public bool IsReloading { get; private set; } = false;
   public float TimeToReloaded { get; private set; } // 当前还有多长时间换完子弹
   public Vector2 SpawnPosition { get; set; }
+  public bool IsPermanentlyDead = false;
 
   public ulong InstanceId => GetInstanceId();
 
@@ -100,7 +100,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   public override void _Process(double delta) {
-    if (_isPermanentlyDead) return;
+    if (IsPermanentlyDead) return;
 
     if (RewindManager.Instance.IsPreviewing) {
       // 在预览时，我们只更新 3D 可视化对象的位置，不做任何逻辑
@@ -204,7 +204,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
     if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
-      // Die();
+      Die();
       return;
     }
   }
@@ -335,14 +335,14 @@ public partial class Player : CharacterBody2D, IRewindable {
     TimeToReloaded = 0.0f;
     ShootTimer = 0.0f;
     CurrentAmmo = Stats.MaxAmmoInt;
-    _isPermanentlyDead = false;
+    IsPermanentlyDead = false;
     _currentAnimationState = AnimationState.Idle;
     UpdateAnimationState();
     UpdateVisualizer();
   }
 
   public void Die() {
-    if (_isPermanentlyDead) return;
+    if (IsPermanentlyDead) return;
 
     // 尝试触发自动回溯
     bool didRewind = RewindManager.Instance.TriggerAutoRewind(AutoRewindOnHitDuration);
@@ -350,7 +350,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     // 如果回溯失败（例如时间不够），则触发死亡菜单
     if (!didRewind) {
       GD.Print("Game Over! Not enough rewind time to survive.");
-      _isPermanentlyDead = true;
+      IsPermanentlyDead = true;
       EmitSignal(SignalName.DiedPermanently);
     }
     // 如果回溯成功，玩家将「复活」到几秒前的状态，游戏继续

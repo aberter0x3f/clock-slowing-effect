@@ -99,9 +99,11 @@ public partial class Boss : BaseEnemy {
     }
 
     // 恢复玩家状态
+    GD.Print("Restoring player state...");
     _player.RestoreState(_playerPhaseStartState);
     GameManager.Instance.CurrentPlayerHealth = _playerPhaseStartState.Health;
     GameManager.Instance.TimeBond = _playerPhaseStartState.TimeBond;
+    _player.IsPermanentlyDead = false;
 
     // 清理场上所有子弹和掉落物
     ClearAllBullets();
@@ -110,28 +112,6 @@ public partial class Boss : BaseEnemy {
     GlobalPosition = _startPosition;
     // 重新开始当前阶段的准备流程
     OnPhaseStarted();
-  }
-
-  /// <summary>
-  /// 从头开始重来
-  /// </summary>
-  public void RestartFromStart() {
-    GD.Print("Restarting from start.");
-
-    // 清理当前阶段
-    if (IsInstanceValid(_activePhaseInstance)) {
-      _activePhaseInstance.QueueFree();
-    }
-    _activePhaseInstance = null;
-
-    // 将 Boss 移回中心
-    GlobalPosition = _startPosition;
-    SetCollisionEnabled(false);
-
-    // 重新会到第一次准备流程
-    InternalState = BossInternalState.Resting;
-    _currentPhaseIndex = 0;
-    _restTimerLeft = RestDuration;
   }
 
   private void OnPhaseStarted() {
@@ -153,8 +133,6 @@ public partial class Boss : BaseEnemy {
 
     // 保存玩家状态，用于「从当前阶段重来」
     _playerPhaseStartState = (PlayerState) _player.CaptureState();
-    _playerPhaseStartState.Health = _player.Health;
-    _playerPhaseStartState.TimeBond = GameManager.Instance.TimeBond;
 
     EmitSignal(SignalName.FightingPhaseStarted);
   }

@@ -54,6 +54,10 @@ public partial class BossCombat : Node {
     _upgradeRng = new RandomNumberGenerator();
     _upgradeRng.Seed = _levelSeed;
 
+    InitializeBoss();
+  }
+
+  private void InitializeBoss() {
     _boss = BossScene.Instantiate<Boss>();
     _boss.Died += OnBossDefeated;
     _boss.FightingPhaseStarted += () => _pauseMenu.EnablePhaseRestart = true;
@@ -118,18 +122,22 @@ public partial class BossCombat : Node {
       _spawnedPortal = null;
     }
 
-    _player.ResetState();
-    _rewindManager.ResetHistory();
-    _boss.RestartFromStart();
-
     _pauseMenu.EnablePhaseRestart = false;
 
-    foreach (var node in GetTree().GetNodesInGroup("bullets").ToList()) {
-      node.QueueFree();
+    foreach (IRewindable node in GetTree().GetNodesInGroup("enemies").ToList()) {
+      node.Destroy();
     }
-    foreach (var node in GetTree().GetNodesInGroup("pickups").ToList()) {
-      node.QueueFree();
+    foreach (IRewindable node in GetTree().GetNodesInGroup("bullets").ToList()) {
+      node.Destroy();
     }
+    foreach (IRewindable node in GetTree().GetNodesInGroup("pickups").ToList()) {
+      node.Destroy();
+    }
+
+    _player.ResetState();
+    _rewindManager.ResetHistory();
+
+    InitializeBoss();
 
     TimeManager.Instance.SetCurrentGameTime(0.0);
 
