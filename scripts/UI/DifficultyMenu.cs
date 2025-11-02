@@ -101,7 +101,8 @@ public partial class DifficultyMenu : CanvasLayer { // 继承 CanvasLayer
                $"{difficulty.Description}\n\n" +
                $"- Initial difficulty: {difficulty.InitialTotalDifficulty}\n" +
                $"- Initial concurrent difficulty: {difficulty.InitialMaxConcurrentDifficulty}\n" +
-               $"- Per level difficulty multiplier: x{difficulty.PerLevelDifficultyMultiplier}";
+               $"- Per level difficulty multiplier: x{difficulty.PerLevelDifficultyMultiplier}\n" +
+               $"- Enemy rank: {difficulty.EnemyRank}";
     _descriptionLabel.Text = desc;
   }
 

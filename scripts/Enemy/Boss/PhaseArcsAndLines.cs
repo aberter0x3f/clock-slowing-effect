@@ -40,9 +40,9 @@ public partial class PhaseArcsAndLines : BasePhase {
 
   [ExportGroup("Attack Pattern")]
   [Export(PropertyHint.Range, "1, 100, 1")]
-  public int BulletCount { get; set; } = 10;
+  public int BulletCount { get; set; } = 20;
   [Export(PropertyHint.Range, "1, 20, 1")]
-  public int VolleyCount { get; set; } = 10;
+  public int VolleyCount { get; set; } = 8;
   [Export(PropertyHint.Range, "0.05, 1.0, 0.05")]
   public float VolleyInterval { get; set; } = 0.1f;
   [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]

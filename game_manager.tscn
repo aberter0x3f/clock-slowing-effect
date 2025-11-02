@@ -21,7 +21,7 @@
 [ext_resource type="Resource" uid="uid://cpcni7g0gdgmn" path="res://events/the_cremators.tres" id="17_fv0ai"]
 [ext_resource type="Resource" uid="uid://r5qh2hapxqtn" path="res://events/we_are_cowboys.tres" id="18_2nf76"]
 
-[sub_resource type="Resource" id="Resource_d5upp"]
+[sub_resource type="Resource" id="Resource_d246e"]
 script = ExtResource("3_o2178")
 metadata/_custom_type_script = "uid://btsh8o314e538"
 
@@ -29,4 +29,4 @@ metadata/_custom_type_script = "uid://btsh8o314e538"
 script = ExtResource("1_smx3j")
 AllEvents = Array[Object]([ExtResource("2_d246e"), ExtResource("3_nvy02"), ExtResource("4_7bexq"), ExtResource("5_424ju"), ExtResource("6_agblk"), ExtResource("7_3alj7"), ExtResource("8_qmmi4"), ExtResource("9_oslct"), ExtResource("10_2x3uj"), ExtResource("11_jy3no"), ExtResource("12_v8q4t"), ExtResource("13_otlv6"), ExtResource("14_3uuvb"), ExtResource("15_brv2v"), ExtResource("16_0viau"), ExtResource("17_fv0ai"), ExtResource("18_2nf76")])
 UpgradeDb = ExtResource("2_o2178")
-PlayerBaseStats = SubResource("Resource_d5upp")
+PlayerBaseStats = SubResource("Resource_d246e")

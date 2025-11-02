@@ -1,0 +1,10 @@
+[gd_scene load_steps=4 format=3 uid="uid://bfuwu8ykpaa14"]
+
+[ext_resource type="Script" uid="uid://ff6k6flg73i1" path="res://scripts/Enemy/Boss/PhaseLiquidCrystal.cs" id="1_f2b8k"]
+[ext_resource type="PackedScene" uid="uid://cdc1sr5qwh6ej" path="res://enemies/boss/liquid_crystal/liquid_crystal_bullet.tscn" id="2_vphar"]
+[ext_resource type="PackedScene" uid="uid://n0da2amuj4dd" path="res://enemies/boss/liquid_crystal/leader_bullet.tscn" id="3_vphar"]
+
+[node name="PhaseLiquidCrystal" type="Node"]
+script = ExtResource("1_f2b8k")
+LiquidCrystalBulletScene = ExtResource("2_vphar")
+LeaderBulletScene = ExtResource("3_vphar")

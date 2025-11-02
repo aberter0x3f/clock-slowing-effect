@@ -1,0 +1,16 @@
+[gd_scene load_steps=7 format=3 uid="uid://bfae4si58fdh3"]
+
+[ext_resource type="Script" uid="uid://b0p8l86klwdgw" path="res://scripts/Enemy/Boss/PhaseThreeBody.cs" id="1_5wu70"]
+[ext_resource type="PackedScene" uid="uid://bbha5pqj45f6x" path="res://enemies/boss/three_body/bullet_big_a.tscn" id="2_t2all"]
+[ext_resource type="PackedScene" uid="uid://bdoql0pxkqgqq" path="res://enemies/boss/three_body/bullet_big_b.tscn" id="3_oct2u"]
+[ext_resource type="PackedScene" uid="uid://dbwq0882xuep1" path="res://enemies/boss/three_body/bullet_small_a.tscn" id="4_jwwtc"]
+[ext_resource type="PackedScene" uid="uid://bb3uk61wdgdl6" path="res://enemies/boss/three_body/bullet_small_b.tscn" id="5_oct2u"]
+[ext_resource type="PackedScene" uid="uid://b7g17tntbj144" path="res://enemies/boss/three_body/bullet_wall.tscn" id="6_jwwtc"]
+
+[node name="PhaseThreeBody" type="Node"]
+script = ExtResource("1_5wu70")
+BigBulletAScene = ExtResource("2_t2all")
+BigBulletBScene = ExtResource("3_oct2u")
+SmallBulletAScene = ExtResource("4_jwwtc")
+SmallBulletBScene = ExtResource("5_oct2u")
+WallBulletScene = ExtResource("6_jwwtc")

@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3 uid="uid://qxto5y31fg8d"]
+
+[ext_resource type="Script" uid="uid://cdnwkne4jyi3e" path="res://scripts/InvertRingEffect.cs" id="1_316th"]
+[ext_resource type="Shader" uid="uid://b6pmue3c3qoeb" path="res://invert_ring.gdshader" id="1_in7cr"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_316th"]
+shader = ExtResource("1_in7cr")
+shader_parameter/center = Vector2(0, 0)
+shader_parameter/inner_radius = 0.0
+shader_parameter/outer_radius = 0.0
+shader_parameter/aspect_ratio = 0.0
+
+[node name="InvertRingEffect" type="CanvasLayer"]
+script = ExtResource("1_316th")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_316th")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

@@ -1,9 +1,9 @@
 [gd_scene load_steps=6 format=3 uid="uid://c3ebr2hfny8mu"]
 
 [ext_resource type="Script" uid="uid://bsmi7g2pwt1xg" path="res://scripts/Enemy/Boss/Boss.cs" id="1_a60ye"]
+[ext_resource type="PackedScene" uid="uid://bfae4si58fdh3" path="res://enemies/boss/three_body/phase.tscn" id="2_nbsx1"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_lh55n"]
 [ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="5_04x26"]
-[ext_resource type="PackedScene" uid="uid://cbuqyyg43op63" path="res://enemies/boss/geometric/phase.tscn" id="5_inxvj"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
@@ -13,7 +13,7 @@ z_index = 2
 collision_layer = 8
 collision_mask = 21
 script = ExtResource("1_a60ye")
-Phases = Array[PackedScene]([ExtResource("5_inxvj")])
+Phases = Array[PackedScene]([ExtResource("2_nbsx1")])
 TimeShardScene = ExtResource("4_lh55n")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

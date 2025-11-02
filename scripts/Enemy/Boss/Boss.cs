@@ -98,6 +98,12 @@ public partial class Boss : BaseEnemy {
       _activePhaseInstance = null;
     }
 
+    // 清理场上所有子弹和掉落物
+    ClearAllBullets();
+    ClearAllPickups();
+    // 将 Boss 移回中心
+    SetDeferred(PropertyName.GlobalPosition, _startPosition);
+
     // 恢复玩家状态
     GD.Print("Restoring player state...");
     _player.RestoreState(_playerPhaseStartState);
@@ -105,11 +111,6 @@ public partial class Boss : BaseEnemy {
     GameManager.Instance.TimeBond = _playerPhaseStartState.TimeBond;
     _player.IsPermanentlyDead = false;
 
-    // 清理场上所有子弹和掉落物
-    ClearAllBullets();
-    ClearAllPickups();
-    // 将 Boss 移回中心
-    SetDeferred(PropertyName.GlobalPosition, _startPosition);
     // 重新开始当前阶段的准备流程
     OnPhaseStarted();
   }

@@ -36,8 +36,8 @@ public partial class SimpleBullet : BaseBullet {
   protected float _timeAlive = 0.0f;
 
   // 用于边界检查的变量
-  private Rect2 _despawnBounds;
-  private bool _boundsInitialized = false;
+  protected Rect2 _despawnBounds;
+  protected bool _boundsInitialized = false;
 
   public override void _Ready() {
     base._Ready();

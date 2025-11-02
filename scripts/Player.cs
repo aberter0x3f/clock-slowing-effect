@@ -75,6 +75,10 @@ public partial class Player : CharacterBody2D, IRewindable {
   [Export(PropertyHint.Range, "0.1, 20.0, 0.1")]
   private float _cameraSmoothingSpeed = 10.0f;
 
+  [ExportGroup("Death Effects")]
+  [Export]
+  public PackedScene DeathRingEffectScene { get; set; }
+
   public float ShootTimer { get; set; } = 0.0f;
   public int CurrentAmmo { get; private set; }
   public bool IsReloading { get; private set; } = false;
@@ -223,11 +227,13 @@ public partial class Player : CharacterBody2D, IRewindable {
     if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
 
     if (body.IsInGroup("enemies")) {
+      GD.Print("Player hit by enemy");
       Die();
       return;
     }
     if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
+      GD.Print("Player hit by bullet");
       Die();
       return;
     }
@@ -367,6 +373,12 @@ public partial class Player : CharacterBody2D, IRewindable {
 
   public void Die() {
     if (IsPermanentlyDead) return;
+
+    if (DeathRingEffectScene != null) {
+      var effect = DeathRingEffectScene.Instantiate<InvertRingEffect>();
+      GetTree().Root.AddChild(effect);
+      effect.StartEffect(this.GlobalPosition);
+    }
 
     // 尝试触发自动回溯
     bool didRewind = RewindManager.Instance.TriggerAutoRewind(AutoRewindOnHitDuration);

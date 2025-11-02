@@ -108,7 +108,7 @@ public partial class BossCombat : Node {
   }
 
   public override void _Process(double delta) {
-    if (IsInstanceValid(_boss) && _boss.InternalState == Boss.BossInternalState.Fighting) {
+    if (IsInstanceValid(_boss) && _boss.InternalState == Boss.BossInternalState.Fighting && !_player.IsPermanentlyDead) {
       _player.Health -= (float) delta;
     }
     UpdateUILabelText();

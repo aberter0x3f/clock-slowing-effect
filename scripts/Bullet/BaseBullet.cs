@@ -12,7 +12,7 @@ public class BaseBulletState : RewindState {
   public Color Modulate;
 }
 
-public abstract partial class BaseBullet : RewindableArea2D {
+public partial class BaseBullet : RewindableArea2D {
   public static readonly Color GRAZE_COLOR = new Color(1.0f, 0.5f, 0.5f);
 
   [Export]

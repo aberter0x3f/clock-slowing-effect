@@ -170,7 +170,7 @@ public partial class Combat : Node {
 
   public override void _Process(double delta) {
     // 在没结束之前，持续扣除玩家生命值
-    if (_enemySpawner != null && !_enemySpawner.IsWaveCompleted) {
+    if (_enemySpawner != null && !_enemySpawner.IsWaveCompleted && !_player.IsPermanentlyDead) {
       _player.Health -= (float) delta;
     }
     UpdateUILabelText();
