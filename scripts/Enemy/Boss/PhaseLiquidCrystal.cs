@@ -8,6 +8,8 @@ namespace Enemy.Boss;
 public class PhaseLiquidCrystalState : BasePhaseState {
   public PhaseLiquidCrystal.PhaseState CurrentState;
   public float Timer;
+  public float OrbitAngle;
+  public Vector2 LastPlayerPosition;
 }
 
 public partial class PhaseLiquidCrystal : BasePhase {
@@ -20,7 +22,9 @@ public partial class PhaseLiquidCrystal : BasePhase {
   [Export]
   public PackedScene LiquidCrystalBulletScene { get; set; }
   [Export]
-  public PackedScene LeaderBulletScene { get; set; }
+  public PackedScene OrbitingBulletScene { get; set; }
+  [Export]
+  public PackedScene TrailBulletScene { get; set; }
 
   [ExportGroup("Pattern Configuration")]
   [Export]
@@ -28,12 +32,23 @@ public partial class PhaseLiquidCrystal : BasePhase {
   [Export]
   public float BulletSpacing { get; set; } = 60f;
   [Export]
-  public float LeaderSpeed { get; set; } = 100f;
-
+  public float BossChaseSpeed { get; set; } = 100f;
   [Export(PropertyHint.Range, "0.0, 2.0, 0.01")]
-  public float LeaderInfluenceOnCrystals { get; set; } = 0.5f;
+  public float BossInfluenceOnCrystals { get; set; } = 0.5f;
 
-  [ExportGroup("")]
+  [ExportGroup("Orbiting Bullet")]
+  [Export]
+  public float OrbitRadius { get; set; } = 50f;
+  [Export]
+  public float OrbitSpeed { get; set; } = 2.0f; // rad/s
+
+  [ExportGroup("Player Trail")]
+  [Export]
+  public float TrailMinDistance { get; set; } = 8f;
+  [Export]
+  public float TrailClearanceRadius { get; set; } = 25f;
+
+  [ExportGroup("Time")]
   [Export]
   public float TimeScaleSensitivity { get; set; } = 1f;
 
@@ -41,8 +56,11 @@ public partial class PhaseLiquidCrystal : BasePhase {
   private float _timer;
   private MapGenerator _mapGenerator;
   private readonly List<PhaseLiquidCrystalBullet> _activeCrystals = new();
+  private readonly List<BaseBullet> _trailBullets = new();
   private Rect2 _crystalBounds;
-  private SimpleBullet _leaderBullet;
+  private BaseBullet _orbitingBullet;
+  private float _orbitAngle;
+  private Vector2 _lastPlayerPosition;
 
   public override void StartPhase(Boss parent) {
     base.StartPhase(parent);
@@ -57,18 +75,28 @@ public partial class PhaseLiquidCrystal : BasePhase {
     float rank = GameManager.Instance.EnemyRank;
     TimeScaleSensitivity = 5f / (rank + 5);
     BulletSpacing = Mathf.Max(45f, (BulletSpacing - 15f) * 10f / (rank + 5) + 15f);
-    LeaderSpeed *= rank / 5f;
+    BossChaseSpeed *= (rank + 5f) / 10f;
 
-    // 在一帧内生成所有子弹并计算精确边界
+    // 生成所有子弹并设置其属性
     SpawnCrystals();
+    SpawnOrbitingBullet();
 
     // 初始化状态机
     _currentState = PhaseState.Waiting;
     _timer = WaitDuration;
+
+    _lastPlayerPosition = PlayerNode.GlobalPosition;
   }
 
   public override void _Process(double delta) {
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) {
+      if (_currentState == PhaseState.Waiting) {
+        _orbitingBullet.GlobalPosition = ParentBoss.GlobalPosition;
+      } else {
+        UpdateOrbitingBulletPosition();
+      }
+      return;
+    }
     float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
     var scaledDelta = (float) delta * effectiveTimeScale;
 
@@ -76,19 +104,38 @@ public partial class PhaseLiquidCrystal : BasePhase {
 
     switch (_currentState) {
       case PhaseState.Waiting:
+        ParentBoss.Velocity = Vector2.Zero;
+        _orbitingBullet.GlobalPosition = ParentBoss.GlobalPosition;
         if (_timer <= 0) {
-          FireLeaderBullet();
           _currentState = PhaseState.Active;
         }
         break;
 
       case PhaseState.Active:
-        if (IsInstanceValid(_leaderBullet) && IsInstanceValid(PlayerNode)) {
-          var direction = _leaderBullet.GlobalPosition.DirectionTo(PlayerNode.GlobalPosition);
-          _leaderBullet.Velocity = direction * LeaderSpeed;
+        if (IsInstanceValid(PlayerNode)) {
+          var direction = ParentBoss.GlobalPosition.DirectionTo(PlayerNode.GlobalPosition);
+          ParentBoss.Velocity = direction * BossChaseSpeed;
         }
+        _orbitAngle += OrbitSpeed * scaledDelta;
+        UpdateOrbitingBulletPosition();
         break;
     }
+
+    // 将 Boss 的速度传递给所有液晶分子
+    foreach (var crystal in _activeCrystals) {
+      if (IsInstanceValid(crystal)) {
+        crystal.BossVelocity = ParentBoss.Velocity;
+      }
+    }
+
+    // 处理玩家轨迹和子弹清理
+    HandlePlayerTrail(scaledDelta);
+    HandleTrailClearing();
+  }
+
+  public override void _PhysicsProcess(double delta) {
+    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+    ParentBoss.MoveAndSlide();
   }
 
   private void SpawnCrystals() {
@@ -113,6 +160,7 @@ public partial class PhaseLiquidCrystal : BasePhase {
         var crystal = LiquidCrystalBulletScene.Instantiate<PhaseLiquidCrystalBullet>();
         crystal.TimeScaleSensitivity = TimeScaleSensitivity;
         crystal.GlobalPosition = new Vector2(x, y);
+        crystal.BossInfluence = BossInfluenceOnCrystals;
         GameRootProvider.CurrentGameRoot.AddChild(crystal);
         _activeCrystals.Add(crystal);
 
@@ -133,24 +181,58 @@ public partial class PhaseLiquidCrystal : BasePhase {
         (maxX - minX) + BulletSpacing,
         (maxY - minY) + BulletSpacing
       );
+      // 将边界信息传递给所有液晶子弹
+      foreach (var crystal in _activeCrystals) {
+        crystal.SetBounds(_crystalBounds);
+      }
     }
   }
 
-  private void FireLeaderBullet() {
-    if (LeaderBulletScene == null || !IsInstanceValid(PlayerNode)) return;
+  private void SpawnOrbitingBullet() {
+    if (OrbitingBulletScene == null) return;
+    _orbitingBullet = OrbitingBulletScene.Instantiate<BaseBullet>();
+    GameRootProvider.CurrentGameRoot.AddChild(_orbitingBullet);
+    _orbitingBullet.GlobalPosition = ParentBoss.GlobalPosition;
+  }
 
-    _leaderBullet = LeaderBulletScene.Instantiate<SimpleBullet>();
-    _leaderBullet.GlobalPosition = ParentBoss.GlobalPosition;
-    _leaderBullet.InitialSpeed = LeaderSpeed;
-    _leaderBullet.TimeScaleSensitivity = TimeScaleSensitivity;
-    GameRootProvider.CurrentGameRoot.AddChild(_leaderBullet);
+  private void UpdateOrbitingBulletPosition() {
+    if (!IsInstanceValid(_orbitingBullet)) return;
+    var offset = Vector2.Right.Rotated(_orbitAngle) * OrbitRadius;
+    _orbitingBullet.GlobalPosition = ParentBoss.GlobalPosition + offset;
+  }
 
-    // 将领导者和边界信息传递给所有液晶子弹
-    foreach (var crystal in _activeCrystals) {
-      if (IsInstanceValid(crystal)) {
-        crystal.SetLeader(_leaderBullet);
-        crystal.SetBounds(_crystalBounds);
-        crystal.LeaderInfluence = LeaderInfluenceOnCrystals;
+  private void HandlePlayerTrail(float scaledDelta) {
+    if (!IsInstanceValid(PlayerNode)) return;
+    var currentPlayerPos = PlayerNode.GlobalPosition;
+
+    if (currentPlayerPos.DistanceTo(_lastPlayerPosition) > TrailMinDistance) {
+      SpawnTrailBullet(_lastPlayerPosition);
+      _lastPlayerPosition = currentPlayerPos;
+    }
+  }
+
+  private void SpawnTrailBullet(Vector2 position) {
+    if (TrailBulletScene == null) return;
+    var bullet = TrailBulletScene.Instantiate<BaseBullet>();
+    bullet.GlobalPosition = position;
+    GameRootProvider.CurrentGameRoot.AddChild(bullet);
+    _trailBullets.Add(bullet);
+  }
+
+  private void HandleTrailClearing() {
+    if (!IsInstanceValid(_orbitingBullet)) return;
+    var orbiterPos = _orbitingBullet.GlobalPosition;
+
+    // 从后向前遍历以安全地移除元素
+    for (int i = _trailBullets.Count - 1; i >= 0; i--) {
+      var trailBullet = _trailBullets[i];
+      if (!IsInstanceValid(trailBullet)) {
+        _trailBullets.RemoveAt(i);
+        continue;
+      }
+      if (trailBullet.GlobalPosition.DistanceTo(orbiterPos) < TrailClearanceRadius) {
+        trailBullet.Destroy();
+        _trailBullets.RemoveAt(i);
       }
     }
   }
@@ -159,6 +241,8 @@ public partial class PhaseLiquidCrystal : BasePhase {
     return new PhaseLiquidCrystalState {
       CurrentState = this._currentState,
       Timer = this._timer,
+      OrbitAngle = this._orbitAngle,
+      LastPlayerPosition = this._lastPlayerPosition,
     };
   }
 
@@ -167,5 +251,7 @@ public partial class PhaseLiquidCrystal : BasePhase {
     if (state is not PhaseLiquidCrystalState plc) return;
     this._currentState = plc.CurrentState;
     this._timer = plc.Timer;
+    this._orbitAngle = plc.OrbitAngle;
+    this._lastPlayerPosition = plc.LastPlayerPosition;
   }
 }

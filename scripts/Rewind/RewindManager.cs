@@ -57,6 +57,9 @@ public partial class RewindManager : Node {
   private double _rewindTargetTimestamp;
   private LinkedListNode<RewindFrame> _currentPreviewNode;
 
+  // 是否有对象刚刚注册
+  private bool _hasObjectStateChanged = false;
+
   public override void _Ready() {
     Instance = this;
     _recordTimer = 1.0f / RecordFps;
@@ -76,9 +79,10 @@ public partial class RewindManager : Node {
     } else {
       // 正常记录
       _recordTimer -= delta;
-      if (_recordTimer <= 0) {
+      if (_hasObjectStateChanged || _recordTimer <= 0) {
         RecordFrame();
         _recordTimer = 1.0f / RecordFps;
+        _hasObjectStateChanged = false;
       }
     }
   }
@@ -172,6 +176,8 @@ public partial class RewindManager : Node {
     if (!_objectPool.ContainsKey(id)) {
       _objectPool.Add(id, node);
     }
+
+    _hasObjectStateChanged = true;
   }
 
   public void Unregister(IRewindable obj) {
@@ -185,6 +191,7 @@ public partial class RewindManager : Node {
   public void NotifyDestroyed(IRewindable obj) {
     // 这是对象调用 Destroy() 时调用的，将其从存活列表中移除
     _aliveObjects.Remove(obj.InstanceId);
+    _hasObjectStateChanged = true;
   }
 
   private void RecordFrame() {

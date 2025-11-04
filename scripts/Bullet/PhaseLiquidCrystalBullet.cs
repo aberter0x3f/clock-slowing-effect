@@ -20,10 +20,10 @@ public partial class PhaseLiquidCrystalBullet : BaseBullet {
   public float BrownianMotionChangeInterval { get; set; } = 0.33f; // 布朗运动改变方向的间隔
 
   public float TimeScaleSensitivity { get; set; } = 1f;
-  public float LeaderInfluence { get; set; }
+  public float BossInfluence { get; set; }
+  public Vector2 BossVelocity { get; set; }
 
   private Player _player;
-  private SimpleBullet _leaderBullet;
   private Vector2 _currentOffset;
   private Vector2 _brownianDirection;
   private float _brownianTimer;
@@ -41,10 +41,6 @@ public partial class PhaseLiquidCrystalBullet : BaseBullet {
     UpdateVisualizer();
   }
 
-  public void SetLeader(SimpleBullet leader) {
-    _leaderBullet = leader;
-  }
-
   public void SetBounds(Rect2 bounds) {
     _bounds = bounds;
   }
@@ -58,7 +54,7 @@ public partial class PhaseLiquidCrystalBullet : BaseBullet {
     var scaledDelta = (float) delta * effectiveTimeScale;
 
     UpdateBrownianMotion(scaledDelta);
-    UpdateLeaderInfluence(scaledDelta);
+    UpdateBossInfluence(scaledDelta);
     UpdateRotation();
     ApplyWrapping();
     UpdateVisualizer();
@@ -77,9 +73,8 @@ public partial class PhaseLiquidCrystalBullet : BaseBullet {
     GlobalPosition += _currentOffset;
   }
 
-  private void UpdateLeaderInfluence(float scaledDelta) {
-    if (!IsInstanceValid(_leaderBullet)) return;
-    GlobalPosition += _leaderBullet.Velocity * LeaderInfluence * scaledDelta;
+  private void UpdateBossInfluence(float scaledDelta) {
+    GlobalPosition += BossVelocity * BossInfluence * scaledDelta;
   }
 
   private void ApplyWrapping() {
@@ -113,7 +108,7 @@ public partial class PhaseLiquidCrystalBullet : BaseBullet {
     if (!IsInstanceValid(_player)) return;
 
     // 默认旋转角度
-    float alpha = Mathf.Pi / 2.0f;
+    float alpha = BossVelocity.IsZeroApprox() ? Mathf.Pi / 2 : BossVelocity.Angle();
     // 指向玩家的角度
     float beta = GlobalPosition.DirectionTo(_player.GlobalPosition).Angle();
 

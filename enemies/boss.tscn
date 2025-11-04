@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://c3ebr2hfny8mu"]
 
 [ext_resource type="Script" uid="uid://bsmi7g2pwt1xg" path="res://scripts/Enemy/Boss/Boss.cs" id="1_a60ye"]
-[ext_resource type="PackedScene" uid="uid://buxkq13puqqwx" path="res://enemies/boss/stellar/phase.tscn" id="2_nbsx1"]
+[ext_resource type="PackedScene" uid="uid://bfuwu8ykpaa14" path="res://enemies/boss/liquid_crystal/phase.tscn" id="2_nbsx1"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_lh55n"]
 [ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="5_04x26"]
 
