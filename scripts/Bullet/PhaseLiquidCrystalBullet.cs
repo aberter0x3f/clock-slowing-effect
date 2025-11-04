@@ -13,7 +13,7 @@ public partial class PhaseLiquidCrystalBullet : BaseBullet {
   [Export]
   public float PlayerInfluenceConstant { get; set; } = 40000f; // 用于计算 k 值的常数
   [Export]
-  public float BrownianMotionRadius { get; set; } = 10f; // 布朗运动的最大半径
+  public float BrownianMotionRadius { get; set; } = 15f; // 布朗运动的最大半径
   [Export]
   public float BrownianMotionSpeed { get; set; } = 10f; // 布朗运动的速度
   [Export]
@@ -34,7 +34,8 @@ public partial class PhaseLiquidCrystalBullet : BaseBullet {
   public override void _Ready() {
     base._Ready();
     _player = GetTree().Root.GetNode<Player>("GameRoot/Player");
-    _sigma = (float) _rnd.Randfn(0, Mathf.DegToRad(5.0f));
+    _sigma = _rnd.Randfn(0, Mathf.DegToRad(5.0f));
+    BrownianMotionChangeInterval += _rnd.Randfn(0, BrownianMotionChangeInterval / 4);
     PickNewBrownianDirection();
     UpdateRotation();
     UpdateVisualizer();

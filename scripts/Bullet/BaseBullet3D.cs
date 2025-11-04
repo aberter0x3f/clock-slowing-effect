@@ -19,7 +19,7 @@ public abstract partial class BaseBullet3D : BaseBullet {
   [Export]
   public float CollisionHeight { get; set; } = 5.0f; // 在此 Z 距离内激活碰撞
 
-  [ExportGroup("Lifetime")]
+  [ExportGroup("Time")]
   [Export]
   public float MaxLifetime { get; set; } = 10.0f;
 

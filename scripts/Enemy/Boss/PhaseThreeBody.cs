@@ -71,7 +71,7 @@ public partial class PhaseThreeBody : BasePhase {
   [Export(PropertyHint.Range, "1, 100, 1")]
   public int WallBulletCountPerSide { get; set; } = 40;
   [Export(PropertyHint.Range, "0, 90, 1")]
-  public float WallBulletAngleSigma { get; set; } = 5.0f;
+  public float WallBulletAngleSigma { get; set; } = 20.0f;
   [Export]
   public float WallBulletInitialSpeedMean { get; set; } = 150f;
   [Export]

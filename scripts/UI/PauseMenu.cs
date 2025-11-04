@@ -19,8 +19,14 @@ public partial class PauseMenu : CanvasLayer {
   private readonly List<Button> _activeButtons = new();
   private int _selectedIndex = 0;
 
+  private float _continueCooldownTimer;
+  private bool _isContinueOnCooldown = false;
+
   [Export(PropertyHint.File, "*.tscn")]
   public string TitleScenePath { get; set; }
+
+  [Export]
+  public float ContinueCooldownDuration { get; set; } = 3.0f;
 
   public bool EnablePhaseRestart { get; set; } = false;
 
@@ -28,12 +34,12 @@ public partial class PauseMenu : CanvasLayer {
     // 此节点应在游戏暂停时也能处理输入．
     ProcessMode = ProcessModeEnum.Always;
 
-    _titleLabel = GetNode<Label>("CenterContainer/VBoxContainer/TitleLabel");
-    _continueButton = GetNode<Button>("CenterContainer/VBoxContainer/ContinueButton");
-    _restartFromPhaseButton = GetNode<Button>("CenterContainer/VBoxContainer/RestartFromPhaseButton");
-    _restartButton = GetNode<Button>("CenterContainer/VBoxContainer/RestartButton");
-    _settingsButton = GetNode<Button>("CenterContainer/VBoxContainer/SettingsButton");
-    _returnToTitleButton = GetNode<Button>("CenterContainer/VBoxContainer/ReturnToTitleButton");
+    _titleLabel = GetNode<Label>("Panel/CenterContainer/VBoxContainer/TitleLabel");
+    _continueButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/ContinueButton");
+    _restartFromPhaseButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/RestartFromPhaseButton");
+    _restartButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/RestartButton");
+    _settingsButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/SettingsButton");
+    _returnToTitleButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/ReturnToTitleButton");
 
     _continueButton.Pressed += OnContinuePressed;
     _restartFromPhaseButton.Pressed += OnRestartFromPhasePressed;
@@ -42,6 +48,26 @@ public partial class PauseMenu : CanvasLayer {
     _returnToTitleButton.Pressed += OnReturnToTitlePressed;
 
     Visible = false; // 初始时隐藏
+  }
+
+  public override void _Process(double delta) {
+    // 如果菜单不可见或冷却未激活，则不执行任何操作
+    if (!Visible || !_isContinueOnCooldown) return;
+
+    _continueCooldownTimer -= (float) delta;
+    if (_continueCooldownTimer > 0) {
+      // 更新按钮文本以显示倒计时
+      _continueButton.Text = $"Continue ({_continueCooldownTimer:F1}s)";
+    } else {
+      // 冷却结束
+      _isContinueOnCooldown = false;
+      _continueButton.Disabled = false;
+      _continueButton.Text = "Continue";
+      // 冷却结束后，如果玩家的焦点还在这个按钮上，则重新聚焦以确保视觉效果正确
+      if (_selectedIndex == _activeButtons.IndexOf(_continueButton)) {
+        _continueButton.GrabFocus();
+      }
+    }
   }
 
   public override void _Input(InputEvent @event) {
@@ -62,8 +88,11 @@ public partial class PauseMenu : CanvasLayer {
     } else if (@event.IsActionPressed("ui_accept")) {
       _activeButtons[_selectedIndex].EmitSignal(Button.SignalName.Pressed);
     } else if (@event.IsActionPressed("ui_cancel")) {
+      // 只有在「继续」按钮可见且不在冷却中时，才允许通过快捷键关闭菜单
       if (_continueButton.Visible) {
-        OnContinuePressed();
+        if (!_isContinueOnCooldown) {
+          OnContinuePressed();
+        }
       } else if (EnablePhaseRestart) {
         OnRestartFromPhasePressed();
       } else {
@@ -86,12 +115,18 @@ public partial class PauseMenu : CanvasLayer {
     if (isDeathMenu) {
       _titleLabel.Text = "GAME OVER";
       _continueButton.Visible = false;
+      _isContinueOnCooldown = false; // 死亡菜单没有继续按钮，禁用冷却
       _selectedIndex = 0; // 默认选择「重新开始」
     } else {
       _titleLabel.Text = "PAUSED";
       _continueButton.Visible = true;
       _activeButtons.Add(_continueButton);
       _selectedIndex = 0; // 默认选择「继续」
+
+      // 启动继续按钮的冷却
+      _isContinueOnCooldown = true;
+      _continueCooldownTimer = ContinueCooldownDuration;
+      _continueButton.Disabled = true;
     }
 
     if (EnablePhaseRestart) {
@@ -116,6 +151,8 @@ public partial class PauseMenu : CanvasLayer {
   }
 
   private void OnContinuePressed() {
+    // 增加一个保护，防止在冷却期间通过某种方式（例如直接点击）触发
+    if (_isContinueOnCooldown) return;
     HideMenu();
   }
 

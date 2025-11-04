@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://ba68poqtns0rw"]
+
+[ext_resource type="Script" uid="uid://b23rpkd7lw7kr" path="res://scripts/Bullet/PhaseStellarJetBullet.cs" id="1_e7dd7"]
+[ext_resource type="PackedScene" uid="uid://lv4u3acty1af" path="res://enemies/boss/stellar/bullet_relativistic.tscn" id="2_8w0db"]
+[ext_resource type="Texture2D" uid="uid://dfd5f6i0nm7t5" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7A Free.png" id="2_v7ulx"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fkmd6"]
+radius = 20.0
+
+[node name="EnemyBullet" type="Area2D" groups=["bullets"]]
+z_index = 3
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_e7dd7")
+RelativisticBulletScene = ExtResource("2_8w0db")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_fkmd6")
+
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="Sprite" type="Sprite3D" parent="Visualizer"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+sorting_offset = 81.0
+billboard = 1
+texture_filter = 0
+texture = ExtResource("2_v7ulx")
+region_enabled = true
+region_rect = Rect2(363, 99, 18, 18)
+
+[connection signal="body_entered" from="." to="." method="OnBodyEntered"]

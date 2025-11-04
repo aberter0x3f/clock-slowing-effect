@@ -1,17 +1,17 @@
-[gd_scene load_steps=4 format=3 uid="uid://c8kcdagv60nmw"]
+[gd_scene load_steps=4 format=3 uid="uid://mpiyrko3rsj"]
 
-[ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_vv6qw"]
-[ext_resource type="Texture2D" uid="uid://da45jlnn5x48c" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7B Free.png" id="3_vv6qw"]
+[ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_28vtv"]
+[ext_resource type="Texture2D" uid="uid://da45jlnn5x48c" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7B Free.png" id="2_2x5e8"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_fkmd6"]
-radius = 20.0
+radius = 7.0
 
 [node name="EnemyBullet" type="Area2D" groups=["bullets"]]
 z_index = 3
 collision_layer = 16
 collision_mask = 4
-script = ExtResource("1_vv6qw")
-InitialSpeed = 600.0
+script = ExtResource("1_28vtv")
+InitialSpeed = 100.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_fkmd6")
@@ -19,11 +19,10 @@ shape = SubResource("CircleShape2D_fkmd6")
 [node name="Visualizer" type="Node3D" parent="."]
 
 [node name="Sprite" type="Sprite3D" parent="Visualizer"]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
-sorting_offset = 80.0
+sorting_offset = 82.0
 billboard = 1
 texture_filter = 0
-texture = ExtResource("3_vv6qw")
+texture = ExtResource("2_2x5e8")
 region_enabled = true
 region_rect = Rect2(195, 99, 19, 19)
 

@@ -215,7 +215,7 @@ animation = &"idle"
 
 [node name="HitPointSprite" type="AnimatedSprite3D" parent="Visualizer"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
-sorting_offset = 61.0
+sorting_offset = 100.0
 billboard = 1
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_7ahtn")

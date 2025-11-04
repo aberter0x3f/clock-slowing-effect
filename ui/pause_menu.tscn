@@ -7,44 +7,52 @@ script = ExtResource("1_hdmo1")
 TitleScenePath = "uid://bqtbfjrfe5x52"
 metadata/_custom_type_script = "uid://ce3p6krk58nbi"
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="Panel" type="Panel" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+[node name="CenterContainer" type="CenterContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/CenterContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="Panel/CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "PAUSED"
 
-[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="ContinueButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Continue"
 
-[node name="RestartFromPhaseButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="RestartFromPhaseButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Restart from phase"
 
-[node name="RestartButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="RestartButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Restart"
 
-[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="SettingsButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 disabled = true
 text = "Settings"
 
-[node name="ReturnToTitleButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="ReturnToTitleButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Return to title"

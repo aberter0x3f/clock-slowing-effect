@@ -126,7 +126,7 @@ public partial class MapGenerator : Node {
       for (int y = 0; y < MapHeight; y++) {
         // 生成地面
         PackedScene tileSceneToUse = ((x + y) % 2 == 0) ? FloorTileScene1 : FloorTileScene2;
-        if (tileSceneToUse != null) {
+        if (_grid[x, y] == 0) {
           var floorTile = tileSceneToUse.Instantiate<Node3D>();
           Vector2 worldPos2D = MapToWorld(new Vector2I(x, y));
           AddChild(floorTile);
@@ -136,16 +136,17 @@ public partial class MapGenerator : Node {
             0,
             worldPos2D.Y * GameConstants.WorldScaleFactor
           );
-        }
-
-        // -生成障碍物或添加到可行走列表
-        if (_grid[x, y] == 1) {
+          _walkableTiles.Add(new Vector2I(x, y));
+        } else {
+          // -生成障碍物或添加到可行走列表
           var obstacle = ObstacleScene.Instantiate<Obstacle>();
+          var node3d = obstacle.GetNode<Node3D>("Node3D");
+          if (x == 0 || x == MapWidth - 1 || y == 0 || y == MapHeight - 1) {
+            node3d.Visible = false;
+          }
           obstacle.TileSize = TileSize;
           obstacle.Position = MapToWorld(new Vector2I(x, y));
           AddChild(obstacle);
-        } else {
-          _walkableTiles.Add(new Vector2I(x, y));
         }
       }
     }

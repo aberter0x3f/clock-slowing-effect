@@ -4,7 +4,7 @@ namespace Rewind;
 
 public abstract partial class RewindableArea2D : Area2D, IRewindable {
   public ulong InstanceId => GetInstanceId();
-  protected bool IsDestroyed { get; private set; } = false;
+  public bool IsDestroyed { get; private set; } = false;
   private CollisionShape2D _collisionShape;
   private Node3D _visualizer;
 

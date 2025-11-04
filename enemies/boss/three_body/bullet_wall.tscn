@@ -12,12 +12,6 @@ collision_layer = 16
 collision_mask = 4
 script = ExtResource("1_7htdg")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-visible = false
-texture = ExtResource("2_5axbe")
-region_enabled = true
-region_rect = Rect2(390, 342, 12, 12)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_fkmd6")
 

@@ -118,6 +118,9 @@ public partial class Boss : BaseEnemy {
   private void OnPhaseStarted() {
     GD.Print($"Starting Boss Phase {_currentPhaseIndex}.");
 
+    // 启用碰撞，让玩家可以攻击
+    SetCollisionEnabled(true);
+
     // 实例化并启动新阶段
     var phaseScene = Phases[_currentPhaseIndex];
     _activePhaseInstance = phaseScene.Instantiate<BasePhase>();
@@ -128,8 +131,6 @@ public partial class Boss : BaseEnemy {
     // 重置回溯历史，防止跨阶段回溯引起状态混乱
     RewindManager.Instance.ResetHistory();
 
-    // 启用碰撞，让玩家可以攻击
-    SetCollisionEnabled(true);
     InternalState = BossInternalState.Fighting;
 
     // 保存玩家状态，用于「从当前阶段重来」
@@ -182,7 +183,7 @@ public partial class Boss : BaseEnemy {
     }
   }
 
-  protected void SetCollisionEnabled(bool enabled) {
+  public void SetCollisionEnabled(bool enabled) {
     _collisionShape.Disabled = !enabled;
   }
 

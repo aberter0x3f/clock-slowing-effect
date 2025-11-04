@@ -1,8 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://1drue7gmc8pb"]
+[gd_scene load_steps=4 format=3 uid="uid://1drue7gmc8pb"]
 
 [ext_resource type="Script" uid="uid://bha8fvbmevtek" path="res://scripts/Bullet/PhaseArcsAndLinesBullet.cs" id="1_egh23"]
-[ext_resource type="Texture2D" uid="uid://cm57ef0xqr05j" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7C Free.png" id="2_skgln"]
-[ext_resource type="Texture2D" uid="uid://b6hhoregxb7ns" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Free Part 4A.png" id="3_f34ru"]
 [ext_resource type="Texture2D" uid="uid://dfd5f6i0nm7t5" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7A Free.png" id="3_wyd7u"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_fkmd6"]
@@ -13,12 +11,6 @@ z_index = 3
 collision_layer = 16
 collision_mask = 4
 script = ExtResource("1_egh23")
-
-[node name="Sprite2D" type="Sprite2D" parent="."]
-visible = false
-texture = ExtResource("2_skgln")
-region_enabled = true
-region_rect = Rect2(195, 99, 19, 19)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_fkmd6")
@@ -32,15 +24,5 @@ texture_filter = 0
 texture = ExtResource("3_wyd7u")
 region_enabled = true
 region_rect = Rect2(195, 99, 19, 19)
-
-[node name="LandingIndicator" type="Node3D" parent="."]
-
-[node name="Sprite" type="Sprite3D" parent="LandingIndicator"]
-sorting_offset = 81.0
-axis = 1
-texture_filter = 0
-texture = ExtResource("3_f34ru")
-region_enabled = true
-region_rect = Rect2(386, 98, 20, 20)
 
 [connection signal="body_entered" from="." to="." method="OnBodyEntered"]

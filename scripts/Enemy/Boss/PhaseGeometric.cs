@@ -21,7 +21,7 @@ public partial class PhaseGeometric : BasePhase {
 
   [ExportGroup("Pattern Configuration")]
   [Export(PropertyHint.Range, "0.1, 5.0, 0.1")]
-  public float ActivePhaseStartTime { get; set; } = 1;
+  public float ActivePhaseStartTime { get; set; } = 1f;
   [Export(PropertyHint.Range, "0.05, 1.0, 0.01")]
   public float VolleyInterval { get; set; } = 0.3f;
   [Export(PropertyHint.Range, "1, 20, 1")]
@@ -47,7 +47,6 @@ public partial class PhaseGeometric : BasePhase {
 
     var rank = GameManager.Instance.EnemyRank;
     TimeScaleSensitivity = 3f / (rank + 3);
-    ActivePhaseStartTime = 5f / rank;
     BulletsPerVolley = Mathf.RoundToInt(40f * rank / 5f);
   }
 
@@ -56,8 +55,6 @@ public partial class PhaseGeometric : BasePhase {
 
     float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
     var scaledDelta = (float) delta * effectiveTimeScale;
-
-    _timer -= scaledDelta;
 
     if (_timer <= 0) {
       // ID 根据已发射的数量计算，从 (VolleysPerCycle - 1) 倒数到 0
@@ -68,13 +65,12 @@ public partial class PhaseGeometric : BasePhase {
 
       // 检查当前攻击序列是否完成
       if (_volleysFiredThisCycle >= VolleysPerCycle) {
-        // 完成，重置计数器并设置长间隔
         _volleysFiredThisCycle = 0;
-        _timer += ActivePhaseStartTime;
       } else {
-        // 未完成，设置短间隔
         _timer += VolleyInterval;
       }
+    } else {
+      _timer -= scaledDelta;
     }
   }
 

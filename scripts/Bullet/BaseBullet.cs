@@ -36,11 +36,11 @@ public partial class BaseBullet : RewindableArea2D {
     UpdateVisualizer();
   }
 
-  public void OnGrazeEnter() {
+  public virtual void OnGrazeEnter() {
     _sprite.Modulate = GRAZE_COLOR;
   }
 
-  public void OnGrazeExit() {
+  public virtual void OnGrazeExit() {
     _sprite.Modulate = _originalColor;
   }
 
