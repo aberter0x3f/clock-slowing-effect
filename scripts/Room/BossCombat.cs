@@ -59,6 +59,33 @@ public partial class BossCombat : Node {
 
   private void InitializeBoss() {
     _boss = BossScene.Instantiate<Boss>();
+
+    // 根据位面选择阶段组合
+    var plane = GameManager.Instance.CurrentPlane;
+    // `plane` 从 1 开始，所以我们需要 `(plane - 1)` 来得到从 0 开始的索引
+    var setIndex = (plane - 1) % 3;
+    Godot.Collections.Array<PackedScene> selectedPhases;
+
+    switch (setIndex) {
+      case 0: // 位面 1, 4, 7, ...
+        selectedPhases = _boss.PhaseSet1;
+        GD.Print($"Current plane is {plane}, selecting Boss Phase Set 1.");
+        break;
+      case 1: // 位面 2, 5, 8, ...
+        selectedPhases = _boss.PhaseSet2;
+        GD.Print($"Current plane is {plane}, selecting Boss Phase Set 2.");
+        break;
+      case 2: // 位面 3, 6, 9, ...
+        selectedPhases = _boss.PhaseSet3;
+        GD.Print($"Current plane is {plane}, selecting Boss Phase Set 3.");
+        break;
+      default: // 备用
+        selectedPhases = _boss.PhaseSet1;
+        GD.PrintErr($"Invalid plane set index {setIndex}, defaulting to Set 1.");
+        break;
+    }
+    _boss.SetActivePhases(selectedPhases);
+
     _boss.Died += OnBossDefeated;
     _boss.FightingPhaseStarted += () => _pauseMenu.EnablePhaseRestart = true;
     _boss.FightingPhaseEnded += () => _pauseMenu.EnablePhaseRestart = false;

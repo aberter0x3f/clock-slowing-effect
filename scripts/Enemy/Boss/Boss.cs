@@ -35,8 +35,13 @@ public partial class Boss : BaseEnemy {
     }
   }
 
+  [ExportGroup("Phase Sets")]
   [Export]
-  public Godot.Collections.Array<PackedScene> Phases { get; set; }
+  public Godot.Collections.Array<PackedScene> PhaseSet1 { get; set; }
+  [Export]
+  public Godot.Collections.Array<PackedScene> PhaseSet2 { get; set; }
+  [Export]
+  public Godot.Collections.Array<PackedScene> PhaseSet3 { get; set; }
 
   [ExportGroup("Phase Transition")]
   [Export]
@@ -48,6 +53,7 @@ public partial class Boss : BaseEnemy {
   private PlayerState _playerPhaseStartState;
   private CollisionShape2D _collisionShape;
   private Vector2 _startPosition;
+  private Godot.Collections.Array<PackedScene> _activePhaseSet;
 
   public override void _Ready() {
     base._Ready();
@@ -56,6 +62,13 @@ public partial class Boss : BaseEnemy {
     _restTimerLeft = RestDuration / 2; // 首次休息时间
 
     SetCollisionEnabled(false);
+  }
+
+  /// <summary>
+  /// 由外部（例如 BossCombat 场景）调用，用于根据当前游戏状态设置本次战斗要使用的阶段组合．
+  /// </summary>
+  public void SetActivePhases(Godot.Collections.Array<PackedScene> phases) {
+    _activePhaseSet = phases;
   }
 
   public override void _Process(double delta) {
@@ -116,13 +129,20 @@ public partial class Boss : BaseEnemy {
   }
 
   private void OnPhaseStarted() {
+    if (_activePhaseSet == null || _activePhaseSet.Count == 0) {
+      GD.PrintErr("Boss has no active phase set configured. Cannot start phase.");
+      InternalState = BossInternalState.Finished;
+      Die();
+      return;
+    }
+
     GD.Print($"Starting Boss Phase {_currentPhaseIndex}.");
 
     // 启用碰撞，让玩家可以攻击
     SetCollisionEnabled(true);
 
     // 实例化并启动新阶段
-    var phaseScene = Phases[_currentPhaseIndex];
+    var phaseScene = _activePhaseSet[_currentPhaseIndex];
     _activePhaseInstance = phaseScene.Instantiate<BasePhase>();
     AddChild(_activePhaseInstance);
     _activePhaseInstance.PhaseCompleted += OnPhaseEnded;
@@ -163,7 +183,7 @@ public partial class Boss : BaseEnemy {
 
     EmitSignal(SignalName.FightingPhaseEnded);
 
-    if (_currentPhaseIndex >= Phases.Count) {
+    if (_currentPhaseIndex >= _activePhaseSet.Count) {
       GD.Print("Boss defeated!");
       InternalState = BossInternalState.Finished;
       // 调用基类的 Die，这会触发 Died 信号，让 BossRoom 生成传送门

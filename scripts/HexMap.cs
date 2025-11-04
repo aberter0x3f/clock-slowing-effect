@@ -76,39 +76,39 @@ public class HexMap {
     StartPosition = new Vector2I(-centerColumn, 0);
     TargetPosition = new Vector2I(centerColumn, 0);
 
-    foreach (var node in Nodes.Values) {
-      node.Type = NodeType.Boss;
+    // foreach (var node in Nodes.Values) {
+    //   node.Type = NodeType.Boss;
+    // }
+
+    Nodes[StartPosition].Type = NodeType.Combat;
+    Nodes[TargetPosition].Type = NodeType.Boss;
+
+    // 随机分配特殊房间
+    var potentialSpecialNodes = Nodes.Values
+      .Where(n => n.Position != StartPosition && n.Position != TargetPosition)
+      .ToList();
+
+    const int SHOP_COUNT = 2, TRANSMUTER_COUNT = 2;
+
+    for (int i = 0; i < SHOP_COUNT; ++i) {
+      if (potentialSpecialNodes.Count == 0) break;
+      int shopIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
+      potentialSpecialNodes[shopIndex].Type = NodeType.Shop;
+      potentialSpecialNodes.RemoveAt(shopIndex);
     }
 
-    // Nodes[StartPosition].Type = NodeType.Combat;
-    // Nodes[TargetPosition].Type = NodeType.Boss;
-
-    // // 随机分配特殊房间
-    // var potentialSpecialNodes = Nodes.Values
-    //   .Where(n => n.Position != StartPosition && n.Position != TargetPosition)
-    //   .ToList();
-
-    // const int SHOP_COUNT = 2, TRANSMUTER_COUNT = 2;
-
-    // for (int i = 0; i < SHOP_COUNT; ++i) {
-    //   if (potentialSpecialNodes.Count == 0) break;
-    //   int shopIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
-    //   potentialSpecialNodes[shopIndex].Type = NodeType.Shop;
-    //   potentialSpecialNodes.RemoveAt(shopIndex);
-    // }
-
-    // for (int i = 0; i < TRANSMUTER_COUNT; ++i) {
-    //   if (potentialSpecialNodes.Count == 0) break;
-    //   int transmuterIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
-    //   potentialSpecialNodes[transmuterIndex].Type = NodeType.Transmuter;
-    //   potentialSpecialNodes.RemoveAt(transmuterIndex);
-    // }
-    // // 剩余的节点一半战斗，一半事件
-    // int eventCount = (potentialSpecialNodes.Count + 1) / 2;
-    // potentialSpecialNodes.Shuffle(new RandomNumberGenerator());
-    // for (int i = 0; i < eventCount; ++i) {
-    //   potentialSpecialNodes[i].Type = NodeType.Event;
-    // }
+    for (int i = 0; i < TRANSMUTER_COUNT; ++i) {
+      if (potentialSpecialNodes.Count == 0) break;
+      int transmuterIndex = GD.RandRange(0, potentialSpecialNodes.Count - 1);
+      potentialSpecialNodes[transmuterIndex].Type = NodeType.Transmuter;
+      potentialSpecialNodes.RemoveAt(transmuterIndex);
+    }
+    // 剩余的节点一半战斗，一半事件
+    int eventCount = (potentialSpecialNodes.Count + 1) / 2;
+    potentialSpecialNodes.Shuffle(new RandomNumberGenerator());
+    for (int i = 0; i < eventCount; ++i) {
+      potentialSpecialNodes[i].Type = NodeType.Event;
+    }
   }
 
   /// <summary>
