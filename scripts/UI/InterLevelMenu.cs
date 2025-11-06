@@ -42,7 +42,7 @@ public partial class InterLevelMenu : Control {
 
     _currentPanelIndex = index;
 
-    for (int i = 0; i < _menuPanels.Count; i++) {
+    for (int i = 0; i < _menuPanels.Count; ++i) {
       var panel = _menuPanels[i];
       panel.Visible = (i == _currentPanelIndex);
     }

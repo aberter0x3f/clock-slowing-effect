@@ -42,8 +42,8 @@ metadata/_edit_use_anchors_ = true
 
 [node name="MapGenerator" type="Node" parent="."]
 script = ExtResource("6_u0hhn")
-MapWidth = 30
-MapHeight = 20
+MapWidth = 31
+MapHeight = 21
 ObstacleProbability = 0.0
 ObstacleScene = ExtResource("7_8jhj1")
 FloorTileScene1 = ExtResource("8_xwl7f")

@@ -5,9 +5,9 @@ using Godot;
 public partial class MapGenerator : Node {
   [ExportGroup("Map Configuration")]
   [Export]
-  public int MapWidth { get; set; } = 40;
+  public int MapWidth { get; set; } = 41;
   [Export]
-  public int MapHeight { get; set; } = 30;
+  public int MapHeight { get; set; } = 31;
   [Export]
   public int TileSize { get; set; } = 32;
   [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]

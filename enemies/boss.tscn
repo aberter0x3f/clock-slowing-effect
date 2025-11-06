@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://c3ebr2hfny8mu"]
+[gd_scene load_steps=16 format=3 uid="uid://c3ebr2hfny8mu"]
 
 [ext_resource type="Script" uid="uid://bsmi7g2pwt1xg" path="res://scripts/Enemy/Boss/Boss.cs" id="1_a60ye"]
 [ext_resource type="PackedScene" uid="uid://cm5dq08tifvge" path="res://enemies/boss/arcs_and_lines/phase.tscn" id="2_kikpo"]
@@ -12,6 +12,8 @@
 [ext_resource type="PackedScene" uid="uid://bfuwu8ykpaa14" path="res://enemies/boss/liquid_crystal/phase.tscn" id="8_y303a"]
 [ext_resource type="PackedScene" uid="uid://dbdl8ffiml85m" path="res://enemies/boss/maze/phase.tscn" id="9_40u2w"]
 [ext_resource type="PackedScene" uid="uid://buxkq13puqqwx" path="res://enemies/boss/stellar/phase.tscn" id="10_jqle5"]
+[ext_resource type="AudioStream" uid="uid://dypy6j3yd7nfw" path="res://sounds/effects/up.wav" id="11_mtimd"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="13_a01x7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
@@ -24,7 +26,9 @@ script = ExtResource("1_a60ye")
 PhaseSet1 = Array[PackedScene]([ExtResource("2_kikpo"), ExtResource("3_6l5el"), ExtResource("4_mtimd")])
 PhaseSet2 = Array[PackedScene]([ExtResource("5_a01x7"), ExtResource("6_rkfnh"), ExtResource("2_nbsx1")])
 PhaseSet3 = Array[PackedScene]([ExtResource("8_y303a"), ExtResource("9_40u2w"), ExtResource("10_jqle5")])
+PowerUpSound = ExtResource("11_mtimd")
 TimeShardScene = ExtResource("4_lh55n")
+AttackSound = ExtResource("13_a01x7")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false

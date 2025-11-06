@@ -125,9 +125,7 @@ public partial class Drummer : BaseEnemy {
     Velocity = Vector2.Zero;
     _attackCooldown -= scaledDelta;
     if (_attackCooldown <= 0) {
-      if (_player != null && IsInstanceValid(_player)) {
-        StartAttackSequence();
-      }
+      StartAttackSequence();
     }
   }
 
@@ -162,7 +160,7 @@ public partial class Drummer : BaseEnemy {
           if (_attackLoopCounter < 2) {
             // --- 小弹幕循环 ---
             FireBulletCircle(SmallBulletScene, SmallBulletCount);
-            _fireSubLoopCounter++;
+            ++_fireSubLoopCounter;
 
             if (_fireSubLoopCounter < 3) {
               // 还没射完 3 波，设置 0.1 秒的间隔
@@ -184,12 +182,12 @@ public partial class Drummer : BaseEnemy {
 
       case AttackSubState.Pausing:
         if (_attackTimer <= 0) {
-          _attackLoopCounter++;
+          ++_attackLoopCounter;
           if (_attackLoopCounter < 3) {
             PrepareNextJump(); // 准备下一次跳跃
           } else {
             // 3 次攻击循环全部结束，转换到撤退状态
-            _retreatDirection = (GlobalPosition - _player.GlobalPosition).Normalized();
+            _retreatDirection = (GlobalPosition - PlayerNode.GlobalPosition).Normalized();
             _retreatTimer = RetreatDuration;
             _currentState = State.Retreating;
             _attackSubState = AttackSubState.None;
@@ -200,9 +198,10 @@ public partial class Drummer : BaseEnemy {
   }
 
   private void PrepareNextJump() {
-    Vector2 attackDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
+    var target = PlayerNode;
+    Vector2 attackDirection = (target.GlobalPosition - GlobalPosition).Normalized();
     Vector2 startPos = GlobalPosition;
-    float distanceToPlayer = startPos.DistanceTo(_player.GlobalPosition);
+    float distanceToPlayer = startPos.DistanceTo(target.GlobalPosition);
     float actualLungeDistance = Mathf.Min(LungeDistance, distanceToPlayer - PlayerAvoidanceDistance);
 
     if (actualLungeDistance > 0) {
@@ -249,6 +248,7 @@ public partial class Drummer : BaseEnemy {
     _attackSubState = AttackSubState.Firing;
     _fireSubLoopCounter = 0;
     _attackTimer = 0; // 立即发射第一波
+    PlayAttackSound();
   }
 
   private void SetCollisionsEnabled(bool enabled) {
@@ -266,7 +266,7 @@ public partial class Drummer : BaseEnemy {
 
     float angleStep = Mathf.Tau / count;
 
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < count; ++i) {
       float angle = i * angleStep;
       Vector2 direction = Vector2.Right.Rotated(angle);
 

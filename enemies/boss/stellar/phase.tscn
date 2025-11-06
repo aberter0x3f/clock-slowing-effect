@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://buxkq13puqqwx"]
+[gd_scene load_steps=11 format=3 uid="uid://buxkq13puqqwx"]
 
 [ext_resource type="Script" uid="uid://btmr0wt3ugit6" path="res://scripts/Enemy/Boss/PhaseStellar.cs" id="1_b1vo0"]
 [ext_resource type="PackedScene" uid="uid://btssylr121vr1" path="res://enemies/boss/stellar/bullet_big.tscn" id="2_3uiai"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://gmp0llgu4mt8" path="res://enemies/boss/stellar/bullet_red.tscn" id="6_dthqa"]
 [ext_resource type="PackedScene" uid="uid://c86qayfwx1bay" path="res://enemies/boss/stellar/bullet_defense.tscn" id="7_nxqqf"]
 [ext_resource type="PackedScene" uid="uid://ba68poqtns0rw" path="res://enemies/boss/stellar/bullet_jet.tscn" id="8_uux1g"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="10_dthqa"]
 
 [node name="PhaseStellar" type="Node"]
 script = ExtResource("1_b1vo0")
@@ -20,3 +21,4 @@ OrangeBulletScene = ExtResource("5_uux1g")
 RedBulletScene = ExtResource("6_dthqa")
 JetBulletScene = ExtResource("8_uux1g")
 DefenseBulletScene = ExtResource("7_nxqqf")
+AttackSound = ExtResource("10_dthqa")

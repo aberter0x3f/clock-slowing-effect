@@ -14,8 +14,13 @@ public abstract partial class BasePhase : Node {
   [Signal]
   public delegate void PhaseCompletedEventHandler();
 
+  [ExportGroup("Sound Effects")]
+  [Export]
+  public AudioStream AttackSound { get; set; }
+
   private bool _isFinished;
   private float _health;
+  private Player _player;
 
   public virtual float MaxHealth { get; protected set; } = 40f;
   public virtual float DamageReduction {
@@ -44,14 +49,14 @@ public abstract partial class BasePhase : Node {
     }
   }
   protected Boss ParentBoss { get; private set; }
-  protected Player PlayerNode { get; private set; }
+  protected Node2D PlayerNode => _player.DecoyTarget ?? _player;
 
   /// <summary>
   /// 当 Boss 控制器启动此阶段时调用．
   /// </summary>
   public virtual void StartPhase(Boss parent) {
     ParentBoss = parent;
-    PlayerNode = GetTree().Root.GetNode<Player>("GameRoot/Player");
+    _player = GetTree().Root.GetNode<Player>("GameRoot/Player");
     Health = MaxHealth;
     SetProcess(true);
     SetPhysicsProcess(true);
@@ -87,5 +92,9 @@ public abstract partial class BasePhase : Node {
   /// </summary>
   public virtual void RestoreInternalState(RewindState state) {
     if (state is not BasePhaseState bps) return;
+  }
+
+  protected void PlayAttackSound() {
+    SoundManager.Instance.PlaySoundEffect(AttackSound, cooldown: 0.2f, volumeDb: -5f);
   }
 }

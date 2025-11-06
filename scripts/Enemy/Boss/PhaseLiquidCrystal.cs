@@ -77,6 +77,8 @@ public partial class PhaseLiquidCrystal : BasePhase {
     BulletSpacing = Mathf.Max(45f, (BulletSpacing - 15f) * 10f / (rank + 5) + 15f);
     BossChaseSpeed *= (rank + 5f) / 10f;
 
+    PlayAttackSound();
+
     // 生成所有子弹并设置其属性
     SpawnCrystals();
     SpawnOrbitingBullet();

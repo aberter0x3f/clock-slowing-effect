@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://c4aex2pw3tmr8"]
+[gd_scene load_steps=9 format=3 uid="uid://c4aex2pw3tmr8"]
 
 [ext_resource type="Script" uid="uid://b21c5bqcvdlj4" path="res://scripts/Enemy/Dna.cs" id="1_ygq8s"]
 [ext_resource type="PackedScene" uid="uid://s4ft2gsdi4gb" path="res://enemies/dna/bullet1.tscn" id="2_i5el3"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://ixilhvudbumt" path="res://enemies/dna/bullet2.tscn" id="3_unv4t"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_3q06v"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_unv4t"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="5_unv4t"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
@@ -15,10 +16,11 @@ z_index = 2
 collision_layer = 8
 collision_mask = 21
 script = ExtResource("1_ygq8s")
-Bullet1 = ExtResource("2_i5el3")
-Bullet2 = ExtResource("3_unv4t")
+Bullet1Scene = ExtResource("2_i5el3")
+Bullet2Scene = ExtResource("3_unv4t")
 TimeShardScene = ExtResource("4_3q06v")
 TimeShardCount = 5
+AttackSound = ExtResource("5_unv4t")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false

@@ -48,7 +48,7 @@ public partial class MapMenuNode : TextureButton {
   private Vector2[] GetHexagonPoints(Vector2 center, float radius) {
     // +1 使其闭合
     Vector2[] points = new Vector2[6 + 1];
-    for (int i = 0; i < 6 + 1; i++) {
+    for (int i = 0; i < 6 + 1; ++i) {
       float angle_deg = 60 * i + 90;
       float angle_rad = Mathf.DegToRad(angle_deg);
       points[i] = new Vector2(

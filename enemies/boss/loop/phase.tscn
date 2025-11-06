@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://c8dvumb0wnvnt"]
+[gd_scene load_steps=8 format=3 uid="uid://c8dvumb0wnvnt"]
 
 [ext_resource type="Script" uid="uid://lwjf4gygtldn" path="res://scripts/Enemy/Boss/PhaseLoop.cs" id="1_hpato"]
 [ext_resource type="PackedScene" uid="uid://bwmlkga153qab" path="res://enemies/boss/loop/bullet_big.tscn" id="2_cjfqm"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bhkm47mawitj0" path="res://enemies/boss/loop/bullet_small.tscn" id="3_m3s13"]
 [ext_resource type="PackedScene" uid="uid://mpiyrko3rsj" path="res://enemies/boss/loop/bullet_homing.tscn" id="4_bwwkp"]
 [ext_resource type="PackedScene" uid="uid://cwejqvd2mw5vl" path="res://enemies/boss/loop/bullet_defense.tscn" id="6_bwwkp"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="7_w676i"]
 
 [node name="PhaseLoop" type="Node"]
 script = ExtResource("1_hpato")
@@ -14,3 +15,4 @@ InactiveBigBulletScene = ExtResource("3_bwwkp")
 SmallBulletScene = ExtResource("3_m3s13")
 HomingBulletScene = ExtResource("4_bwwkp")
 DefenseBulletScene = ExtResource("6_bwwkp")
+AttackSound = ExtResource("7_w676i")

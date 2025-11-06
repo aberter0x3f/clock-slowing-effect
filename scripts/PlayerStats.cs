@@ -101,7 +101,7 @@ public class PlayerStats {
   /// <summary>
   /// 应用那些每帧都可能变化的加成．
   /// </summary>
-  public void ApplyDynamicBonuses(float currentHealth) {
+  private void ApplyDynamicBonuses(float currentHealth) {
     // 肾上腺素
     if (_adrenalineBonus > 0f) {
       float missingHealthRatio = Mathf.Clamp(1.0f - (currentHealth / MaxHealth), 0f, 1f);

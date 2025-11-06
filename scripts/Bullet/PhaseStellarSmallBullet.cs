@@ -40,14 +40,14 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
   public float TimeScaleSensitivity { get; set; }
 
   private Vector2 _velocity;
-  private Node2D _playerNode;
+  private Player _playerNode;
   private float _supernovaTimer = 0f;
 
   public override void _Ready() {
     base._Ready();
     SetProcess(false);
     Visible = false;
-    _playerNode = GameRootProvider.CurrentGameRoot.GetNode<Node2D>("Player");
+    _playerNode = GameRootProvider.CurrentGameRoot.GetNode<Player>("Player");
   }
 
   public void Activate(Vector2 startPosition) {
@@ -118,8 +118,9 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
 
   private void SwitchToSupernovaHoming() {
     CurrentState = State.SupernovaHoming;
-    if (IsInstanceValid(_playerNode)) {
-      var dir = (_playerNode.GlobalPosition - GlobalPosition).Normalized();
+    var target = _playerNode.DecoyTarget ?? _playerNode;
+    if (IsInstanceValid(target)) {
+      var dir = (target.GlobalPosition - GlobalPosition).Normalized();
       dir = dir.Rotated((float) GD.Randfn(0, 0.1));
       if (GD.Randi() % 2 == 0) {
         dir *= -1;

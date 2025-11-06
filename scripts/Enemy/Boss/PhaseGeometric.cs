@@ -57,6 +57,10 @@ public partial class PhaseGeometric : BasePhase {
     var scaledDelta = (float) delta * effectiveTimeScale;
 
     if (_timer <= 0) {
+      if (_volleysFiredThisCycle == 0) {
+        PlayAttackSound();
+      }
+
       // ID 根据已发射的数量计算，从 (VolleysPerCycle - 1) 倒数到 0
       int id = (VolleysPerCycle - 1) - _volleysFiredThisCycle;
       FireVolley(id);

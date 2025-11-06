@@ -1,12 +1,14 @@
-[gd_scene load_steps=5 format=3 uid="uid://bfuwu8ykpaa14"]
+[gd_scene load_steps=6 format=3 uid="uid://bfuwu8ykpaa14"]
 
 [ext_resource type="Script" uid="uid://ff6k6flg73i1" path="res://scripts/Enemy/Boss/PhaseLiquidCrystal.cs" id="1_f2b8k"]
 [ext_resource type="PackedScene" uid="uid://cdc1sr5qwh6ej" path="res://enemies/boss/liquid_crystal/liquid_crystal_bullet.tscn" id="2_vphar"]
 [ext_resource type="PackedScene" uid="uid://n0da2amuj4dd" path="res://enemies/boss/liquid_crystal/orbiting_bullet.tscn" id="3_vphar"]
 [ext_resource type="PackedScene" uid="uid://duulck0duiio" path="res://enemies/boss/liquid_crystal/trail_bullet.tscn" id="4_gxk1u"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="5_oxke7"]
 
 [node name="PhaseLiquidCrystal" type="Node"]
 script = ExtResource("1_f2b8k")
 LiquidCrystalBulletScene = ExtResource("2_vphar")
 OrbitingBulletScene = ExtResource("3_vphar")
 TrailBulletScene = ExtResource("4_gxk1u")
+AttackSound = ExtResource("5_oxke7")

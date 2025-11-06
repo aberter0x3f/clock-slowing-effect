@@ -12,7 +12,7 @@ public partial class SimpleEnemy1 : BaseEnemy {
   private const float SHOOT_INTERVAL = 1.0f;
 
   [Export]
-  public PackedScene Bullet { get; set; }
+  public PackedScene BulletScene { get; set; }
 
   private float _shootTimer = SHOOT_INTERVAL;
   private RandomWalkComponent _randomWalkComponent;
@@ -45,9 +45,11 @@ public partial class SimpleEnemy1 : BaseEnemy {
   }
 
   private void Shoot() {
-    if (_player == null || !IsInstanceValid(_player)) return;
-    var bullet = Bullet.Instantiate<SimpleBullet>();
-    var direction = (_player.GlobalPosition - GlobalPosition).Normalized();
+    PlayAttackSound();
+    var target = PlayerNode;
+    if (target == null || !IsInstanceValid(target)) return;
+    var bullet = BulletScene.Instantiate<SimpleBullet>();
+    var direction = (target.GlobalPosition - GlobalPosition).Normalized();
     bullet.GlobalPosition = GlobalPosition;
     bullet.Velocity = direction * bullet.InitialSpeed;
     bullet.Rotation = direction.Angle();

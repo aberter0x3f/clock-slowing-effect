@@ -126,7 +126,7 @@ public partial class PhaseArcsAndLines : BasePhase {
         if (_volleyCounter < VolleyCount) {
           // 当前阶段还有更多齐射
           FireVolley();
-          _volleyCounter++;
+          ++_volleyCounter;
           _timer = VolleyInterval;
         } else {
           // 当前阶段齐射完毕，进入阶段间隔
@@ -147,10 +147,12 @@ public partial class PhaseArcsAndLines : BasePhase {
         _theta0 = _rng.Randf() * Mathf.Tau;
 
         FireVolley();
-        _volleyCounter++;
+        ++_volleyCounter;
 
         _currentState = AttackState.BetweenVolleys;
         _timer = VolleyInterval;
+
+        PlayAttackSound();
         break;
     }
   }
@@ -176,6 +178,7 @@ public partial class PhaseArcsAndLines : BasePhase {
       return;
     }
 
+    PlayAttackSound();
     float angleStep = Mathf.Tau / DefenseBulletCount;
     for (int i = 0; i < DefenseBulletCount; ++i) {
       var bullet = DefenseBulletScene.Instantiate<SimpleBullet>();
@@ -199,10 +202,12 @@ public partial class PhaseArcsAndLines : BasePhase {
 
     // 立即发射第一波
     FireVolley();
-    _volleyCounter++;
+    ++_volleyCounter;
 
     _currentState = AttackState.BetweenVolleys;
     _timer = VolleyInterval;
+
+    PlayAttackSound();
   }
 
   private void FireVolley() {

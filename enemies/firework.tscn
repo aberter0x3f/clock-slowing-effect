@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://cr3bruas086hy"]
+[gd_scene load_steps=9 format=3 uid="uid://cr3bruas086hy"]
 
 [ext_resource type="Script" uid="uid://dty0xg4cntgxs" path="res://scripts/Enemy/Firework.cs" id="1_hc1he"]
 [ext_resource type="PackedScene" uid="uid://co2ju4gcsf2j3" path="res://enemies/firework/projectile_visualizer.tscn" id="2_to1ct"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="3_y54bg"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_6cwcf"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_y54bg"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="5_6cwcf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
@@ -19,6 +20,7 @@ FireworkProjectileVisualizerScene = ExtResource("2_to1ct")
 FallingBulletScene = ExtResource("3_6cwcf")
 TimeShardScene = ExtResource("4_y54bg")
 TimeShardCount = 5
+AttackSound = ExtResource("5_6cwcf")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false

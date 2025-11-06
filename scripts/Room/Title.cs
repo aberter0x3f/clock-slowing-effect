@@ -1,3 +1,4 @@
+using Curio;
 using Godot;
 using Rewind;
 using UI;
@@ -11,9 +12,12 @@ public partial class Title : Node {
   private RewindManager _rewindManager;
   private Vector2 _playerSpawnPosition;
   private DifficultyMenu _difficultyMenu;
+  private CurioSelectionMenu _curioSelectionMenu;
 
   [Export]
   public PackedScene DifficultyMenuScene { get; set; }
+  [Export]
+  public PackedScene CurioSelectionMenuScene { get; set; }
 
   [Export(PropertyHint.File, "*.tscn")]
   public string InterLevelMenuScenePath { get; set; }
@@ -52,12 +56,33 @@ public partial class Title : Node {
   }
 
   private void OnDifficultySelected(DifficultySetting difficulty) {
+    GameManager.Instance.InitializeNewRun(difficulty);
+
+    // 显示初始奇物选择菜单
+    if (CurioSelectionMenuScene != null) {
+      _curioSelectionMenu = CurioSelectionMenuScene.Instantiate<CurioSelectionMenu>();
+      AddChild(_curioSelectionMenu);
+      _curioSelectionMenu.CurioSelectionFinished += OnStartingCurioSelected;
+      // 从数据库中获取所有可作为开局的奇物
+      var startingCurios = new Godot.Collections.Array<BaseCurio>(GameManager.Instance.CurioDb.AllCurios)
+      .Slice(0, GameManager.Instance.CurioDb.StartingCurioCount);
+      _curioSelectionMenu.StartCurioSelection(startingCurios, new RandomNumberGenerator());
+    } else {
+      GD.PrintErr("CurioSelectionMenuScene is not set. Skipping starting curio selection.");
+      StartGame();
+    }
+  }
+
+  private void OnStartingCurioSelected() {
+    GameManager.Instance.CommitPendingCurios();
+    StartGame();
+  }
+
+  private void StartGame() {
     if (string.IsNullOrEmpty(InterLevelMenuScenePath)) {
       GD.PrintErr("MapMenuScenePath is not set in the Title scene inspector.");
       return;
     }
-
-    GameManager.Instance.InitializeNewRun(difficulty);
     GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
   }
 
@@ -76,10 +101,18 @@ public partial class Title : Node {
     var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
     var rewindTimeLeft = _rewindManager.AvailableRewindTime;
 
+    string curioText = "Curio: None";
+    var activeCurio = GameManager.Instance.GetCurrentActiveCurio();
+    if (activeCurio != null) {
+      string cdText = activeCurio.CurrentCooldown > 0 ? $" (CD: {activeCurio.CurrentCooldown:F1}s)" : " (Ready)";
+      curioText = $"Curio: {activeCurio.Name}{cdText}";
+    }
+
     _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
                     $"Time Scale: {TimeManager.Instance.TimeScale:F2}\n" +
                     $"Rewind Left: {rewindTimeLeft:F1}s\n" +
                     $"{ammoText}\n" +
+                    $"{curioText}\n" +
                     $"Bullet object count: {bulletObjectCount}";
   }
 }

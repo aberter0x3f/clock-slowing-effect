@@ -285,6 +285,7 @@ Level = 3
 Name = "Adrenaline 3"
 ShortName = "Ad₃"
 Description = "Increases damage by [color=orange](x^2 * 100)%[/color], where x is the ratio of missing health to max health (0 <= x <= 1)."
+Value1 = 1.0
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [resource]

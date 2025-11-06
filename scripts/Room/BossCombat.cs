@@ -1,4 +1,5 @@
 using System.Linq;
+using Curio;
 using Enemy.Boss;
 using Godot;
 using Rewind;
@@ -17,6 +18,7 @@ public partial class BossCombat : Node {
 
   private ulong _levelSeed;
   private RandomNumberGenerator _upgradeRng;
+  private RandomNumberGenerator _curioRng;
 
   [Export]
   public PackedScene PauseMenuScene { get; set; }
@@ -24,6 +26,8 @@ public partial class BossCombat : Node {
   public PackedScene PortalScene { get; set; }
   [Export]
   public PackedScene UpgradeSelectionMenuScene { get; set; }
+  [Export]
+  public PackedScene CurioSelectionMenuScene { get; set; } // 新增
   [Export]
   public PackedScene BossScene { get; set; }
   [Export(PropertyHint.File, "*.tscn")]
@@ -53,6 +57,8 @@ public partial class BossCombat : Node {
     _levelSeed = ((ulong) GD.Randi() << 32) | (ulong) GD.Randi();
     _upgradeRng = new RandomNumberGenerator();
     _upgradeRng.Seed = _levelSeed;
+    _curioRng = new RandomNumberGenerator();
+    _curioRng.Seed = _levelSeed + 1; // 使用不同的种子
 
     InitializeBoss();
   }
@@ -111,11 +117,19 @@ public partial class BossCombat : Node {
     // Boss 战固定奖励一个 3 级强化
     var upgradeMenu = UpgradeSelectionMenuScene.Instantiate<UpgradeSelectionMenu>();
     AddChild(upgradeMenu);
-    upgradeMenu.UpgradeSelectionFinished += () => OnUpgradeSelectionFinished();
+    upgradeMenu.UpgradeSelectionFinished += OnUpgradeSelectionFinished;
     upgradeMenu.StartUpgradeSelection(UpgradeSelectionMenu.Mode.Gain, 1, 3, 3, 3, _upgradeRng);
   }
 
   private void OnUpgradeSelectionFinished() {
+    // 强化选完后，选择奇物
+    var curioMenu = CurioSelectionMenuScene.Instantiate<CurioSelectionMenu>();
+    AddChild(curioMenu);
+    curioMenu.CurioSelectionFinished += OnCurioSelectionFinished;
+    curioMenu.StartCurioSelection(3, _curioRng);
+  }
+
+  private void OnCurioSelectionFinished() {
     // Boss 战固定为标准通关
     GameManager.Instance.CompleteLevel(HexMap.ClearScore.StandardClear);
     GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
@@ -135,7 +149,10 @@ public partial class BossCombat : Node {
   }
 
   public override void _Process(double delta) {
-    if (IsInstanceValid(_boss) && _boss.InternalState == Boss.BossInternalState.Fighting && !_player.IsPermanentlyDead) {
+    var tAxisCurio = GameManager.Instance.GetCurrentAndPendingCurios().FirstOrDefault(c => c.Type == CurioType.TAxisEnhancement);
+    bool isRewindingWithCurio = tAxisCurio != null && (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding);
+
+    if (IsInstanceValid(_boss) && _boss.InternalState == Boss.BossInternalState.Fighting && !_player.IsPermanentlyDead && !isRewindingWithCurio) {
       _player.Health -= (float) delta;
     }
     UpdateUILabelText();
@@ -171,6 +188,8 @@ public partial class BossCombat : Node {
     // 使用之前保存的种子重新初始化 RNG，以保证强化选项不变
     _upgradeRng = new RandomNumberGenerator();
     _upgradeRng.Seed = _levelSeed;
+    _curioRng = new RandomNumberGenerator();
+    _curioRng.Seed = _levelSeed + 1;
 
     GameManager.Instance?.RestartLevel();
   }
@@ -186,10 +205,18 @@ public partial class BossCombat : Node {
     var timeBondText = $"Time Bond: {GameManager.Instance.TimeBond:F1}s";
     var trackedObjectCount = RewindManager.Instance.TrackedObjectCount;
 
+    string curioText = "Curio: None";
+    var activeCurio = GameManager.Instance.GetCurrentActiveCurio();
+    if (activeCurio != null) {
+      string cdText = activeCurio.CurrentCooldown > 0 ? $" (CD: {activeCurio.CurrentCooldown:F1}s)" : " (Ready)";
+      curioText = $"Curio: {activeCurio.Name}{cdText}";
+    }
+
     _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
                     $"{timeBondText}\n" +
                     $"Rewind Left: {rewindTimeLeft:F1}s\n" +
                     $"{ammoText}\n" +
+                    $"{curioText}\n" +
                     $"Tracked object count: {trackedObjectCount}";
   }
 }

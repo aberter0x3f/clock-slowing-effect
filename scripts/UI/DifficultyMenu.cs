@@ -42,7 +42,7 @@ public partial class DifficultyMenu : CanvasLayer { // 继承 CanvasLayer
       return;
     }
 
-    for (int i = 0; i < Difficulties.Count; i++) {
+    for (int i = 0; i < Difficulties.Count; ++i) {
       var difficulty = Difficulties[i];
       var button = DifficultyButtonScene.Instantiate<Button>();
       button.Text = difficulty.Name;
@@ -85,7 +85,7 @@ public partial class DifficultyMenu : CanvasLayer { // 继承 CanvasLayer
 
   private void UpdateSelection() {
     if (_buttons.Count == 0) return;
-    for (int i = 0; i < _buttons.Count; i++) {
+    for (int i = 0; i < _buttons.Count; ++i) {
       if (i == _selectedIndex) {
         _buttons[i].GrabFocus();
       }

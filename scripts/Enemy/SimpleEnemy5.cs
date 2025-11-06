@@ -33,6 +33,7 @@ public partial class SimpleEnemy5 : BaseEnemy {
   private float _currentJumpHeight = 0f;
 
   private RandomWalkComponent _randomWalkComponent;
+  private CollisionShape2D _bodyCollisionShape;
   private readonly RandomNumberGenerator _rnd = new();
 
   [ExportGroup("State Durations")]
@@ -61,6 +62,7 @@ public partial class SimpleEnemy5 : BaseEnemy {
     _currentState = State.RandomWalk;
     _stateTimer = (float) _rnd.RandfRange(RandomWalkDuration / 5, RandomWalkDuration);
     _shootTimer = ShootInterval;
+    _bodyCollisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
   }
 
   public override void _Process(double delta) {
@@ -135,8 +137,15 @@ public partial class SimpleEnemy5 : BaseEnemy {
     }
   }
 
+  private void SetCollisionsEnabled(bool enabled) {
+    if (_bodyCollisionShape != null) {
+      _bodyCollisionShape.Disabled = !enabled;
+    }
+  }
+
   private void SwitchToJumpingState() {
-    if (_mapGenerator == null || _player == null || !IsInstanceValid(_player)) {
+    var target = PlayerNode;
+    if (_mapGenerator == null || target == null || !IsInstanceValid(target)) {
       // 无法跳跃，继续游走
       _stateTimer = RandomWalkDuration;
       return;
@@ -152,7 +161,7 @@ public partial class SimpleEnemy5 : BaseEnemy {
       Vector2 worldPos = _mapGenerator.MapToWorld(cell);
 
       if (worldPos.DistanceTo(GlobalPosition) >= MinJumpDistance &&
-          worldPos.DistanceTo(_player.GlobalPosition) >= MinPlayerAvoidanceDistance) {
+          worldPos.DistanceTo(target.GlobalPosition) >= MinPlayerAvoidanceDistance) {
         targetPos = worldPos;
         foundTarget = true;
       }
@@ -171,25 +180,29 @@ public partial class SimpleEnemy5 : BaseEnemy {
     _jumpDuration = Mathf.Max(distance / JumpSpeed, 0.5f);
     _jumpTime = 0f;
     _shootTimer = 0; // 立即射击
+    SetCollisionsEnabled(false);
+    PlayAttackSound();
   }
 
   private void SwitchToRandomWalkState() {
     _currentState = State.RandomWalk;
     // 后续的随机游走都使用完整的设定时长
     _stateTimer = RandomWalkDuration;
+    SetCollisionsEnabled(true);
   }
 
   private void Shoot() {
-    if (_player == null || !IsInstanceValid(_player) || BulletScene == null) return;
+    var target = PlayerNode;
+    if (target == null || !IsInstanceValid(target) || BulletScene == null) return;
 
-    var bullet = BulletScene.Instantiate<Bullet.SimpleBullet3D>();
+    var bullet = BulletScene.Instantiate<SimpleBullet3D>();
 
     // 敌人的当前 3D 位置（在子弹的坐标系中）
     var enemyPos3D = new Vector3(GlobalPosition.X, GlobalPosition.Y, _currentJumpHeight);
-    // 玩家的 3D 位置（在游戏平面上，Z=0）
-    var playerPos3D = new Vector3(_player.GlobalPosition.X, _player.GlobalPosition.Y, 0);
+    // 目标的 3D 位置（在游戏平面上，Z=0）
+    var targetPos3D = new Vector3(target.GlobalPosition.X, target.GlobalPosition.Y, 0);
 
-    var direction = (playerPos3D - enemyPos3D).Normalized();
+    var direction = (targetPos3D - enemyPos3D).Normalized();
 
     bullet.RawPosition = enemyPos3D;
     bullet.Velocity = direction;
@@ -227,5 +240,6 @@ public partial class SimpleEnemy5 : BaseEnemy {
     this._jumpDuration = ses.JumpDuration;
     this._jumpTime = ses.JumpTime;
     this._currentJumpHeight = ses.CurrentJumpHeight;
+    SetCollisionsEnabled(_currentState != State.Jumping);
   }
 }

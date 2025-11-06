@@ -121,6 +121,8 @@ public partial class PhaseMaze : BasePhase {
   }
 
   private void SpawnHexRow() {
+    PlayAttackSound();
+
     var verticalEdges = new List<(Vector2, Vector2)>();
     var slantedEdges = new List<(Vector2, Vector2)>();
 
@@ -193,7 +195,7 @@ public partial class PhaseMaze : BasePhase {
   /// </summary>
   private Vector2[] GetPointTopHexagonVertices(Vector2 center, float size) {
     var vertices = new Vector2[6];
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 6; ++i) {
       float angle = Mathf.DegToRad(60 * i + 90); // +90 度使一个顶点正对下方
       vertices[i] = center + new Vector2(size * Mathf.Cos(angle), size * Mathf.Sin(angle));
     }

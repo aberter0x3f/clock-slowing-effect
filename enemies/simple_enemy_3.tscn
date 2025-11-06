@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://bhneh14ltuqgc"]
+[gd_scene load_steps=8 format=3 uid="uid://bhneh14ltuqgc"]
 
 [ext_resource type="Script" uid="uid://d0u075kjhfaci" path="res://scripts/Enemy/SimpleEnemy3.cs" id="1_yd8wd"]
 [ext_resource type="PackedScene" uid="uid://tubsltq0dqvk" path="res://enemies/simple_enemy_3/bullet.tscn" id="2_hp0oe"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="3_hp0oe"]
 [ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="3_s6532"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_3wvkw"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="4_s6532"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
@@ -14,9 +15,10 @@ z_index = 2
 collision_layer = 8
 collision_mask = 21
 script = ExtResource("1_yd8wd")
-Bullet = ExtResource("2_hp0oe")
+BulletScene = ExtResource("2_hp0oe")
 TimeShardScene = ExtResource("3_hp0oe")
 TimeShardCount = 5
+AttackSound = ExtResource("4_s6532")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false

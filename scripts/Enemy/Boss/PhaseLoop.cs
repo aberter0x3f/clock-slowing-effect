@@ -148,6 +148,8 @@ public partial class PhaseLoop : BasePhase {
   }
 
   private void SpawnAllBullets() {
+    PlayAttackSound();
+
     // 清理任何旧的子弹引用
     _aBullets.Clear();
     _bBullets.Clear();

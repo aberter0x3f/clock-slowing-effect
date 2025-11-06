@@ -128,16 +128,6 @@ public partial class RewindManager : Node {
     } else {
       TimeManager.Instance.TimeScale = 1.0f;
     }
-
-    // 自动回溯期间，禁用玩家手动控制
-    if (!IsAutoRewinding) {
-      if (Input.IsActionJustPressed("time_rewind")) {
-        if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;
-        StartRewindPreview();
-      } else if (Input.IsActionJustReleased("time_rewind")) {
-        CommitRewind();
-      }
-    }
   }
 
   /// <summary>
@@ -261,8 +251,8 @@ public partial class RewindManager : Node {
     }
   }
 
-  private void StartRewindPreview() {
-    if (_history.Count == 0) return;
+  public void StartRewindPreview() {
+    if (_history.Count == 0 || IsPreviewing) return;
     IsPreviewing = true;
     _rewindTargetTimestamp = _history.Last.Value.Timestamp;
     _currentPreviewNode = _history.Last;
@@ -286,7 +276,7 @@ public partial class RewindManager : Node {
     RestoreFromFrame(frame);
   }
 
-  private void CommitRewind() {
+  public void CommitRewind() {
     if (!IsPreviewing) return;
 
     IsRewinding = true; // 标记正在进行一次真正的状态恢复

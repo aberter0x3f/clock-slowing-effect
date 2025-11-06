@@ -1,12 +1,14 @@
-[gd_scene load_steps=5 format=3 uid="uid://cm5dq08tifvge"]
+[gd_scene load_steps=6 format=3 uid="uid://cm5dq08tifvge"]
 
 [ext_resource type="Script" uid="uid://y4seytu60db6" path="res://scripts/Enemy/Boss/PhaseArcsAndLines.cs" id="1_ocb5m"]
 [ext_resource type="PackedScene" uid="uid://1drue7gmc8pb" path="res://enemies/boss/arcs_and_lines/bullet1.tscn" id="2_jcq8t"]
 [ext_resource type="PackedScene" uid="uid://cxfw62m8fum8b" path="res://enemies/boss/arcs_and_lines/bullet2.tscn" id="3_i0nd0"]
 [ext_resource type="PackedScene" uid="uid://c8kcdagv60nmw" path="res://enemies/boss/arcs_and_lines/defense_bullet.tscn" id="4_m4jj7"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="5_i0nd0"]
 
 [node name="PhaseArcsAndLines" type="Node"]
 script = ExtResource("1_ocb5m")
 BulletScene1 = ExtResource("2_jcq8t")
 BulletScene2 = ExtResource("3_i0nd0")
 DefenseBulletScene = ExtResource("4_m4jj7")
+AttackSound = ExtResource("5_i0nd0")

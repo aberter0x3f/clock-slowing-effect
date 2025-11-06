@@ -19,7 +19,7 @@ public partial class SimpleEnemy3 : BaseEnemy {
   private Vector2 _attackBaseDirection;
 
   [Export]
-  public PackedScene Bullet { get; set; }
+  public PackedScene BulletScene { get; set; }
 
   [Export]
   public float ShootInterval { get; set; } = 4f;
@@ -67,7 +67,13 @@ public partial class SimpleEnemy3 : BaseEnemy {
     _isAttacking = true;
     _attackOuterLoopCounter = 1;
     _attackTimer = 0; // 立即开始
-    _attackBaseDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
+    var target = PlayerNode;
+    if (target == null || !IsInstanceValid(target)) {
+      _isAttacking = false;
+      return;
+    }
+    _attackBaseDirection = (target.GlobalPosition - GlobalPosition).Normalized();
+    PlayAttackSound();
   }
 
   private void HandleAttackState(float scaledDelta) {
@@ -89,14 +95,14 @@ public partial class SimpleEnemy3 : BaseEnemy {
         var unit = direction.Rotated(Mathf.Pi / 2);
         var startPosition = GlobalPosition - unit * ((i - 1) * len / 2);
         var position = startPosition + unit * (j * len);
-        var bullet = Bullet.Instantiate<SimpleBullet>();
+        var bullet = BulletScene.Instantiate<SimpleBullet>();
         bullet.GlobalPosition = position;
         bullet.Rotation = direction.Angle();
         GameRootProvider.CurrentGameRoot.AddChild(bullet);
       }
     }
 
-    _attackOuterLoopCounter++;
+    ++_attackOuterLoopCounter;
     _attackTimer = 0.1f; // 重置计时器
   }
 

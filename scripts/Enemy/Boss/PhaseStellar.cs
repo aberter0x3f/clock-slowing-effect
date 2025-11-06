@@ -198,6 +198,8 @@ public partial class PhaseStellar : BasePhase {
   }
 
   private void TransitionTo(Phase nextPhase) {
+    PlayAttackSound();
+
     GD.Print($"Stellar Phase transitioning from {_currentPhase} to {nextPhase}");
     _currentPhase = nextPhase;
 

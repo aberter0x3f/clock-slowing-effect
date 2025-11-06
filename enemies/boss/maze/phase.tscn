@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://dbdl8ffiml85m"]
+[gd_scene load_steps=7 format=3 uid="uid://dbdl8ffiml85m"]
 
 [ext_resource type="Script" uid="uid://c8hsyigu50pc8" path="res://scripts/Enemy/Boss/PhaseMaze.cs" id="1_ioqbg"]
 [ext_resource type="PackedScene" uid="uid://bltkif0bcqdgo" path="res://enemies/boss/maze/bullet_low.tscn" id="2_6258w"]
 [ext_resource type="PackedScene" uid="uid://bj7nhkj4bcxaw" path="res://enemies/boss/maze/bullet_high.tscn" id="3_wie2s"]
 [ext_resource type="PackedScene" uid="uid://ch8cm4t4jaqw" path="res://enemies/boss/maze/bullet_graze.tscn" id="4_7gpfa"]
 [ext_resource type="PackedScene" uid="uid://ds7moonlw26n1" path="res://enemies/boss/maze/bullet_normal.tscn" id="5_523ie"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="6_v8wux"]
 
 [node name="PhaseMaze" type="Node"]
 script = ExtResource("1_ioqbg")
@@ -12,3 +13,4 @@ LowSpeedPhaseBulletScene = ExtResource("2_6258w")
 HighSpeedPhaseBulletScene = ExtResource("3_wie2s")
 GrazeSlowdownBulletScene = ExtResource("4_7gpfa")
 NormalBulletScene = ExtResource("5_523ie")
+AttackSound = ExtResource("6_v8wux")

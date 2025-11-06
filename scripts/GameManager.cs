@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Curio;
 using Godot;
 
 public partial class GameManager : Node {
@@ -9,6 +10,8 @@ public partial class GameManager : Node {
   public Godot.Collections.Array<Event.GameEvent> AllEvents { get; set; }
   [Export]
   public UpgradeDatabase UpgradeDb { get; set; }
+  [Export]
+  public CurioDatabase CurioDb { get; set; }
 
   public DifficultySetting CurrentDifficulty { get; private set; }
   public HexMap GameMap { get; private set; }
@@ -27,6 +30,13 @@ public partial class GameManager : Node {
   public HashSet<Upgrade> AcquiredUpgrades { get; } = new();
   public HashSet<Upgrade> PendingUpgradesAdditions { get; } = new();
   public HashSet<Upgrade> PendingUpgradesRemovals { get; } = new();
+
+  // 奇物系统属性
+  public HashSet<BaseCurio> AcquiredCurios { get; } = new();
+  public HashSet<BaseCurio> PendingCuriosAdditions { get; } = new();
+  public HashSet<BaseCurio> PendingCuriosRemovals { get; } = new();
+  private readonly List<BaseCurio> _activeCurios = new();
+  private int _currentActiveCurioIndex = -1;
 
   // 时间债券属性
   public float TimeBond { get; set; }
@@ -85,6 +95,11 @@ public partial class GameManager : Node {
     AcquiredUpgrades.Clear();
     PendingUpgradesAdditions.Clear();
     PendingUpgradesRemovals.Clear();
+    AcquiredCurios.Clear();
+    PendingCuriosAdditions.Clear();
+    PendingCuriosRemovals.Clear();
+    UpdateActiveCurioList();
+
     CurrentPlayerHealth = PlayerBaseStats.MaxHealth;
     PlayerStats = new PlayerStats(PlayerBaseStats);
     PlayerStats.RecalculateStats(AcquiredUpgrades, CurrentPlayerHealth);
@@ -97,6 +112,8 @@ public partial class GameManager : Node {
   public void RestartLevel() {
     PendingUpgradesAdditions.Clear();
     PendingUpgradesRemovals.Clear();
+    PendingCuriosAdditions.Clear();
+    PendingCuriosRemovals.Clear();
     StartLevel();
   }
 
@@ -140,6 +157,7 @@ public partial class GameManager : Node {
 
     ActiveEvent = null;
     CommitPendingUpgrades();
+    CommitPendingCurios();
   }
 
   /// <summary>
@@ -229,6 +247,99 @@ public partial class GameManager : Node {
   }
 
   /// <summary>
+  /// 将一个新奇物添加到待定列表．
+  /// </summary>
+  public void AddCurio(BaseCurio curio, Player player) {
+    if (curio == null) return;
+    if (PendingCuriosRemovals.Contains(curio)) {
+      PendingCuriosRemovals.Remove(curio);
+      return;
+    }
+    if (AcquiredCurios.Contains(curio) || PendingCuriosAdditions.Contains(curio)) return;
+
+    PendingCuriosAdditions.Add(curio);
+    curio.OnAcquired(player);
+    UpdateActiveCurioList();
+  }
+
+  /// <summary>
+  /// 将一个奇物添加到待移除列表．
+  /// </summary>
+  public void RemoveCurio(BaseCurio curio, Player player) {
+    if (curio == null) return;
+
+    var currentActive = GetCurrentActiveCurio();
+
+    if (PendingCuriosAdditions.Contains(curio)) {
+      PendingCuriosAdditions.Remove(curio);
+    } else if (AcquiredCurios.Contains(curio) && !PendingCuriosRemovals.Contains(curio)) {
+      PendingCuriosRemovals.Add(curio);
+    }
+
+    curio.OnLost(player);
+    UpdateActiveCurioList();
+  }
+
+  /// <summary>
+  /// 将所有待定奇物正式应用．
+  /// </summary>
+  public void CommitPendingCurios() {
+    if (PendingCuriosAdditions.Count == 0 && PendingCuriosRemovals.Count == 0) return;
+
+    AcquiredCurios.UnionWith(PendingCuriosAdditions);
+    AcquiredCurios.ExceptWith(PendingCuriosRemovals);
+    PendingCuriosAdditions.Clear();
+    PendingCuriosRemovals.Clear();
+
+    UpdateActiveCurioList();
+  }
+
+  /// <summary>
+  /// 获取玩家当前生效的所有奇物．
+  /// </summary>
+  public HashSet<BaseCurio> GetCurrentAndPendingCurios() {
+    var currentCurios = new HashSet<BaseCurio>(AcquiredCurios);
+    currentCurios.UnionWith(PendingCuriosAdditions);
+    currentCurios.ExceptWith(PendingCuriosRemovals);
+    return currentCurios;
+  }
+
+  /// <summary>
+  /// 更新拥有主动技能的奇物列表和当前索引．
+  /// </summary>
+  private void UpdateActiveCurioList() {
+    var currentSelection = GetCurrentActiveCurio();
+    _activeCurios.Clear();
+    _activeCurios.AddRange(GetCurrentAndPendingCurios().Where(c => c.HasActiveEffect));
+
+    if (_activeCurios.Count == 0) {
+      _currentActiveCurioIndex = -1;
+    } else {
+      int newIndex = _activeCurios.IndexOf(currentSelection);
+      _currentActiveCurioIndex = (newIndex != -1) ? newIndex : 0;
+    }
+  }
+
+  /// <summary>
+  /// 切换到下一个拥有主动技能的奇物．
+  /// </summary>
+  public void SwitchToNextActiveCurio() {
+    if (_activeCurios.Count > 1) {
+      _currentActiveCurioIndex = (_currentActiveCurioIndex + 1) % _activeCurios.Count;
+    }
+  }
+
+  /// <summary>
+  /// 获取当前选中的主动奇物．
+  /// </summary>
+  public BaseCurio GetCurrentActiveCurio() {
+    if (_currentActiveCurioIndex >= 0 && _currentActiveCurioIndex < _activeCurios.Count) {
+      return _activeCurios[_currentActiveCurioIndex];
+    }
+    return null;
+  }
+
+  /// <summary>
   /// 根据规则获取一批可供选择的强化．
   /// </summary>
   public List<Upgrade> GetUpgradeToGain(int minLevel, int maxLevel, int count, RandomNumberGenerator rnd) {
@@ -298,6 +409,27 @@ public partial class GameManager : Node {
       int randomIndex = rnd.RandiRange(0, candidates.Count - 1);
       choices.Add(candidates[randomIndex]);
       candidates.RemoveAt(randomIndex);
+    }
+    return choices;
+  }
+
+  /// <summary>
+  /// 获取一批可供选择的奇物．
+  /// </summary>
+  public List<BaseCurio> GetCuriosToGain(int count, RandomNumberGenerator rnd) {
+    var currentlyOwned = GetCurrentAndPendingCurios();
+    var available = CurioDb.AllCurios.Where(c => !currentlyOwned.Contains(c)).ToList();
+
+    if (available.Count <= count) {
+      return available;
+    }
+
+    var choices = new List<BaseCurio>();
+    for (int i = 0; i < count; ++i) {
+      if (available.Count == 0) break;
+      int randomIndex = rnd.RandiRange(0, available.Count - 1);
+      choices.Add(available[randomIndex]);
+      available.RemoveAt(randomIndex);
     }
     return choices;
   }

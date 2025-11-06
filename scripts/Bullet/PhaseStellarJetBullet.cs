@@ -36,8 +36,9 @@ public partial class PhaseStellarJetBullet : SimpleBullet3D {
       return;
     }
 
-    var playerTargetPos3D = new Vector3(player.GlobalPosition.X, player.GlobalPosition.Y, 0);
-    var direction = (playerTargetPos3D - RawPosition).Normalized();
+    var target = player.DecoyTarget ?? player;
+    var targetPos3D = new Vector3(target.GlobalPosition.X, target.GlobalPosition.Y, 0);
+    var direction = (targetPos3D - RawPosition).Normalized();
 
     for (int i = 0; i < RelativisticBulletCount; ++i) {
       var bullet = RelativisticBulletScene.Instantiate<SimpleBullet3D>();

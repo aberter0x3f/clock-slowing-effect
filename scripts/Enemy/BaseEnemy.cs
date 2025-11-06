@@ -24,6 +24,8 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
   protected SpriteBase3D _sprite;
   protected MapGenerator _mapGenerator;
 
+  protected Node2D PlayerNode => _player.DecoyTarget ?? _player;
+
   [Export]
   public virtual float MaxHealth { get; protected set; } = 20.0f;
 
@@ -32,6 +34,10 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
   public PackedScene TimeShardScene { get; set; } // 引用 TimeShard.tscn 场景
   [Export(PropertyHint.Range, "0, 50, 1")]
   public int TimeShardCount { get; set; } = 0; // 死亡时掉落的碎片数量
+
+  [ExportGroup("Sound Effects")]
+  [Export]
+  public AudioStream AttackSound { get; set; }
 
   [Signal]
   public delegate void DiedEventHandler(float difficulty);
@@ -135,6 +141,10 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
       // 使用 CallDeferred 将节点添加到场景树，以避免在物理帧内修改物理世界
       GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, shard);
     }
+  }
+
+  protected void PlayAttackSound() {
+    SoundManager.Instance.PlaySoundEffect(AttackSound, cooldown: 0.2f, volumeDb: -5f);
   }
 
   public override RewindState CaptureState() {

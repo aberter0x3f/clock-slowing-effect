@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://d312i4tukca50"]
+[gd_scene load_steps=15 format=3 uid="uid://d312i4tukca50"]
 
 [ext_resource type="Script" uid="uid://clxppjn3dpyf8" path="res://scripts/Room/BossCombat.cs" id="1_eja48"]
 [ext_resource type="Script" uid="uid://d1if7b56ademj" path="res://scripts/MapGenerator.cs" id="2_cnar5"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="4_youth"]
 [ext_resource type="PackedScene" uid="uid://c3ebr2hfny8mu" path="res://enemies/boss.tscn" id="5_7g3sr"]
 [ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="5_jbn53"]
+[ext_resource type="PackedScene" uid="uid://cr4j0chissibb" path="res://ui/curio_selection_menu.tscn" id="5_kxt71"]
 [ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="6_7g3sr"]
 [ext_resource type="PackedScene" uid="uid://c6vnywdveemsw" path="res://world_environment.tscn" id="6_sbsf0"]
 [ext_resource type="PackedScene" uid="uid://dynj33onwm4qh" path="res://rewind_label.tscn" id="7_kxt71"]
@@ -19,6 +20,7 @@ script = ExtResource("1_eja48")
 PauseMenuScene = ExtResource("2_youth")
 PortalScene = ExtResource("3_jbn53")
 UpgradeSelectionMenuScene = ExtResource("4_7g3sr")
+CurioSelectionMenuScene = ExtResource("5_kxt71")
 BossScene = ExtResource("5_7g3sr")
 InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
 
@@ -39,7 +41,7 @@ offset_bottom = 23.0
 
 [node name="MapGenerator" type="Node" parent="."]
 script = ExtResource("2_cnar5")
-MapWidth = 30
+MapWidth = 31
 ObstacleProbability = 0.0
 ObstacleScene = ExtResource("3_0yc7o")
 FloorTileScene1 = ExtResource("4_youth")

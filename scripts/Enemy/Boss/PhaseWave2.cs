@@ -205,6 +205,8 @@ public partial class PhaseWave2 : BasePhase {
 
     bool invertWave = _rng.Randf() > 0.5f;
 
+    PlayAttackSound();
+
     if (isHorizontalWave) {
       for (float x = -_mapHalfWidth; x <= _mapHalfWidth; x += BulletSpacing) {
         SpawnWaveBullet(direction, invertWave, new Vector3(x, pos.Y, 0), (x - pos.X));

@@ -99,7 +99,8 @@ public partial class Firework : BaseEnemy {
     Velocity = _randomWalkComponent.TargetVelocity * TimeManager.Instance.TimeScale;
     _attackCooldown -= scaledDelta;
     if (_attackCooldown <= 0) {
-      if (_player != null && IsInstanceValid(_player)) {
+      var target = PlayerNode;
+      if (target != null && IsInstanceValid(target)) {
         StartAttackSequence();
       }
     }
@@ -116,16 +117,20 @@ public partial class Firework : BaseEnemy {
       return;
     }
 
+    PlayAttackSound();
+
     _activeProjectileVisualizer = FireworkProjectileVisualizerScene.Instantiate<Node3D>();
     GameRootProvider.CurrentGameRoot.AddChild(_activeProjectileVisualizer);
 
+    var target = PlayerNode;
+
     _launchStartPosition = GlobalPosition;
-    _launchTargetPosition = _player.GlobalPosition;
+    _launchTargetPosition = target.GlobalPosition;
     float distance = _launchStartPosition.DistanceTo(_launchTargetPosition);
     _launchDuration = Mathf.Sqrt(2 * distance / ProjectileAcceleration);
     _launchTime = 0;
     _attackSubState = AttackSubState.Launching;
-    _explosionCenter = _player.GlobalPosition;
+    _explosionCenter = target.GlobalPosition;
 
     HandleAttackingState(0);
   }
@@ -162,7 +167,9 @@ public partial class Firework : BaseEnemy {
     if (FallingBulletScene == null) {
       GD.PrintErr("Firework: FallingBulletScene is not set!");
     } else {
-      for (int i = 0; i < ExplosionBulletCount; i++) {
+      PlayAttackSound();
+
+      for (int i = 0; i < ExplosionBulletCount; ++i) {
         var bullet = FallingBulletScene.Instantiate<FallingBullet>();
         float offsetX = (float) _rnd.Randfn(0, LandingSpreadSigma);
         float offsetY = (float) _rnd.Randfn(0, LandingSpreadSigma);

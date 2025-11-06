@@ -1,4 +1,5 @@
 using System.Linq;
+using Curio;
 using Godot;
 using Rewind;
 using UI;
@@ -170,7 +171,10 @@ public partial class Combat : Node {
 
   public override void _Process(double delta) {
     // 在没结束之前，持续扣除玩家生命值
-    if (_enemySpawner != null && !_enemySpawner.IsWaveCompleted && !_player.IsPermanentlyDead) {
+    var tAxisCurio = GameManager.Instance.GetCurrentAndPendingCurios().FirstOrDefault(c => c.Type == CurioType.TAxisEnhancement);
+    bool isRewindingWithCurio = tAxisCurio != null && (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding);
+
+    if (_enemySpawner != null && !_enemySpawner.IsWaveCompleted && !_player.IsPermanentlyDead && !isRewindingWithCurio) {
       _player.Health -= (float) delta;
     }
     UpdateUILabelText();
@@ -214,10 +218,18 @@ public partial class Combat : Node {
     var timeBondText = $"Time Bond: {GameManager.Instance.TimeBond:F1}s";
     var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
 
+    string curioText = "Curio: None";
+    var activeCurio = GameManager.Instance.GetCurrentActiveCurio();
+    if (activeCurio != null) {
+      string cdText = activeCurio.CurrentCooldown > 0 ? $" (CD: {activeCurio.CurrentCooldown:F1}s)" : " (Ready)";
+      curioText = $"Curio: {activeCurio.Name}{cdText}";
+    }
+
     _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
                     $"{timeBondText}\n" +
                     $"Rewind Left: {rewindTimeLeft:F1}s\n" +
                     $"{ammoText}\n" +
+                    $"{curioText}\n" +
                     $"Bullet object count: {bulletObjectCount}";
   }
 }

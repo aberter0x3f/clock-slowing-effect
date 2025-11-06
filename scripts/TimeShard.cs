@@ -23,7 +23,6 @@ public partial class TimeShard : RewindableArea2D {
     Collected // 已被玩家拾取，正在飞向玩家
   }
 
-  private State _currentState = State.Spawning;
   private CollisionShape2D _collisionShape;
   private Node3D _visualizer;
   private Player _targetPlayer;
@@ -49,6 +48,7 @@ public partial class TimeShard : RewindableArea2D {
   [Export]
   public float FlyToPlayerSpeed { get; set; } = 800.0f; // 飞向玩家的速度
 
+  public State CurrentState { get; private set; } = State.Spawning;
   public Vector2 SpawnCenter { get; set; }
   public MapGenerator MapGeneratorRef { get; set; }
 
@@ -74,7 +74,7 @@ public partial class TimeShard : RewindableArea2D {
 
   private void CheckInitialOverlap() {
     // 如果在检查时已经被别的逻辑拾取了，就直接返回
-    if (_currentState == State.Collected) return;
+    if (CurrentState == State.Collected) return;
 
     foreach (var body in GetOverlappingBodies()) {
       if (body is Player player) {
@@ -93,7 +93,7 @@ public partial class TimeShard : RewindableArea2D {
 
     var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
 
-    switch (_currentState) {
+    switch (CurrentState) {
       case State.Spawning:
         // 手动处理生成动画，以响应 TimeScale
         _animationTimer += scaledDelta;
@@ -114,7 +114,7 @@ public partial class TimeShard : RewindableArea2D {
 
         // 动画结束
         if (progress >= 1.0f) {
-          _currentState = State.Idle;
+          CurrentState = State.Idle;
           GlobalPosition = _landingPosition; // 确保最终位置精确
           _currentHeight = 0;
         }
@@ -157,19 +157,19 @@ public partial class TimeShard : RewindableArea2D {
   private void OnBodyEntered(Node2D body) {
     if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
     // Spawning 和 Idle 状态都可以被拾取
-    if ((_currentState == State.Spawning || _currentState == State.Idle) && body is Player player) {
+    if ((CurrentState == State.Spawning || CurrentState == State.Idle) && body is Player player) {
       CollectByPlayer(player);
     }
   }
 
-  private void CollectByPlayer(Player player) {
-    if (_currentState == State.Collected) return;
+  public void CollectByPlayer(Player player) {
+    if (CurrentState == State.Collected) return;
 
     var (appliedToBond, appliedToHealth) = GameManager.Instance.AddTime(TimeBonus);
     _timeAppliedToBond = appliedToBond;
     _timeAppliedToHealth = appliedToHealth;
 
-    _currentState = State.Collected;
+    CurrentState = State.Collected;
     _targetPlayer = player;
     _collisionShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
   }
@@ -181,7 +181,7 @@ public partial class TimeShard : RewindableArea2D {
     }
 
     var rnd = new RandomNumberGenerator();
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 20; ++i) {
       float offsetX = (float) rnd.Randfn(0, SpreadSigma);
       float offsetY = (float) rnd.Randfn(0, SpreadSigma);
       Vector2 potentialPosition = center + new Vector2(offsetX, offsetY);
@@ -198,7 +198,7 @@ public partial class TimeShard : RewindableArea2D {
 
   public override RewindState CaptureState() {
     return new TimeShardState {
-      CurrentState = this._currentState,
+      CurrentState = this.CurrentState,
       GlobalPosition = this.GlobalPosition,
       CurrentHeight = this._currentHeight,
       LifetimeTimer = this._lifetimeTimer,
@@ -211,7 +211,7 @@ public partial class TimeShard : RewindableArea2D {
   public override void RestoreState(RewindState state) {
     if (state is not TimeShardState tss) return;
 
-    bool wasCollected = (this._currentState == State.Collected || this.IsDestroyed) && IsInstanceValid(_targetPlayer);
+    bool wasCollected = (this.CurrentState == State.Collected || this.IsDestroyed) && IsInstanceValid(_targetPlayer);
     bool isNowIdleOrSpawning = (tss.CurrentState == State.Idle || tss.CurrentState == State.Spawning);
 
     if (wasCollected && isNowIdleOrSpawning) {
@@ -222,7 +222,7 @@ public partial class TimeShard : RewindableArea2D {
       _targetPlayer = null;
     }
 
-    this._currentState = tss.CurrentState;
+    this.CurrentState = tss.CurrentState;
     this.GlobalPosition = tss.GlobalPosition;
     this._currentHeight = tss.CurrentHeight;
     this._lifetimeTimer = tss.LifetimeTimer;
@@ -230,6 +230,6 @@ public partial class TimeShard : RewindableArea2D {
     this._timeAppliedToBond = tss.TimeAppliedToBond;
     this._timeAppliedToHealth = tss.TimeAppliedToHealth;
 
-    _collisionShape.Disabled = _currentState == State.Collected;
+    _collisionShape.Disabled = CurrentState == State.Collected;
   }
 }

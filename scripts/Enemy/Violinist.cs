@@ -88,8 +88,9 @@ public partial class Violinist : BaseEnemy {
   }
 
   private void StartAttackSequence() {
-    if (_player == null || !IsInstanceValid(_player)) {
-      GD.PrintErr("Violinist: Player not found, cannot attack.");
+    var target = PlayerNode;
+    if (target == null || !IsInstanceValid(target)) {
+      GD.PrintErr("Violinist: Player target not found, cannot attack.");
       return;
     }
 
@@ -97,13 +98,14 @@ public partial class Violinist : BaseEnemy {
 
     // --- 初始化攻击参数 ---
     _attackStartPosition = GlobalPosition;
-    Vector2 playerPos = _player.GlobalPosition;
-    _attackDirection = (playerPos - _attackStartPosition).Normalized();
-    float distanceToPlayer = _attackStartPosition.DistanceTo(playerPos);
-    _attackLineLength = Mathf.Max(500.0f, 1.2f * distanceToPlayer);
+    Vector2 targetPos = target.GlobalPosition;
+    _attackDirection = (targetPos - _attackStartPosition).Normalized();
+    float distanceToTarget = _attackStartPosition.DistanceTo(targetPos);
+    _attackLineLength = Mathf.Max(500.0f, 1.2f * distanceToTarget);
     _attackPerpendicularDir = _attackDirection.Rotated(Mathf.Pi / 2.0f);
     _staffCreationDist = 0;
     _attackTimer = 0; // 立即开始
+    PlayAttackSound();
   }
 
   private void HandleAttackState(float scaledDelta) {
@@ -117,6 +119,7 @@ public partial class Violinist : BaseEnemy {
           _attackState = AttackState.FiringNotes;
           _notesFiredCount = 0;
           _attackTimer = 0; // 立即开始
+          PlayAttackSound();
           return;
         }
         // --- 执行创建五线谱的逻辑 ---

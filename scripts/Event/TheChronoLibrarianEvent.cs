@@ -43,7 +43,7 @@ public partial class TheChronoLibrarianEvent : GameEvent {
         new("Keep Current Knowledge", "Leave the library.")
       };
     }
-    return new List<EventOption>();
+    return new List<EventOption> { new("Claim Reward", "Receive your prize.") };
   }
 
   public override EventExecutionResult ExecuteOption(int optionIndex) {

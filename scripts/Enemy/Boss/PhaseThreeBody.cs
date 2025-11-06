@@ -205,6 +205,8 @@ public partial class PhaseThreeBody : BasePhase {
   }
 
   private void FireSmallABullets() {
+    PlayAttackSound();
+
     var startPos = GetBigABullet2DPosition();
     var directionToPlayer = (PlayerNode.GlobalPosition - startPos).Normalized();
     float baseAngle = directionToPlayer.Angle();
@@ -221,6 +223,8 @@ public partial class PhaseThreeBody : BasePhase {
   }
 
   private void FireSmallBBullets() {
+    PlayAttackSound();
+
     var startPos = GetBigBBullet2DPosition();
     var directionToPlayer = (PlayerNode.GlobalPosition - startPos).Normalized();
     float angleStep = Mathf.Tau / SmallBulletCount;
@@ -237,6 +241,8 @@ public partial class PhaseThreeBody : BasePhase {
   }
 
   private void FireWallBulletLine() {
+    PlayAttackSound();
+
     var pos = ParentBoss.GlobalPosition;
     float mapHalfWidth = _mapGenerator.MapWidth * _mapGenerator.TileSize / 2.0f;
     float mapHalfHeight = _mapGenerator.MapHeight * _mapGenerator.TileSize / 2.0f;

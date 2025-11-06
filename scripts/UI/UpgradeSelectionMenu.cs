@@ -108,7 +108,7 @@ public partial class UpgradeSelectionMenu : CanvasLayer {
 
     Visible = true;
 
-    for (int i = 0; i < _currentChoices.Count; i++) {
+    for (int i = 0; i < _currentChoices.Count; ++i) {
       var upgrade = _currentChoices[i];
       var card = UpgradeCardScene.Instantiate<Button>();
       var shortNameLabel = card.GetNode<Label>("VBoxContainer/ShortNameLabel");

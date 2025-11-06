@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Bullet;
+using Curio;
 using Enemy;
 using Godot;
 using Rewind;
@@ -12,12 +13,22 @@ public class PlayerState : RewindState {
   public bool IsReloading;
   public float TimeToReloaded;
   public float ShootTimer;
+  public bool IsJumping;
+  public float JumpTimer;
+  public bool IsInvincible;
+  public Dictionary<CurioType, float> CurioCooldowns = new();
+  public bool DecoyActive;
+  public Vector2 DecoyPosition;
+  public float DecoyTimerLeft;
   // 以下字段仅用于「从当前阶段重来」，回溯系统会忽略它们
   public float Health;
   public float TimeBond;
 }
 
 public partial class Player : CharacterBody2D, IRewindable {
+  private const float MAX_JUMP_HEIGHT = 200f;
+  private const float JUMP_TIME = 1f;
+
   public enum AnimationState {
     Idle,
     Walk,
@@ -33,6 +44,8 @@ public partial class Player : CharacterBody2D, IRewindable {
   private Area2D _grazeArea; // 擦弹区域的引用
   private CollisionShape2D _grazeAreaShape;
   private AnimatedSprite3D _hitPointSprite;
+  private CollisionShape2D _hitPointShape;
+  private Node3D _landingIndicator;
   private bool _timeSlowPressed = false;
   private RandomNumberGenerator _rnd = new RandomNumberGenerator();
   private Node3D _visualizer;
@@ -44,7 +57,15 @@ public partial class Player : CharacterBody2D, IRewindable {
   private float _beginningTimeBond;
   private Camera3D _camera;
 
-  private PlayerStats Stats => GameManager.Instance.PlayerStats;
+  // 奇物系统状态
+  private bool _curioUsePressed = false;
+  public bool IsJumping { get; private set; } = false;
+  private float _jumpTimer = 0f;
+  public bool IsInvincible { get; set; } = false;
+  private Timer _decoyTimer;
+  public Node2D DecoyTarget { get; private set; }
+
+  public PlayerStats Stats => GameManager.Instance.PlayerStats;
 
   public float Health {
     get => GameManager.Instance.CurrentPlayerHealth;
@@ -59,7 +80,9 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   [Export]
-  public PackedScene Bullet { get; set; }
+  public PackedScene BulletScene { get; set; }
+  [Export]
+  public PackedScene DecoyTargetScene { get; set; }
   [Export]
   public PackedScene GrazeTimeShard { get; set; }
   [Export]
@@ -79,6 +102,14 @@ public partial class Player : CharacterBody2D, IRewindable {
   [Export]
   public PackedScene DeathRingEffectScene { get; set; }
 
+  [ExportGroup("Sound Effects")]
+  [Export]
+  public AudioStream GrazeSound { get; set; }
+  [Export]
+  public AudioStream DeathSound { get; set; }
+  [Export]
+  public AudioStream SkillAvailableSound { get; set; }
+
   public float ShootTimer { get; set; } = 0.0f;
   public int CurrentAmmo { get; private set; }
   public bool IsReloading { get; private set; } = false;
@@ -94,6 +125,8 @@ public partial class Player : CharacterBody2D, IRewindable {
     _visualizer = GetNode<Node3D>("Visualizer");
     _sprite = _visualizer.GetNode<AnimatedSprite3D>("AnimatedSprite3D");
     _hitPointSprite = _visualizer.GetNode<AnimatedSprite3D>("HitPointSprite");
+    _hitPointShape = GetNode<CollisionShape2D>("HitArea/CollisionShape2D");
+    _landingIndicator = GetNode<Node3D>("LandingIndicator");
     _interactionArea = GetNode<Area2D>("InteractionArea");
     _interactionArea.AreaEntered += OnInteractionAreaEntered;
     _interactionArea.AreaExited += OnInteractionAreaExited;
@@ -124,19 +157,35 @@ public partial class Player : CharacterBody2D, IRewindable {
 
     if (RewindManager.Instance.IsPreviewing) {
       // 在预览时，我们只更新 3D 可视化对象的位置，不做任何逻辑
+      // 结束回溯预览的逻辑除外
+      if (Input.IsActionJustReleased("curio_use") && _curioUsePressed) {
+        var currentCurio = GameManager.Instance.GetCurrentActiveCurio();
+        if (currentCurio != null && currentCurio.Type == CurioType.TAxisEnhancement) {
+          currentCurio?.OnUseReleased(this);
+          _curioUsePressed = false;
+        }
+      }
       UpdateVisualizer();
       return;
     }
     if (RewindManager.Instance.IsRewinding) return;
 
+    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
+
     // 每帧更新动态属性
-    Stats.ApplyDynamicBonuses(Health);
+    Stats.RecalculateStats(GameManager.Instance.GetCurrentAndPendingUpgrades(), Health);
     (_grazeAreaShape.Shape as CircleShape2D).Radius = Stats.GrazeRadius;
 
     _currentAnimationState = AnimationState.Idle;
 
     UpdateInteractionTarget();
     HandleInteractionInput();
+    HandleCurioInput();
+    UpdateCurios(scaledDelta);
+
+    if (IsJumping) {
+      UpdateJump(scaledDelta);
+    }
 
     if (IsReloading) {
       TimeToReloaded -= (float) delta * TimeManager.Instance.TimeScale; // 换弹时间不受时间缩放影响
@@ -169,6 +218,56 @@ public partial class Player : CharacterBody2D, IRewindable {
     UpdateVisualizer();
   }
 
+  private void UpdateCurios(float scaledDelta) {
+    var gm = GameManager.Instance;
+    if (gm == null) return;
+
+    foreach (var curio in gm.GetCurrentAndPendingCurios()) {
+      // 更新冷却
+      if (curio.CurrentCooldown > 0) {
+        curio.CurrentCooldown -= scaledDelta;
+        if (curio.CurrentCooldown <= 0 && curio == gm.GetCurrentActiveCurio()) {
+          SoundManager.Instance.PlaySoundEffect(SkillAvailableSound, cooldown: 0.1f);
+        }
+      }
+      // 更新被动效果
+      if (curio.HasPassiveEffect) {
+        curio.OnUpdate(this, scaledDelta);
+      }
+    }
+
+    // 更新按住效果
+    if (_curioUsePressed) {
+      gm.GetCurrentActiveCurio()?.OnUseHeld(this, scaledDelta);
+    }
+  }
+
+  private void HandleCurioInput() {
+    var gm = GameManager.Instance;
+    if (gm == null) return;
+
+    var currentCurio = gm.GetCurrentActiveCurio();
+
+    if (Input.IsActionJustPressed("curio_switch")) {
+      if (_curioUsePressed) {
+        currentCurio?.OnUseCancelled(this);
+        _curioUsePressed = false;
+      }
+      gm.SwitchToNextActiveCurio();
+    }
+
+    if (Input.IsActionJustPressed("curio_use")) {
+      _curioUsePressed = true;
+      currentCurio?.OnUsePressed(this);
+    }
+
+    if (Input.IsActionJustReleased("curio_use")) {
+      if (_curioUsePressed) {
+        currentCurio?.OnUseReleased(this);
+        _curioUsePressed = false;
+      }
+    }
+  }
 
   private void UpdateCameraTransform(float delta) {
     if (_camera == null) return;
@@ -180,13 +279,20 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   private void UpdateVisualizer() {
+    float jumpHeight = 0f;
+    if (IsJumping) {
+      jumpHeight = Mathf.Sin(_jumpTimer * Mathf.Pi / JUMP_TIME) * MAX_JUMP_HEIGHT;
+    }
+
     _visualizer.GlobalPosition = new Vector3(
       GlobalPosition.X * GameConstants.WorldScaleFactor,
-      GameConstants.GamePlaneY,
+      GameConstants.GamePlaneY + jumpHeight * GameConstants.WorldScaleFactor,
       GlobalPosition.Y * GameConstants.WorldScaleFactor
     );
 
     _hitPointSprite.Visible = _timeSlowPressed;
+    _landingIndicator.Visible = IsJumping;
+    _landingIndicator.GlobalPosition = _visualizer.GlobalPosition with { Y = GameConstants.GamePlaneY };
   }
 
   private void StartReload() {
@@ -207,6 +313,11 @@ public partial class Player : CharacterBody2D, IRewindable {
       bullet.OnGrazeEnter();
       if (bullet.WasGrazed) return;
       bullet.WasGrazed = true;
+
+      if (GrazeSound != null) {
+        SoundManager.Instance.PlaySoundEffect(GrazeSound, cooldown: 0.05f);
+      }
+
       var shard = GrazeTimeShard.Instantiate<TimeShard>();
       shard.TimeBonus = Stats.GrazeTimeBonus;
       shard.SpawnCenter = bullet.GlobalPosition;
@@ -223,8 +334,8 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   private void OnHitAreaBodyEntered(Node2D body) {
-    // 玩家在回溯预览期间是无敌的
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
+    // 玩家在回溯预览、跳跃、金身期间是无敌的
+    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding || IsJumping || IsInvincible) return;
 
     if (body.IsInGroup("enemies")) {
       GD.Print("Player hit by enemy");
@@ -240,7 +351,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   private void HandleInteractionInput() {
-    if (Input.IsActionJustPressed("interact") && _closestInteractable != null) {
+    if (Input.IsActionJustPressed("ui_accept") && _closestInteractable != null) {
       _closestInteractable.Interact();
     }
   }
@@ -319,13 +430,14 @@ public partial class Player : CharacterBody2D, IRewindable {
   private void Shoot() {
     if (CurrentAmmo <= 0) return;
 
-    ShootTimer = Stats.ShootCooldown;
     --CurrentAmmo;
+    ShootTimer = Stats.ShootCooldown;
 
     // 实例化 SimpleBullet
-    var bullet = Bullet.Instantiate<SimpleBullet>();
+    var bullet = BulletScene.Instantiate<SimpleBullet>();
     bullet.IsPlayerBullet = true; // 明确设置这是玩家子弹
     bullet.Damage = Stats.BulletDamage;
+    GD.Print($"BulletDamage: {Stats.BulletDamage}");
     bullet.GlobalPosition = GlobalPosition;
 
     var randomRotationSigma = _timeSlowPressed ? Stats.BulletSpreadSlow : Stats.BulletSpreadNormal;
@@ -346,6 +458,11 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   private void HandleMovement() {
+    if (IsInvincible) {
+      Velocity = Vector2.Zero;
+      MoveAndSlide();
+      return;
+    }
     Vector2 direction = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
     Velocity = direction * Stats.MovementSpeed * (_timeSlowPressed ? Stats.SlowMovementSpeedScale : 1f);
     if (!direction.IsZeroApprox()) {
@@ -359,7 +476,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     Velocity = Vector2.Zero;
     Health = _beginningHealth;
     GameManager.Instance.TimeBond = _beginningTimeBond;
-    Stats.ApplyDynamicBonuses(Health);
+    Stats.RecalculateStats(GameManager.Instance.GetCurrentAndPendingUpgrades(), Health);
     (_grazeAreaShape.Shape as CircleShape2D).Radius = Stats.GrazeRadius;
     IsReloading = false;
     TimeToReloaded = 0.0f;
@@ -367,12 +484,24 @@ public partial class Player : CharacterBody2D, IRewindable {
     CurrentAmmo = Stats.MaxAmmoInt;
     IsPermanentlyDead = false;
     _currentAnimationState = AnimationState.Idle;
+    IsJumping = false;
+    _jumpTimer = 0f;
+    IsInvincible = false;
+    foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
+      curio.CurrentCooldown = 0f;
+    }
+    RemoveDecoyTarget();
+    _hitPointShape.Disabled = false;
     UpdateAnimationState();
     UpdateVisualizer();
   }
 
   public void Die() {
     if (IsPermanentlyDead) return;
+
+    if (DeathSound != null) {
+      SoundManager.Instance.PlaySoundEffect(DeathSound, cooldown: 0.2f);
+    }
 
     if (DeathRingEffectScene != null) {
       var effect = DeathRingEffectScene.Instantiate<InvertRingEffect>();
@@ -406,7 +535,58 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
   }
 
+  public void Jump() {
+    if (IsJumping) return;
+    IsJumping = true;
+    _jumpTimer = 0f;
+    _hitPointShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
+  }
+
+  private void UpdateJump(float delta) {
+    _jumpTimer += delta;
+    if (_jumpTimer >= JUMP_TIME) {
+      IsJumping = false;
+      _jumpTimer = 0f;
+      _hitPointShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, false);
+    }
+  }
+
+  public void CreateDecoyTarget(float duration) {
+    if (DecoyTargetScene == null || IsInstanceValid(DecoyTarget)) {
+      return;
+    }
+
+    DecoyTarget = DecoyTargetScene.Instantiate<Node2D>();
+    DecoyTarget.GlobalPosition = this.GlobalPosition;
+    GameRootProvider.CurrentGameRoot.AddChild(DecoyTarget);
+
+    // 创建一个计时器来移除诱饵
+    _decoyTimer = new Timer();
+    _decoyTimer.WaitTime = duration;
+    _decoyTimer.OneShot = true;
+    _decoyTimer.Timeout += RemoveDecoyTarget;
+    AddChild(_decoyTimer);
+    _decoyTimer.Start();
+  }
+
+  public void RemoveDecoyTarget() {
+    if (IsInstanceValid(DecoyTarget)) {
+      DecoyTarget.QueueFree();
+      DecoyTarget = null;
+    }
+    if (IsInstanceValid(_decoyTimer)) {
+      _decoyTimer.Stop();
+      _decoyTimer.QueueFree();
+      _decoyTimer = null;
+    }
+  }
+
   public RewindState CaptureState() {
+    Dictionary<CurioType, float> curioCooldowns = new();
+    foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
+      curioCooldowns[curio.Type] = curio.CurrentCooldown;
+    }
+
     return new PlayerState {
       GlobalPosition = this.GlobalPosition,
       Velocity = this.Velocity,
@@ -415,6 +595,13 @@ public partial class Player : CharacterBody2D, IRewindable {
       IsReloading = this.IsReloading,
       TimeToReloaded = this.TimeToReloaded,
       ShootTimer = this.ShootTimer,
+      IsJumping = this.IsJumping,
+      JumpTimer = this._jumpTimer,
+      IsInvincible = this.IsInvincible,
+      CurioCooldowns = curioCooldowns,
+      DecoyActive = IsInstanceValid(DecoyTarget),
+      DecoyPosition = IsInstanceValid(DecoyTarget) ? DecoyTarget.GlobalPosition : Vector2.Zero,
+      DecoyTimerLeft = IsInstanceValid(_decoyTimer) ? (float) _decoyTimer.TimeLeft : 0f,
       // Health 和 TimeBond 仅用于阶段重启，回溯系统不会使用它们
       Health = this.Health,
       TimeBond = GameManager.Instance.TimeBond
@@ -431,6 +618,40 @@ public partial class Player : CharacterBody2D, IRewindable {
     this.IsReloading = ps.IsReloading;
     this.TimeToReloaded = ps.TimeToReloaded;
     this.ShootTimer = ps.ShootTimer;
+    this.IsJumping = ps.IsJumping;
+    this._jumpTimer = ps.JumpTimer;
+    this.IsInvincible = ps.IsInvincible;
+    _hitPointShape.Disabled = this.IsJumping;
+    foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
+      if (ps.CurioCooldowns.TryGetValue(curio.Type, out var cd)) {
+        curio.CurrentCooldown = cd;
+      }
+    }
+
+    // --- 诱饵状态恢复 ---
+    bool shouldBeActive = ps.DecoyActive;
+    bool isActive = IsInstanceValid(DecoyTarget);
+
+    if (shouldBeActive && !isActive) {
+      // 诱饵需要被创建
+      if (DecoyTargetScene != null) {
+        DecoyTarget = DecoyTargetScene.Instantiate<Node2D>();
+        GameRootProvider.CurrentGameRoot.AddChild(DecoyTarget);
+        _decoyTimer = new Timer();
+        _decoyTimer.OneShot = true;
+        _decoyTimer.Timeout += RemoveDecoyTarget;
+        AddChild(_decoyTimer);
+      }
+    } else if (!shouldBeActive && isActive) {
+      // 诱饵需要被移除
+      RemoveDecoyTarget();
+    }
+
+    // 如果诱饵应该激活（并且现在是），更新其状态
+    if (shouldBeActive && IsInstanceValid(DecoyTarget)) {
+      DecoyTarget.GlobalPosition = ps.DecoyPosition;
+      _decoyTimer.Start(ps.DecoyTimerLeft);
+    }
 
     // 注意：回溯系统不应该恢复 Health 和 TimeBond，
     // 但「从当前阶段重来」功能会手动恢复它们．
@@ -444,6 +665,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   public void Resurrect() { }
 
   public override void _ExitTree() {
+    RemoveDecoyTarget();
     if (RewindManager.Instance != null) {
       RewindManager.Instance.Unregister(this);
     }

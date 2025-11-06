@@ -105,16 +105,17 @@ public partial class PhaseLiquidCrystalBullet : BaseBullet {
   }
 
   private void UpdateRotation() {
-    if (!IsInstanceValid(_player)) return;
+    var target = _player.DecoyTarget ?? _player;
+    if (!IsInstanceValid(target)) return;
 
     // 默认旋转角度
     float alpha = BossVelocity.IsZeroApprox() ? Mathf.Pi / 2 : BossVelocity.Angle();
-    // 指向玩家的角度
-    float beta = GlobalPosition.DirectionTo(_player.GlobalPosition).Angle();
+    // 指向目标的角度
+    float beta = GlobalPosition.DirectionTo(target.GlobalPosition).Angle();
 
     // 计算 k 值
-    float distSqToPlayer = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
-    float k = Mathf.Clamp(PlayerInfluenceConstant / (distSqToPlayer + 1.0f), 0.0f, 1.0f);
+    float distSqToTarget = GlobalPosition.DistanceSquaredTo(target.GlobalPosition);
+    float k = Mathf.Clamp(PlayerInfluenceConstant / (distSqToTarget + 1.0f), 0.0f, 1.0f);
 
     // 计算最终旋转角度
     // LerpAngle 确保在角度环上正确插值

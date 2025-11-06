@@ -57,6 +57,7 @@ public partial class RockPaperScissorsEvent : GameEvent {
         return new FinishEvent();
       }
     } else if (CurrentState == State.CombatWon) {
+      IsFinished = true;
       return new ShowUpgradeSelection { Picks = 2, MinLevel = 1, MaxLevel = 2 };
     }
 

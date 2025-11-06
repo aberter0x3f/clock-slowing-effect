@@ -1,8 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://thwaf74pde5f"]
+[gd_scene load_steps=4 format=3 uid="uid://thwaf74pde5f"]
 
 [ext_resource type="Script" uid="uid://ddqyc0ktk0d5v" path="res://scripts/Enemy/Boss/PhaseWave2.cs" id="1_kgneg"]
 [ext_resource type="PackedScene" uid="uid://clkmcx76wk0aj" path="res://enemies/boss/wave2/bullet1.tscn" id="2_idklx"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="3_idklx"]
 
 [node name="PhaseWave2" type="Node"]
 script = ExtResource("1_kgneg")
 WaveBulletScene = ExtResource("2_idklx")
+AttackSound = ExtResource("3_idklx")

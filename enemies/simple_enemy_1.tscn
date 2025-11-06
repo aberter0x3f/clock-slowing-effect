@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://cyest5jveonbm"]
+[gd_scene load_steps=8 format=3 uid="uid://cyest5jveonbm"]
 
 [ext_resource type="Script" uid="uid://c0s2gabecbebj" path="res://scripts/Enemy/SimpleEnemy1.cs" id="1_vy8cc"]
 [ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="2_qi2p4"]
 [ext_resource type="PackedScene" uid="uid://bg6yui6j6kvip" path="res://enemies/simple_enemy_1/bullet.tscn" id="2_s87yl"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="3_im6pg"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="4_qyhwj"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_s87yl"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
@@ -14,9 +15,10 @@ z_index = 2
 collision_layer = 8
 collision_mask = 21
 script = ExtResource("1_vy8cc")
-Bullet = ExtResource("2_s87yl")
+BulletScene = ExtResource("2_s87yl")
 TimeShardScene = ExtResource("3_im6pg")
 TimeShardCount = 5
+AttackSound = ExtResource("4_qyhwj")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false
@@ -32,6 +34,9 @@ one_shot = true
 
 [node name="RandomWalkComponent" type="Node" parent="."]
 script = ExtResource("4_s87yl")
+MoveSpeedMean = null
+MoveSpeedSigma = null
+MoveDuration = null
 metadata/_custom_type_script = "uid://b7y3ayqdya65s"
 
 [node name="Visualizer" type="Node3D" parent="."]

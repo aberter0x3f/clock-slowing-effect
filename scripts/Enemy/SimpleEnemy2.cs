@@ -12,7 +12,7 @@ public partial class SimpleEnemy2 : BaseEnemy {
   private float _shootTimer;
 
   [Export]
-  public PackedScene Bullet { get; set; }
+  public PackedScene BulletScene { get; set; }
   [Export]
   public float ShootInterval { get; set; } = 2.5f;
   [Export]
@@ -50,8 +50,12 @@ public partial class SimpleEnemy2 : BaseEnemy {
   }
 
   private void Shoot() {
-    if (_player == null || !IsInstanceValid(_player)) return;
-    var baseDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
+    var target = PlayerNode;
+    if (target == null || !IsInstanceValid(target)) return;
+
+    PlayAttackSound();
+
+    var baseDirection = (target.GlobalPosition - GlobalPosition).Normalized();
     for (int i = 0; i < ShootCount; ++i) {
       var rotationAngle = Mathf.Tau / ShootCount * i;
       if (rotationAngle > Mathf.Pi) {
@@ -61,7 +65,7 @@ public partial class SimpleEnemy2 : BaseEnemy {
         continue;
       }
       var dir = baseDirection.Rotated(rotationAngle);
-      var bullet = Bullet.Instantiate<SimpleBullet>();
+      var bullet = BulletScene.Instantiate<SimpleBullet>();
       bullet.GlobalPosition = GlobalPosition;
       bullet.Velocity = dir * bullet.InitialSpeed;
       bullet.Rotation = dir.Angle();

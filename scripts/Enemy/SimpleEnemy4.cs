@@ -13,7 +13,7 @@ public partial class SimpleEnemy4 : BaseEnemy {
   private float _shootTimer;
 
   [Export]
-  public PackedScene Bullet { get; set; }
+  public PackedScene BulletScene { get; set; }
 
   [Export]
   public float ShootInterval { get; set; } = 1.5f;
@@ -49,10 +49,15 @@ public partial class SimpleEnemy4 : BaseEnemy {
   }
 
   private void Shoot() {
-    var direction = (_player.GlobalPosition - GlobalPosition).Normalized();
+    var target = PlayerNode;
+    if (target == null || !IsInstanceValid(target) || BulletScene == null) return;
+
+    PlayAttackSound();
+
+    var direction = (target.GlobalPosition - GlobalPosition).Normalized();
 
     for (int i = 0; i < 15; ++i) {
-      var bullet = Bullet.Instantiate<SimpleBullet>();
+      var bullet = BulletScene.Instantiate<SimpleBullet>();
       bullet.GlobalPosition = GlobalPosition;
       bullet.InitialSpeed += i * 20;
       bullet.Rotation = direction.Angle();

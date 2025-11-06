@@ -24,10 +24,10 @@ public partial class Dna : BaseEnemy {
   private Vector2 _attackDirection;
 
   [Export]
-  public PackedScene Bullet1 { get; set; }
+  public PackedScene Bullet1Scene { get; set; }
 
   [Export]
-  public PackedScene Bullet2 { get; set; }
+  public PackedScene Bullet2Scene { get; set; }
 
   [Export]
   public float ShootInterval { get; set; } = 5f;
@@ -83,9 +83,15 @@ public partial class Dna : BaseEnemy {
   /// </summary>
   private void StartAttackSequence() {
     _attackState = AttackState.Attacking;
-    _attackDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
+    var target = PlayerNode;
+    if (target == null || !IsInstanceValid(target)) {
+      _attackState = AttackState.Idle;
+      return;
+    }
+    _attackDirection = (target.GlobalPosition - GlobalPosition).Normalized();
     _bulletsFiredInSequence = 0;
     _attackTimer = 0; // 立即发射第一对子弹
+    PlayAttackSound();
   }
 
   /// <summary>
@@ -105,19 +111,19 @@ public partial class Dna : BaseEnemy {
 
       var enemyPosition = GlobalPosition;
 
-      var bullet1 = Bullet1.Instantiate<WavyBullet>();
+      var bullet1 = Bullet1Scene.Instantiate<WavyBullet>();
       bullet1.GlobalPosition = enemyPosition;
       bullet1.GlobalRotation = _attackDirection.Angle();
       bullet1.InvertSine = false;
       GameRootProvider.CurrentGameRoot.AddChild(bullet1);
 
-      var bullet2 = Bullet2.Instantiate<WavyBullet>();
+      var bullet2 = Bullet2Scene.Instantiate<WavyBullet>();
       bullet2.GlobalPosition = enemyPosition;
       bullet2.GlobalRotation = _attackDirection.Angle();
       bullet2.InvertSine = true;
       GameRootProvider.CurrentGameRoot.AddChild(bullet2);
 
-      _bulletsFiredInSequence++;
+      ++_bulletsFiredInSequence;
 
       // 重置计时器，等待下一次发射
       _attackTimer = BulletCreationInterval;

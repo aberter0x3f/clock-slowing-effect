@@ -131,7 +131,9 @@ public partial class PhaseWave : BasePhase {
       return;
     }
 
-    _waveCounter++;
+    PlayAttackSound();
+
+    ++_waveCounter;
     float mapWidth = _mapGenerator.MapWidth * _mapGenerator.TileSize;
     float startX = -mapWidth / 2.0f;
     float endX = mapWidth / 2.0f;

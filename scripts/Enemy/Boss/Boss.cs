@@ -47,6 +47,10 @@ public partial class Boss : BaseEnemy {
   [Export]
   public float RestDuration { get; set; } = 5f; // 阶段间的休息时间
 
+  [ExportGroup("Sound Effects")]
+  [Export]
+  public AudioStream PowerUpSound { get; set; }
+
   private int _currentPhaseIndex = 0;
   private BasePhase _activePhaseInstance;
   private float _restTimerLeft;
