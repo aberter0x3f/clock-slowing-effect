@@ -416,3 +416,5 @@ mono_crash.*.json
 
 .zed/
 images/
+sounds/
+fonts/

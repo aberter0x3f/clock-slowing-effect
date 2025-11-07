@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://wngnk3v6gahp"]
+[gd_scene load_steps=24 format=3 uid="uid://wngnk3v6gahp"]
 
 [ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="1_xj5yv"]
 [ext_resource type="Script" uid="uid://u4t27m71rfwv" path="res://scripts/Room/Combat.cs" id="1_y7vi5"]
@@ -11,6 +11,7 @@
 [ext_resource type="Resource" uid="uid://bavwyb1080vsp" path="res://enemies/simple_enemy_1.tres" id="5_8tlgu"]
 [ext_resource type="PackedScene" uid="uid://c6vnywdveemsw" path="res://world_environment.tscn" id="5_awqhq"]
 [ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="5_lt8bm"]
+[ext_resource type="PackedScene" uid="uid://8tp11lig65w" path="res://ui/heads_up_display.tscn" id="6_15veh"]
 [ext_resource type="PackedScene" uid="uid://dynj33onwm4qh" path="res://rewind_label.tscn" id="6_80jcd"]
 [ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="6_q7c2t"]
 [ext_resource type="Resource" uid="uid://bc4c7si6m041s" path="res://enemies/simple_enemy_2.tres" id="6_soos4"]
@@ -37,11 +38,9 @@ transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660
 shadow_enabled = true
 directional_shadow_mode = 1
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="HeadsUpDisplay" parent="." instance=ExtResource("6_15veh")]
 
-[node name="Label" type="Label" parent="CanvasLayer"]
-offset_right = 40.0
-offset_bottom = 23.0
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="RewindLabel" parent="CanvasLayer" instance=ExtResource("6_80jcd")]
 

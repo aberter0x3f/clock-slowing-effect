@@ -45,7 +45,7 @@ public partial class CheatCodeEvent : GameEvent {
         new("IDKFA",
           "Gain [color=orange]2[/color] Level [color=orange]1-2[/color] Upgrades. There is a [color=orange]50%[/color] chance of triggering a combat encounter."),
         new("I want it all",
-          "Gain both of the above rewards. There is a [color=orange]75%[/color] chance of triggering a [b]harder[/b] ([color=orange]1.2x[/color] difficulty) combat encounter."),
+          "Gain both of the above rewards. There is a [color=orange]75%[/color] chance of triggering a harder ([color=orange]1.2x[/color] difficulty) combat encounter."),
         new("No clipping", "Leave the glitch alone.")
       };
     }

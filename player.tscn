@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3 uid="uid://clq42dr4qhnpb"]
+[gd_scene load_steps=37 format=3 uid="uid://clq42dr4qhnpb"]
 
 [ext_resource type="Script" uid="uid://b6t3j7axqr3pk" path="res://scripts/Player.cs" id="1_onrkg"]
 [ext_resource type="PackedScene" uid="uid://clk8144n4xb8u" path="res://player_bullet.tscn" id="2_hqtel"]
@@ -11,6 +11,7 @@
 [ext_resource type="AudioStream" uid="uid://bnfy1dhlnv8br" path="res://sounds/effects/player_death.wav" id="7_nvl01"]
 [ext_resource type="Texture2D" uid="uid://drravq36efsfa" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 5B Free.png" id="8_dw050"]
 [ext_resource type="AudioStream" uid="uid://cwltmlyx4lrne" path="res://sounds/effects/bling.wav" id="8_ivps1"]
+[ext_resource type="AudioStream" uid="uid://dcnqnd0chphl4" path="res://sounds/effects/violin.wav" id="9_ivps1"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_sweqy"]
 radius = 100.0
@@ -186,6 +187,7 @@ DeathRingEffectScene = ExtResource("4_2hs0m")
 GrazeSound = ExtResource("6_b26j0")
 DeathSound = ExtResource("7_nvl01")
 SkillAvailableSound = ExtResource("8_ivps1")
+ShootSound = ExtResource("9_ivps1")
 
 [node name="InteractionArea" type="Area2D" parent="."]
 

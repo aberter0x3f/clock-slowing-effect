@@ -1,6 +1,8 @@
 using Godot;
 using Rewind;
 
+namespace UI;
+
 public partial class RewindLabel : Label {
   public override void _Process(double delta) {
     base._Process(delta);

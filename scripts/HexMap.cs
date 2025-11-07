@@ -80,6 +80,8 @@ public class HexMap {
     //   node.Type = NodeType.Boss;
     // }
 
+    // return;
+
     Nodes[StartPosition].Type = NodeType.Combat;
     Nodes[TargetPosition].Type = NodeType.Boss;
 

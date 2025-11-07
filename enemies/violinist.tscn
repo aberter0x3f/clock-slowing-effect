@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://cp1ncmsmewuqr"]
+[gd_scene load_steps=10 format=3 uid="uid://cp1ncmsmewuqr"]
 
 [ext_resource type="Script" uid="uid://c3ctfqvvorxe1" path="res://scripts/Enemy/Violinist.cs" id="1_n4fa3"]
 [ext_resource type="PackedScene" uid="uid://dm5xk7cw2rst7" path="res://enemies/violinist/stuff_line_bullet.tscn" id="2_x3cys"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_5e0yb"]
 [ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="5_lga6a"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="5_yei7r"]
+[ext_resource type="AudioStream" uid="uid://dhc88mnrkuak" path="res://sounds/effects/explosion_small.wav" id="6_7b6ex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
@@ -22,6 +23,7 @@ MaxHealth = 50.0
 TimeShardScene = ExtResource("4_5e0yb")
 TimeShardCount = 20
 AttackSound = ExtResource("5_lga6a")
+DeathSound = ExtResource("6_7b6ex")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false

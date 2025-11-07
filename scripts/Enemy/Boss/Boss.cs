@@ -142,6 +142,8 @@ public partial class Boss : BaseEnemy {
 
     GD.Print($"Starting Boss Phase {_currentPhaseIndex}.");
 
+    SoundManager.Instance.PlaySoundEffect(PowerUpSound, cooldown: 0.2f, volumeDb: 5f);
+
     // 启用碰撞，让玩家可以攻击
     SetCollisionEnabled(true);
 
@@ -165,6 +167,8 @@ public partial class Boss : BaseEnemy {
 
   private void OnPhaseEnded() {
     GD.Print($"Boss Phase {_currentPhaseIndex} completed!");
+
+    SoundManager.Instance.PlaySoundEffect(DeathSound, cooldown: 0.2f, volumeDb: 5f);
 
     CallDeferred(nameof(SetCollisionEnabled), false);
     ClearAllBullets();

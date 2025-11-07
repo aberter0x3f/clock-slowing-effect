@@ -18,7 +18,7 @@ public partial class AhaStuffedToyEvent : GameEvent {
       new("Twist the switch",
         "There's a [color=orange]42%[/color] chance to get a Level [color=orange]1[/color] Upgrade, a [color=orange]36%[/color] chance for nothing to happen, and a [color=orange]22%[/color] chance to lose a Level [color=orange]1[/color] Upgrade."),
       new("Tear it apart",
-        "There's a [color=orange]50%[/color] chance to restore health equal to [color=orange]50%[/color] of your max health, and a [color=orange]50%[/color] chance to gain a Time Bond equal to [color=orange]50%[/color] of your [b]current[/b] health.")
+        "There's a [color=orange]50%[/color] chance to restore health equal to [color=orange]50%[/color] of your max health, and a [color=orange]50%[/color] chance to gain a Time Bond equal to [color=orange]50%[/color] of your current health.")
     };
   }
 

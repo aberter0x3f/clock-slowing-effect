@@ -8,7 +8,6 @@ namespace Room;
 
 public partial class Combat : Node {
   private Player _player;
-  private Label _uiLabel;
   private MapGenerator _mapGenerator;
   private EnemySpawner _enemySpawner;
   private RewindManager _rewindManager;
@@ -34,7 +33,6 @@ public partial class Combat : Node {
     GameRootProvider.CurrentGameRoot = this;
 
     _player = GetNode<Player>("Player");
-    _uiLabel = GetNode<Label>("CanvasLayer/Label");
     _mapGenerator = GetNode<MapGenerator>("MapGenerator");
     _enemySpawner = GetNode<EnemySpawner>("EnemySpawner");
     _rewindManager = GetNode<RewindManager>("RewindManager");
@@ -177,7 +175,6 @@ public partial class Combat : Node {
     if (_enemySpawner != null && !_enemySpawner.IsWaveCompleted && !_player.IsPermanentlyDead && !isRewindingWithCurio) {
       _player.Health -= (float) delta;
     }
-    UpdateUILabelText();
   }
 
   private void OnRestartRequested() {
@@ -209,27 +206,5 @@ public partial class Combat : Node {
     _upgradeRng.Seed = _levelSeed;
 
     GameManager.Instance?.RestartLevel();
-  }
-
-  private void UpdateUILabelText() {
-    if (_player == null || _uiLabel == null) return;
-    string ammoText = _player.IsReloading ? $"Reloading: {_player.TimeToReloaded:F1}s" : $"Ammo: {_player.CurrentAmmo} / {GameManager.Instance.PlayerStats.MaxAmmoInt}";
-    var rewindTimeLeft = _rewindManager.AvailableRewindTime;
-    var timeBondText = $"Time Bond: {GameManager.Instance.TimeBond:F1}s";
-    var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
-
-    string curioText = "Curio: None";
-    var activeCurio = GameManager.Instance.GetCurrentActiveCurio();
-    if (activeCurio != null) {
-      string cdText = activeCurio.CurrentCooldown > 0 ? $" (CD: {activeCurio.CurrentCooldown:F1}s)" : " (Ready)";
-      curioText = $"Curio: {activeCurio.Name}{cdText}";
-    }
-
-    _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
-                    $"{timeBondText}\n" +
-                    $"Rewind Left: {rewindTimeLeft:F1}s\n" +
-                    $"{ammoText}\n" +
-                    $"{curioText}\n" +
-                    $"Bullet object count: {bulletObjectCount}";
   }
 }

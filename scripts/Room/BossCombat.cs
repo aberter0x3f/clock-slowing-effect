@@ -9,7 +9,6 @@ namespace Room;
 
 public partial class BossCombat : Node {
   private Player _player;
-  private Label _uiLabel;
   private MapGenerator _mapGenerator;
   private RewindManager _rewindManager;
   private PauseMenu _pauseMenu;
@@ -37,7 +36,6 @@ public partial class BossCombat : Node {
     GameRootProvider.CurrentGameRoot = this;
 
     _player = GetNode<Player>("Player");
-    _uiLabel = GetNode<Label>("CanvasLayer/Label");
     _mapGenerator = GetNode<MapGenerator>("MapGenerator");
     _rewindManager = GetNode<RewindManager>("RewindManager");
 
@@ -155,7 +153,6 @@ public partial class BossCombat : Node {
     if (IsInstanceValid(_boss) && _boss.InternalState == Boss.BossInternalState.Fighting && !_player.IsPermanentlyDead && !isRewindingWithCurio) {
       _player.Health -= (float) delta;
     }
-    UpdateUILabelText();
   }
 
   private void OnRestartRequested() {
@@ -196,27 +193,5 @@ public partial class BossCombat : Node {
 
   private void OnRestartFromPhaseRequested() {
     _boss.RestartFromCurrentPhase();
-  }
-
-  private void UpdateUILabelText() {
-    if (_player == null || _uiLabel == null) return;
-    string ammoText = _player.IsReloading ? $"Reloading: {_player.TimeToReloaded:F1}s" : $"Ammo: {_player.CurrentAmmo} / {GameManager.Instance.PlayerStats.MaxAmmoInt}";
-    var rewindTimeLeft = _rewindManager.AvailableRewindTime;
-    var timeBondText = $"Time Bond: {GameManager.Instance.TimeBond:F1}s";
-    var trackedObjectCount = RewindManager.Instance.TrackedObjectCount;
-
-    string curioText = "Curio: None";
-    var activeCurio = GameManager.Instance.GetCurrentActiveCurio();
-    if (activeCurio != null) {
-      string cdText = activeCurio.CurrentCooldown > 0 ? $" (CD: {activeCurio.CurrentCooldown:F1}s)" : " (Ready)";
-      curioText = $"Curio: {activeCurio.Name}{cdText}";
-    }
-
-    _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
-                    $"{timeBondText}\n" +
-                    $"Rewind Left: {rewindTimeLeft:F1}s\n" +
-                    $"{ammoText}\n" +
-                    $"{curioText}\n" +
-                    $"Tracked object count: {trackedObjectCount}";
   }
 }

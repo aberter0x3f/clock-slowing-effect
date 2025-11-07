@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dynj33onwm4qh"]
 
-[ext_resource type="FontFile" uid="uid://cgd7yr23vminh" path="res://fonts/DSEG7Modern-BoldItalic.ttf" id="1_k3rvv"]
-[ext_resource type="Script" uid="uid://dgrfln24t4kyk" path="res://scripts/RewindLabel.cs" id="2_q4ro8"]
+[ext_resource type="FontFile" uid="uid://d3otfmdmno8op" path="res://fonts/DSEG14Modern-BoldItalic.ttf" id="1_k3rvv"]
+[ext_resource type="Script" path="res://scripts/UI/RewindLabel.cs" id="2_q4ro8"]
 
 [node name="RewindLabel" type="Label"]
 visible = false

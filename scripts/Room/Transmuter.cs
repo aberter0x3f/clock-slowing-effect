@@ -6,7 +6,6 @@ namespace Room;
 
 public partial class Transmuter : Node {
   private Player _player;
-  private Label _uiLabel;
   private MapGenerator _mapGenerator;
   private RewindManager _rewindManager;
   private PauseMenu _pauseMenu;
@@ -33,7 +32,6 @@ public partial class Transmuter : Node {
     GameRootProvider.CurrentGameRoot = this;
 
     _player = GetNode<Player>("Player");
-    _uiLabel = GetNode<Label>("CanvasLayer/Label");
     _mapGenerator = GetNode<MapGenerator>("MapGenerator");
     _rewindManager = GetNode<RewindManager>("RewindManager");
 
@@ -99,10 +97,6 @@ public partial class Transmuter : Node {
     }
   }
 
-  public override void _Process(double delta) {
-    UpdateUILabelText();
-  }
-
   private void OnRestartRequested() {
     GD.Print("Restarting Transmuter level...");
 
@@ -110,17 +104,5 @@ public partial class Transmuter : Node {
     _rewindManager.ResetHistory();
     _transmuterDevice.Reset();
     GameManager.Instance?.RestartLevel();
-  }
-
-  private void UpdateUILabelText() {
-    if (_player == null || _uiLabel == null) return;
-    string ammoText = _player.IsReloading ? $"Reloading: {_player.TimeToReloaded:F1}s" : $"Ammo: {_player.CurrentAmmo} / {GameManager.Instance.PlayerStats.MaxAmmoInt}";
-    var rewindTimeLeft = _rewindManager.AvailableRewindTime;
-    var timeBondText = $"Time Bond: {GameManager.Instance.TimeBond:F1}s";
-
-    _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
-                    $"{timeBondText}\n" +
-                    $"Rewind Left: {rewindTimeLeft:F1}s\n" +
-                    $"{ammoText}";
   }
 }

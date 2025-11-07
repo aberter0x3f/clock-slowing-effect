@@ -1,0 +1,239 @@
+[gd_scene load_steps=7 format=3 uid="uid://8tp11lig65w"]
+
+[ext_resource type="Texture2D" uid="uid://dxuac10nlq4c1" path="res://images/rec_icon.png" id="1_miehu"]
+[ext_resource type="Script" uid="uid://c6q1npcfcifs3" path="res://scripts/UI/HeadsUpDisplay.cs" id="1_syk6b"]
+[ext_resource type="FontFile" uid="uid://d34t13ols1dhi" path="res://fonts/DSEG14Modern-Regular.ttf" id="2_syk6b"]
+[ext_resource type="Texture2D" uid="uid://dyup7ue0m4qpp" path="res://images/rew_icon.png" id="3_3ox6w"]
+[ext_resource type="Texture2D" uid="uid://14b4y8nh1vpb" path="res://images/violin.png" id="4_3ox6w"]
+[ext_resource type="Texture2D" uid="uid://cg4q1tuxkx36d" path="res://images/hexagon1.png" id="5_yakho"]
+
+[node name="HeadsUpDisplay" type="CanvasLayer"]
+script = ExtResource("1_syk6b")
+RecordIcon = ExtResource("1_miehu")
+RewindIcon = ExtResource("3_3ox6w")
+
+[node name="TopLeftContainer" type="VBoxContainer" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="RewindTimeContainer" type="HBoxContainer" parent="TopLeftContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="StatusIcon" type="TextureRect" parent="TopLeftContainer/RewindTimeContainer"]
+custom_minimum_size = Vector2(105, 33)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+texture = ExtResource("1_miehu")
+expand_mode = 1
+
+[node name="RewindTimeLabel" type="Label" parent="TopLeftContainer/RewindTimeContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = "15.0"
+vertical_alignment = 2
+
+[node name="Label3" type="Label" parent="TopLeftContainer/RewindTimeContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+theme_override_font_sizes/font_size = 8
+text = "s"
+vertical_alignment = 2
+
+[node name="MaxRewindTimeLabel" type="Label" parent="TopLeftContainer/RewindTimeContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = "/15.0"
+vertical_alignment = 2
+
+[node name="Label4" type="Label" parent="TopLeftContainer/RewindTimeContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+theme_override_font_sizes/font_size = 8
+text = "s"
+vertical_alignment = 2
+
+[node name="HealthContainer" type="HBoxContainer" parent="TopLeftContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="HealthLabel" type="Label" parent="TopLeftContainer/HealthContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("2_syk6b")
+theme_override_font_sizes/font_size = 32
+text = "999.9"
+vertical_alignment = 2
+
+[node name="Label2" type="Label" parent="TopLeftContainer/HealthContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = "s"
+vertical_alignment = 2
+
+[node name="MaxHealthLabel" type="Label" parent="TopLeftContainer/HealthContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = "/999.9"
+vertical_alignment = 2
+
+[node name="Label" type="Label" parent="TopLeftContainer/HealthContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+theme_override_font_sizes/font_size = 8
+text = "s"
+vertical_alignment = 2
+
+[node name="TimeBondContainer" type="HBoxContainer" parent="TopLeftContainer/HealthContainer"]
+modulate = Color(1, 0.46666667, 0.46666667, 1)
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Label" type="Label" parent="TopLeftContainer/HealthContainer/TimeBondContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = "(+"
+vertical_alignment = 2
+
+[node name="TimeBondLabel" type="Label" parent="TopLeftContainer/HealthContainer/TimeBondContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = "99.9"
+vertical_alignment = 2
+
+[node name="Label2" type="Label" parent="TopLeftContainer/HealthContainer/TimeBondContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+theme_override_font_sizes/font_size = 8
+text = "s"
+vertical_alignment = 2
+
+[node name="Label3" type="Label" parent="TopLeftContainer/HealthContainer/TimeBondContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = ")"
+vertical_alignment = 2
+
+[node name="TopRightContainer" type="VBoxContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -142.0
+offset_bottom = 25.0
+grow_horizontal = 0
+
+[node name="AmmoContainer" type="HBoxContainer" parent="TopRightContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/separation = 0
+
+[node name="AmmoLabel" type="Label" parent="TopRightContainer/AmmoContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("2_syk6b")
+theme_override_font_sizes/font_size = 32
+text = "99"
+vertical_alignment = 2
+
+[node name="MaxAmmoLabel" type="Label" parent="TopRightContainer/AmmoContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = "/99"
+vertical_alignment = 2
+
+[node name="LabelS" type="Label" parent="TopRightContainer/AmmoContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+theme_override_font_sizes/font_size = 8
+text = "s"
+vertical_alignment = 2
+
+[node name="TextureRect" type="TextureRect" parent="TopRightContainer/AmmoContainer"]
+custom_minimum_size = Vector2(35, 33)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+texture = ExtResource("4_3ox6w")
+expand_mode = 1
+
+[node name="SkillContainer" type="HBoxContainer" parent="TopRightContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TopRightContainer/SkillContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="SkillCooldownLabel" type="Label" parent="TopRightContainer/SkillContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = "99.9"
+vertical_alignment = 2
+
+[node name="LabelS" type="Label" parent="TopRightContainer/SkillContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+theme_override_font_sizes/font_size = 8
+text = "s"
+vertical_alignment = 2
+
+[node name="TextureRect" type="TextureRect" parent="TopRightContainer/SkillContainer"]
+custom_minimum_size = Vector2(32, 33)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+texture = ExtResource("5_yakho")
+expand_mode = 1
+
+[node name="CurioNameLabel" type="Label" parent="TopRightContainer/SkillContainer/TextureRect"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_syk6b")
+text = "C"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true

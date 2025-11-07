@@ -4,8 +4,8 @@ using Godot;
 public partial class SoundManager : Node {
   public static SoundManager Instance { get; private set; }
 
-  [Export(PropertyHint.Range, "1, 64, 1")]
-  private int _playerPoolSize = 16; // 音频播放器的数量，决定了最多可以有多少个音效同时播放
+  [Export(PropertyHint.Range, "1, 256, 1")]
+  private int _playerPoolSize = 64; // 音频播放器的数量，决定了最多可以有多少个音效同时播放
 
   private List<AudioStreamPlayer> _playerPool = new();
   private Dictionary<AudioStream, ulong> _lastPlayTimestamps = new();

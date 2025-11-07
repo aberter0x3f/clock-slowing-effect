@@ -7,7 +7,6 @@ namespace Room;
 
 public partial class Title : Node {
   private Player _player;
-  private Label _uiLabel;
   private MapGenerator _mapGenerator;
   private RewindManager _rewindManager;
   private Vector2 _playerSpawnPosition;
@@ -26,7 +25,6 @@ public partial class Title : Node {
     GameRootProvider.CurrentGameRoot = this;
 
     _player = GetNode<Player>("Player");
-    _uiLabel = GetNode<Label>("CanvasLayer/Label");
     _mapGenerator = GetNode<MapGenerator>("MapGenerator");
     _rewindManager = GetNode<RewindManager>("RewindManager");
 
@@ -84,35 +82,5 @@ public partial class Title : Node {
       return;
     }
     GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
-  }
-
-  public override void _Process(double delta) {
-    UpdateUILabelText();
-  }
-
-  private void UpdateUILabelText() {
-    if (_player == null || _uiLabel == null) return;
-    string ammoText;
-    if (_player.IsReloading) {
-      ammoText = $"Reloading: {_player.TimeToReloaded:F1}s";
-    } else {
-      ammoText = $"Ammo: {_player.CurrentAmmo} / {GameManager.Instance.PlayerStats.MaxAmmoInt}";
-    }
-    var bulletObjectCount = GetTree().GetNodesInGroup("bullets").Count;
-    var rewindTimeLeft = _rewindManager.AvailableRewindTime;
-
-    string curioText = "Curio: None";
-    var activeCurio = GameManager.Instance.GetCurrentActiveCurio();
-    if (activeCurio != null) {
-      string cdText = activeCurio.CurrentCooldown > 0 ? $" (CD: {activeCurio.CurrentCooldown:F1}s)" : " (Ready)";
-      curioText = $"Curio: {activeCurio.Name}{cdText}";
-    }
-
-    _uiLabel.Text = $"Time HP: {_player.Health:F2}\n" +
-                    $"Time Scale: {TimeManager.Instance.TimeScale:F2}\n" +
-                    $"Rewind Left: {rewindTimeLeft:F1}s\n" +
-                    $"{ammoText}\n" +
-                    $"{curioText}\n" +
-                    $"Bullet object count: {bulletObjectCount}";
   }
 }

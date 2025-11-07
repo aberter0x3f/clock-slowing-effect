@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://b1oabnpn3oiwj"]
+[gd_scene load_steps=15 format=3 uid="uid://b1oabnpn3oiwj"]
 
 [ext_resource type="Script" uid="uid://dpywvgi4s0v2" path="res://scripts/Room/Shop.cs" id="1_ctc3m"]
 [ext_resource type="PackedScene" uid="uid://da40nomxihqtm" path="res://ui/pause_menu.tscn" id="2_mwi7v"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://d1if7b56ademj" path="res://scripts/MapGenerator.cs" id="6_2idtq"]
 [ext_resource type="PackedScene" uid="uid://c6vnywdveemsw" path="res://world_environment.tscn" id="6_cmayy"]
 [ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="7_cmayy"]
+[ext_resource type="PackedScene" uid="uid://8tp11lig65w" path="res://ui/heads_up_display.tscn" id="7_pksvi"]
 [ext_resource type="PackedScene" uid="uid://dynj33onwm4qh" path="res://rewind_label.tscn" id="7_wq0iu"]
 [ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="8_wq0iu"]
 [ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="9_pksvi"]
@@ -29,12 +30,9 @@ transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660
 shadow_enabled = true
 directional_shadow_mode = 1
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="HeadsUpDisplay" parent="." instance=ExtResource("7_pksvi")]
 
-[node name="Label" type="Label" parent="CanvasLayer"]
-offset_right = 40.0
-offset_bottom = 23.0
-metadata/_edit_use_anchors_ = true
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="RewindLabel" parent="CanvasLayer" instance=ExtResource("7_wq0iu")]
 

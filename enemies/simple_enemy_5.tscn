@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://bd6s603e1jdfj"]
+[gd_scene load_steps=9 format=3 uid="uid://bd6s603e1jdfj"]
 
 [ext_resource type="Script" uid="uid://mj85qbe0hh8n" path="res://scripts/Enemy/SimpleEnemy5.cs" id="1_sm1ja"]
 [ext_resource type="PackedScene" uid="uid://dyk21cim21ukb" path="res://enemies/simple_enemy_5/bullet.tscn" id="2_nwshx"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="3_dhwd4"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_0oxhm"]
 [ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="4_dhwd4"]
+[ext_resource type="AudioStream" uid="uid://dhc88mnrkuak" path="res://sounds/effects/explosion_small.wav" id="5_0oxhm"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
@@ -19,6 +20,7 @@ BulletScene = ExtResource("2_nwshx")
 TimeShardScene = ExtResource("3_75yjc")
 TimeShardCount = 5
 AttackSound = ExtResource("4_dhwd4")
+DeathSound = ExtResource("5_0oxhm")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false

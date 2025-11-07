@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://c3ebr2hfny8mu"]
+[gd_scene load_steps=17 format=3 uid="uid://c3ebr2hfny8mu"]
 
 [ext_resource type="Script" uid="uid://bsmi7g2pwt1xg" path="res://scripts/Enemy/Boss/Boss.cs" id="1_a60ye"]
 [ext_resource type="PackedScene" uid="uid://cm5dq08tifvge" path="res://enemies/boss/arcs_and_lines/phase.tscn" id="2_kikpo"]
@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://buxkq13puqqwx" path="res://enemies/boss/stellar/phase.tscn" id="10_jqle5"]
 [ext_resource type="AudioStream" uid="uid://dypy6j3yd7nfw" path="res://sounds/effects/up.wav" id="11_mtimd"]
 [ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="13_a01x7"]
+[ext_resource type="AudioStream" uid="uid://bko5jbxt577e0" path="res://sounds/effects/explosion_big.wav" id="14_a01x7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
 size = Vector2(40, 40)
@@ -29,6 +30,7 @@ PhaseSet3 = Array[PackedScene]([ExtResource("8_y303a"), ExtResource("9_40u2w"), 
 PowerUpSound = ExtResource("11_mtimd")
 TimeShardScene = ExtResource("4_lh55n")
 AttackSound = ExtResource("13_a01x7")
+DeathSound = ExtResource("14_a01x7")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 visible = false

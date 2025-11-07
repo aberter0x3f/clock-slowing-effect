@@ -46,7 +46,7 @@ public partial class TheCrematorsEvent : GameEvent {
       case State.Decision:
         var options = new List<EventOption> {
           new("Total Rebirth",
-            "Lose [color=orange]ALL[/color] of your upgrades. For each upgrade lost, you have a [color=orange]1/3[/color] chance to gain a new upgrade of the [b]next highest level[/b] (max Level 3), and a [color=orange]2/3[/color] chance to gain one of the [b]same level[/b]."),
+            "Lose [color=orange]ALL[/color] of your upgrades. For each upgrade lost, you have a [color=orange]1/3[/color] chance to gain a new upgrade of the next highest level (max Level 3), and a [color=orange]2/3[/color] chance to gain one of the [b]same level[/b]."),
           new("Calculated Sacrifice",
             "Gain [color=orange]1[/color] Level [color=orange]1-3[/color] Upgrade, then lose [color=orange]1[/color] of your highest-level upgrades."),
           new("Refuse", "Decline their offer.")

@@ -109,6 +109,8 @@ public partial class Player : CharacterBody2D, IRewindable {
   public AudioStream DeathSound { get; set; }
   [Export]
   public AudioStream SkillAvailableSound { get; set; }
+  [Export]
+  public AudioStream ShootSound { get; set; }
 
   public float ShootTimer { get; set; } = 0.0f;
   public int CurrentAmmo { get; private set; }
@@ -433,11 +435,12 @@ public partial class Player : CharacterBody2D, IRewindable {
     --CurrentAmmo;
     ShootTimer = Stats.ShootCooldown;
 
+    SoundManager.Instance.PlaySoundEffect(ShootSound, cooldown: 0.05f, volumeDb: -5f);
+
     // 实例化 SimpleBullet
     var bullet = BulletScene.Instantiate<SimpleBullet>();
     bullet.IsPlayerBullet = true; // 明确设置这是玩家子弹
     bullet.Damage = Stats.BulletDamage;
-    GD.Print($"BulletDamage: {Stats.BulletDamage}");
     bullet.GlobalPosition = GlobalPosition;
 
     var randomRotationSigma = _timeSlowPressed ? Stats.BulletSpreadSlow : Stats.BulletSpreadNormal;

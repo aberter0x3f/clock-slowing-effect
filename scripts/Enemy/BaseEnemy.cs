@@ -38,6 +38,8 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
   [ExportGroup("Sound Effects")]
   [Export]
   public AudioStream AttackSound { get; set; }
+  [Export]
+  public AudioStream DeathSound { get; set; }
 
   [Signal]
   public delegate void DiedEventHandler(float difficulty);
@@ -62,6 +64,11 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
 
   protected virtual void Die() {
     if (IsDestroyed) return; // 使用基类的 IsDestroyed 属性检查
+
+    if (DeathSound != null) {
+      SoundManager.Instance.PlaySoundEffect(DeathSound, cooldown: 0.2f, volumeDb: -5f);
+    }
+
     SpawnTimeShards(TimeShardCount);
     Destroy();
     EmitSignal(SignalName.Died, Difficulty); // 发射信号
