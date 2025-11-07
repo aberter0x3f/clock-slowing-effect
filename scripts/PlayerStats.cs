@@ -81,7 +81,7 @@ public class PlayerStats {
     BulletDamage += BaseStats.BulletDamage * bonusTotals.GetValueOrDefault(UpgradeType.BulletDamage, 0f);
     MaxAmmo += BaseStats.MaxAmmo * bonusTotals.GetValueOrDefault(UpgradeType.MaxAmmo, 0f);
     GrazeRadius += BaseStats.GrazeRadius * bonusTotals.GetValueOrDefault(UpgradeType.GrazeRadius, 0f);
-    GrazeTimeBonus += BaseStats.GrazeRadius * bonusTotals.GetValueOrDefault(UpgradeType.GrazeBonus, 0f);
+    GrazeTimeBonus += BaseStats.GrazeTimeBonus * bonusTotals.GetValueOrDefault(UpgradeType.GrazeBonus, 0f);
 
     // 特殊计算 (除法)
     BulletAccuracyNormal += bonusTotals.GetValueOrDefault(UpgradeType.BulletAccuracy, 0f);
