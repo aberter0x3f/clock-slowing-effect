@@ -7,6 +7,10 @@ public partial class Portal : RewindableArea2D, IInteractable {
   [Signal]
   public delegate void LevelCompletedEventHandler(HexMap.ClearScore score);
 
+  [ExportGroup("Sound Effects")]
+  [Export]
+  public AudioStream EnterSound { get; set; }
+
   private Label3D _label;
   private Node3D _visualizer;
 
@@ -25,6 +29,8 @@ public partial class Portal : RewindableArea2D, IInteractable {
   }
 
   public void Interact() {
+    SoundManager.Instance.PlaySoundEffect(EnterSound);
+
     // 根据本关表现计算得分
     var gm = GameManager.Instance;
     HexMap.ClearScore score;

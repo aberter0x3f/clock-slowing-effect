@@ -17,7 +17,7 @@ public partial class XAxisEnhancementCurio : BaseCurio {
     _mapGenerator = player.GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
   }
 
-  public override void OnUseReleased(Player player) {
+  public override void OnUsePressed(Player player) {
     if (CurrentCooldown > 0) {
       SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
       return;

@@ -9,19 +9,16 @@ public class BaseEnemyState : RewindState {
   public Vector2 Velocity;
   public float Health;
   public float HitTimerLeft;
-  public Color SpriteModulate;
+  public bool IsInHitState;
 }
 
 public abstract partial class BaseEnemy : RewindableCharacterBody2D {
-  public static readonly Color HIT_COLOR = new Color(1.0f, 0.5f, 0.5f);
-
-  private Color _originalColor;
   private float _health;
   protected Player _player;
   protected Timer _hitTimer;
   protected Label3D _healthLabel;
   protected Node3D _visualizer;
-  protected SpriteBase3D _sprite;
+  protected EnemyPolyhedron _enemyPolyhedron;
   protected MapGenerator _mapGenerator;
 
   protected Node2D PlayerNode => _player.DecoyTarget ?? _player;
@@ -80,9 +77,8 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
     _player = GetTree().Root.GetNode<Player>("GameRoot/Player");
     _hitTimer = GetNode<Timer>("HitTimer");
     _visualizer = GetNode<Node3D>("Visualizer");
-    _sprite = _visualizer.GetNode<SpriteBase3D>("Sprite");
+    _enemyPolyhedron = _visualizer.GetNode<EnemyPolyhedron>("EnemyPolyhedron");
     _healthLabel = _visualizer.GetNode<Label3D>("HealthLabel");
-    _originalColor = _sprite.Modulate;
 
     // 获取并缓存地图生成器的引用，以提高性能和鲁棒性
     _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
@@ -107,12 +103,12 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
 
   public virtual void TakeDamage(float damage) {
     Health -= damage;
-    _sprite.Modulate = HIT_COLOR;
+    _enemyPolyhedron.SetHitState(true);
     _hitTimer.Start();
   }
 
   private void OnHitTimerTimeout() {
-    _sprite.Modulate = _originalColor;
+    _enemyPolyhedron.SetHitState(false);
   }
 
   protected void UpdateHealthLabel() {
@@ -160,7 +156,7 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
       Velocity = this.Velocity,
       Health = this.Health,
       HitTimerLeft = (float) _hitTimer.TimeLeft,
-      SpriteModulate = _sprite.Modulate
+      IsInHitState = _hitTimer.TimeLeft > 0
     };
   }
 
@@ -169,7 +165,7 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
     this.GlobalPosition = bes.GlobalPosition;
     this.Velocity = bes.Velocity;
     this.Health = bes.Health;
-    _sprite.Modulate = bes.SpriteModulate;
+    _enemyPolyhedron.SetHitState(bes.IsInHitState);
     if (bes.HitTimerLeft > 0) {
       _hitTimer.Start(bes.HitTimerLeft);
     } else {

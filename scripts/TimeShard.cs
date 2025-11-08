@@ -48,6 +48,10 @@ public partial class TimeShard : RewindableArea2D {
   [Export]
   public float FlyToPlayerSpeed { get; set; } = 800.0f; // 飞向玩家的速度
 
+  [ExportGroup("Sound Effects")]
+  [Export]
+  public AudioStream CollectSound { get; set; }
+
   public State CurrentState { get; private set; } = State.Spawning;
   public Vector2 SpawnCenter { get; set; }
   public MapGenerator MapGeneratorRef { get; set; }
@@ -164,6 +168,8 @@ public partial class TimeShard : RewindableArea2D {
 
   public void CollectByPlayer(Player player) {
     if (CurrentState == State.Collected) return;
+
+    SoundManager.Instance.PlaySoundEffect(CollectSound, cooldown: 0.05f);
 
     var (appliedToBond, appliedToHealth) = GameManager.Instance.AddTime(TimeBonus);
     _timeAppliedToBond = appliedToBond;

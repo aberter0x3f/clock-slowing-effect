@@ -285,7 +285,7 @@ public partial class Drummer : BaseEnemy {
       Velocity = baseState.Velocity,
       Health = baseState.Health,
       HitTimerLeft = baseState.HitTimerLeft,
-      SpriteModulate = baseState.SpriteModulate,
+      IsInHitState = baseState.IsInHitState,
       CurrentState = this._currentState,
       AttackSubState = this._attackSubState,
       AttackLoopCounter = this._attackLoopCounter,

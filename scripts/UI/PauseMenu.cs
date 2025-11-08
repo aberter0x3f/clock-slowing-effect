@@ -175,6 +175,8 @@ public partial class PauseMenu : CanvasLayer {
       TimeManager.Instance.TimeScale = 1.0f;
     }
 
+    GameManager.Instance.ResetPlayerStats();
+
     GetTree().ChangeSceneToFile(TitleScenePath);
   }
 }

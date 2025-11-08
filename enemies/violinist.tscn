@@ -1,16 +1,30 @@
-[gd_scene load_steps=10 format=3 uid="uid://cp1ncmsmewuqr"]
+[gd_scene load_steps=13 format=4 uid="uid://cp1ncmsmewuqr"]
 
 [ext_resource type="Script" uid="uid://c3ctfqvvorxe1" path="res://scripts/Enemy/Violinist.cs" id="1_n4fa3"]
 [ext_resource type="PackedScene" uid="uid://dm5xk7cw2rst7" path="res://enemies/violinist/stuff_line_bullet.tscn" id="2_x3cys"]
 [ext_resource type="PackedScene" uid="uid://d2qceuhiw775d" path="res://enemies/violinist/note_bullet.tscn" id="3_5e0yb"]
-[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="3_yei7r"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_5e0yb"]
 [ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="5_lga6a"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="5_yei7r"]
 [ext_resource type="AudioStream" uid="uid://dhc88mnrkuak" path="res://sounds/effects/explosion_small.wav" id="6_7b6ex"]
+[ext_resource type="FontFile" uid="uid://d34t13ols1dhi" path="res://fonts/DSEG14Modern-Regular.ttf" id="9_8tb3k"]
+[ext_resource type="Script" uid="uid://dr23d7xks0mth" path="res://scripts/Enemy/EnemyPolyhedron.cs" id="9_yldkc"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
-size = Vector2(40, 40)
+[sub_resource type="CircleShape2D" id="CircleShape2D_7b6ex"]
+radius = 40.0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_dele8"]
+_surfaces = [{
+"aabb": AABB(-0.28867513, -0.28867513, -0.28867513, 0.57735026, 0.57735026, 0.57735026),
+"format": 34359738375,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 36,
+"vertex_data": PackedByteArray("Os2TvjrNk746zZO+Os2TPjrNk746zZO+Os2TPjrNkz46zZO+Os2TvjrNk746zZO+Os2TPjrNkz46zZO+Os2TvjrNkz46zZO+Os2TvjrNk746zZM+Os2TPjrNkz46zZM+Os2TPjrNk746zZM+Os2TvjrNk746zZM+Os2TvjrNkz46zZM+Os2TPjrNkz46zZM+Os2TvjrNk746zZO+Os2TvjrNkz46zZO+Os2TvjrNkz46zZM+Os2TvjrNk746zZO+Os2TvjrNkz46zZM+Os2TvjrNk746zZM+Os2TPjrNk746zZO+Os2TPjrNk746zZM+Os2TPjrNkz46zZM+Os2TPjrNk746zZO+Os2TPjrNkz46zZM+Os2TPjrNkz46zZO+Os2TvjrNkz46zZO+Os2TPjrNkz46zZO+Os2TPjrNkz46zZM+Os2TvjrNkz46zZO+Os2TPjrNkz46zZM+Os2TvjrNkz46zZM+Os2TvjrNk746zZO+Os2TvjrNk746zZM+Os2TPjrNk746zZM+Os2TvjrNk746zZO+Os2TPjrNk746zZM+Os2TPjrNk746zZO+qiqqKv8//7//3/8/OI6qqv/f/98ys8yMqiqqKv8//7//3//fMrPMjP8//9+qKo2j/1//XzKzzIyqqqqq/z//v/+f/z+qKo2j/1//XzKzzIz/P/+fOI6qqqqqqqr/P/+/qiqqKv8//7//P//fqiqNo/8//584jqqqqiqqKv8//7//P/+fOI6qqv9f/18ys8yM/9//PziOqqr/n/8/qiqNo6qqqqr/P/+//9//PziOqqqqqqqq/z//v//f/98ys8yM/z//36oqjaP/3//fMrPMjKqqqqr/P/+//z//36oqjaOqqqqq/z//v/8//584jqqqqiqqKv8//7//X/9fMrPMjP+f/z+qKo2jqiqqKv8//7//n/8/qiqNo//f/z84jqqq")
+}]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dele8"]
+albedo_color = Color(0.7764706, 0.47058824, 0.8666667, 1)
 
 [node name="Violinist" type="CharacterBody2D" groups=["enemies"]]
 z_index = 2
@@ -25,13 +39,8 @@ TimeShardCount = 20
 AttackSound = ExtResource("5_lga6a")
 DeathSound = ExtResource("6_7b6ex")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-visible = false
-scale = Vector2(0.3, 0.3)
-texture = ExtResource("3_yei7r")
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_qi2p4")
+shape = SubResource("CircleShape2D_7b6ex")
 
 [node name="HitTimer" type="Timer" parent="."]
 wait_time = 0.1
@@ -43,32 +52,18 @@ metadata/_custom_type_script = "uid://b7y3ayqdya65s"
 
 [node name="Visualizer" type="Node3D" parent="."]
 
-[node name="Sprite" type="Sprite3D" parent="Visualizer"]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)
-sorting_offset = 70.0
-texture_filter = 0
-texture = ExtResource("3_yei7r")
-
-[node name="HealthLabel1" type="Label" parent="Visualizer"]
-visible = false
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -426.0
-offset_top = -643.0
-offset_right = -374.0
-offset_bottom = -620.0
-grow_horizontal = 2
-grow_vertical = 0
-text = "Health"
-horizontal_alignment = 1
-vertical_alignment = 1
+[node name="EnemyPolyhedron" type="MeshInstance3D" parent="Visualizer"]
+mesh = SubResource("ArrayMesh_dele8")
+surface_material_override/0 = SubResource("StandardMaterial3D_dele8")
+script = ExtResource("9_yldkc")
+Shape = 1
+Size = 0.5
+Color = Color(0.7764706, 0.47058824, 0.8666667, 1)
 
 [node name="HealthLabel" type="Label3D" parent="Visualizer"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
-billboard = 2
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+billboard = 1
 text = "Health"
+font = ExtResource("9_8tb3k")
 
 [connection signal="timeout" from="HitTimer" to="." method="OnHitTimerTimeout"]

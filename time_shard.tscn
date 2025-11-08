@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://c2swi1jboj4j4"]
+[gd_scene load_steps=6 format=3 uid="uid://c2swi1jboj4j4"]
 
 [ext_resource type="Script" uid="uid://dsmfcjusv0r88" path="res://scripts/TimeShard.cs" id="1_ylx71"]
+[ext_resource type="AudioStream" uid="uid://do01bwefxyb4c" path="res://sounds/effects/item_get.wav" id="2_va5h8"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_va5h8"]
 radius = 120.0
@@ -16,6 +17,7 @@ size = Vector3(0.15, 0.01, 0.15)
 collision_layer = 32
 collision_mask = 2
 script = ExtResource("1_ylx71")
+CollectSound = ExtResource("2_va5h8")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_va5h8")

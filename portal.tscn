@@ -1,6 +1,7 @@
-[gd_scene load_steps=13 format=3 uid="uid://c366ntgyj6v6m"]
+[gd_scene load_steps=14 format=3 uid="uid://c366ntgyj6v6m"]
 
 [ext_resource type="Script" uid="uid://4ovd556w4nt7" path="res://scripts/Portal.cs" id="1_ef3v5"]
+[ext_resource type="AudioStream" uid="uid://cit0jwj2e43yk" path="res://sounds/effects/enter_portal.wav" id="2_6r214"]
 [ext_resource type="Texture2D" uid="uid://bdt5bj3ggpn7m" path="res://images/portal/blue.png" id="2_grrij"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_6r214"]
@@ -71,8 +72,7 @@ animations = [{
 
 [node name="Portal" type="Area2D"]
 script = ExtResource("1_ef3v5")
-MapMenuScenePath = "uid://bto53p17w4ixu"
-TitleScenePath = "uid://bqtbfjrfe5x52"
+EnterSound = ExtResource("2_6r214")
 metadata/_custom_type_script = "uid://4ovd556w4nt7"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

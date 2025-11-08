@@ -1,15 +1,29 @@
-[gd_scene load_steps=9 format=3 uid="uid://cyest5jveonbm"]
+[gd_scene load_steps=12 format=4 uid="uid://cyest5jveonbm"]
 
 [ext_resource type="Script" uid="uid://c0s2gabecbebj" path="res://scripts/Enemy/SimpleEnemy1.cs" id="1_vy8cc"]
-[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="2_qi2p4"]
 [ext_resource type="PackedScene" uid="uid://bg6yui6j6kvip" path="res://enemies/simple_enemy_1/bullet.tscn" id="2_s87yl"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="3_im6pg"]
 [ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="4_qyhwj"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_s87yl"]
 [ext_resource type="AudioStream" uid="uid://dhc88mnrkuak" path="res://sounds/effects/explosion_small.wav" id="5_yo0qv"]
+[ext_resource type="FontFile" uid="uid://d34t13ols1dhi" path="res://fonts/DSEG14Modern-Regular.ttf" id="8_7yvmk"]
+[ext_resource type="Script" uid="uid://dr23d7xks0mth" path="res://scripts/Enemy/EnemyPolyhedron.cs" id="8_aihx4"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
-size = Vector2(40, 40)
+[sub_resource type="CircleShape2D" id="CircleShape2D_yo0qv"]
+radius = 20.0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_4i235"]
+_surfaces = [{
+"aabb": AABB(-0.17320508, -0.17320508, -0.17320508, 0.34641016, 0.34641016, 0.34641016),
+"format": 34359738375,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 12,
+"vertex_data": PackedByteArray("rFwxPqxcMT6sXDE+rFwxvqxcMT6sXDG+rFwxPqxcMb6sXDG+rFwxPqxcMT6sXDE+rFwxPqxcMb6sXDG+rFwxvqxcMb6sXDE+rFwxPqxcMT6sXDE+rFwxvqxcMb6sXDE+rFwxvqxcMT6sXDG+rFwxPqxcMb6sXDG+rFwxvqxcMT6sXDG+rFwxvqxcMb6sXDE+qqqqqv8//7+qKlTV/z//n1TVqir/f/+fqqqqqv8//79U1aoq/3//n1RVVFUAAACAqqqqqv8//79UVVRVAAAAgKoqVNX/P/+fVNWqKv9//5+qKlTV/z//n1RVVFUAAACA")
+}]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4i235"]
+albedo_color = Color(0.3882353, 0.42745098, 0.5137255, 1)
 
 [node name="Enemy" type="CharacterBody2D" groups=["enemies"]]
 z_index = 2
@@ -22,13 +36,8 @@ TimeShardCount = 5
 AttackSound = ExtResource("4_qyhwj")
 DeathSound = ExtResource("5_yo0qv")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-visible = false
-scale = Vector2(0.3, 0.3)
-texture = ExtResource("2_qi2p4")
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_qi2p4")
+shape = SubResource("CircleShape2D_yo0qv")
 
 [node name="HitTimer" type="Timer" parent="."]
 wait_time = 0.1
@@ -36,39 +45,22 @@ one_shot = true
 
 [node name="RandomWalkComponent" type="Node" parent="."]
 script = ExtResource("4_s87yl")
-MoveSpeedMean = null
-MoveSpeedSigma = null
-MoveDuration = null
 metadata/_custom_type_script = "uid://b7y3ayqdya65s"
 
 [node name="Visualizer" type="Node3D" parent="."]
 
-[node name="Sprite" type="Sprite3D" parent="Visualizer"]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)
-sorting_offset = 70.0
-texture_filter = 0
-texture = ExtResource("2_qi2p4")
-
-[node name="HealthLabel1" type="Label" parent="Visualizer"]
-visible = false
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -426.0
-offset_top = -643.0
-offset_right = -374.0
-offset_bottom = -620.0
-grow_horizontal = 2
-grow_vertical = 0
-text = "Health"
-horizontal_alignment = 1
-vertical_alignment = 1
+[node name="EnemyPolyhedron" type="MeshInstance3D" parent="Visualizer"]
+mesh = SubResource("ArrayMesh_4i235")
+surface_material_override/0 = SubResource("StandardMaterial3D_4i235")
+script = ExtResource("8_aihx4")
+Shape = 0
+Size = 0.3
+Color = Color(0.3882353, 0.42745098, 0.5137255, 1)
 
 [node name="HealthLabel" type="Label3D" parent="Visualizer"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
-billboard = 2
+billboard = 1
 text = "Health"
+font = ExtResource("8_7yvmk")
 
 [connection signal="timeout" from="HitTimer" to="." method="OnHitTimerTimeout"]

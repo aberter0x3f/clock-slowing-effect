@@ -1,17 +1,22 @@
-[gd_scene load_steps=37 format=3 uid="uid://clq42dr4qhnpb"]
+[gd_scene load_steps=32 format=3 uid="uid://clq42dr4qhnpb"]
 
 [ext_resource type="Script" uid="uid://b6t3j7axqr3pk" path="res://scripts/Player.cs" id="1_onrkg"]
 [ext_resource type="PackedScene" uid="uid://clk8144n4xb8u" path="res://player_bullet.tscn" id="2_hqtel"]
 [ext_resource type="PackedScene" uid="uid://boswatb52hcs" path="res://decoy_target.tscn" id="3_1jxqw"]
-[ext_resource type="Texture2D" uid="uid://coki8tuub8mds" path="res://images/ROBO_WITHOUT_HANDS.png" id="3_i3pqv"]
 [ext_resource type="PackedScene" uid="uid://cf51bidbo3k5j" path="res://time_shard_small.tscn" id="3_sweqy"]
 [ext_resource type="PackedScene" uid="uid://qxto5y31fg8d" path="res://invert_ring_effect.tscn" id="4_2hs0m"]
 [ext_resource type="Texture2D" uid="uid://dqjwje0ye4apm" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 9C Free.png" id="4_hqtel"]
-[ext_resource type="AudioStream" uid="uid://gjbbxkphm7n3" path="res://sounds/effects/hi-hat.wav" id="6_b26j0"]
+[ext_resource type="AudioStream" uid="uid://dt4ib6ejks0dx" path="res://sounds/effects/graze.wav" id="6_ivps1"]
 [ext_resource type="AudioStream" uid="uid://bnfy1dhlnv8br" path="res://sounds/effects/player_death.wav" id="7_nvl01"]
 [ext_resource type="Texture2D" uid="uid://drravq36efsfa" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 5B Free.png" id="8_dw050"]
 [ext_resource type="AudioStream" uid="uid://cwltmlyx4lrne" path="res://sounds/effects/bling.wav" id="8_ivps1"]
+[ext_resource type="AudioStream" uid="uid://dho4cb2kse2po" path="res://sounds/effects/change_item.wav" id="9_bwjto"]
 [ext_resource type="AudioStream" uid="uid://dcnqnd0chphl4" path="res://sounds/effects/violin.wav" id="9_ivps1"]
+[ext_resource type="AudioStream" uid="uid://i7822ekvsgsr" path="res://sounds/effects/reload_complete.wav" id="11_606se"]
+[ext_resource type="Texture2D" uid="uid://bu6xmohgwjkxn" path="res://images/player/idle0.png" id="13_pylmc"]
+[ext_resource type="Texture2D" uid="uid://birsimqmap13n" path="res://images/player/idle1.png" id="14_pbfsw"]
+[ext_resource type="Texture2D" uid="uid://dr5lidvwxnxtg" path="res://images/player/idle2.png" id="15_5tmop"]
+[ext_resource type="Texture2D" uid="uid://bu31gjok7y1uo" path="res://images/player/idle3.png" id="16_7ahtn"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_sweqy"]
 radius = 100.0
@@ -24,91 +29,23 @@ radius = 50.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_onrkg"]
 radius = 3.0
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_hqtel"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(0, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_sweqy"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(32, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_2hs0m"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(64, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_1jxqw"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(96, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_dw050"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(0, 64, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_b26j0"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(32, 64, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_n7ghd"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(0, 32, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_nvl01"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(32, 32, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_ivps1"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(64, 32, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_urp6f"]
-atlas = ExtResource("3_i3pqv")
-region = Rect2(96, 32, 32, 32)
-
 [sub_resource type="SpriteFrames" id="SpriteFrames_bwjto"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_hqtel")
+"texture": ExtResource("13_pylmc")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_sweqy")
+"texture": ExtResource("14_pbfsw")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_2hs0m")
+"texture": ExtResource("15_5tmop")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_1jxqw")
+"texture": ExtResource("16_7ahtn")
 }],
 "loop": true,
 "name": &"idle",
-"speed": 8.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_dw050")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_b26j0")
-}],
-"loop": true,
-"name": &"shoot",
-"speed": 8.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_n7ghd")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_nvl01")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_ivps1")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_urp6f")
-}],
-"loop": true,
-"name": &"walk",
 "speed": 8.0
 }]
 
@@ -180,14 +117,17 @@ animations = [{
 collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_onrkg")
+SpriteBasePositionX = -0.045
 BulletScene = ExtResource("2_hqtel")
 DecoyTargetScene = ExtResource("3_1jxqw")
 GrazeTimeShard = ExtResource("3_sweqy")
 DeathRingEffectScene = ExtResource("4_2hs0m")
-GrazeSound = ExtResource("6_b26j0")
+GrazeSound = ExtResource("6_ivps1")
 DeathSound = ExtResource("7_nvl01")
 SkillAvailableSound = ExtResource("8_ivps1")
+CurioSwitchSound = ExtResource("9_bwjto")
 ShootSound = ExtResource("9_ivps1")
+ReloadCompleteSound = ExtResource("11_606se")
 
 [node name="InteractionArea" type="Area2D" parent="."]
 
@@ -217,7 +157,7 @@ debug_color = Color(0.3529412, 0.61960787, 0, 0.49803922)
 [node name="Visualizer" type="Node3D" parent="."]
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Visualizer"]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, -0.045, 0.06, 0)
 sorting_offset = 60.0
 offset = Vector2(0, 11)
 texture_filter = 0

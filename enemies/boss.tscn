@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://c3ebr2hfny8mu"]
+[gd_scene load_steps=20 format=4 uid="uid://c3ebr2hfny8mu"]
 
 [ext_resource type="Script" uid="uid://bsmi7g2pwt1xg" path="res://scripts/Enemy/Boss/Boss.cs" id="1_a60ye"]
 [ext_resource type="PackedScene" uid="uid://cm5dq08tifvge" path="res://enemies/boss/arcs_and_lines/phase.tscn" id="2_kikpo"]
@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" uid="uid://jbkkxym6bf0l" path="res://enemies/boss/wave/phase.tscn" id="3_6l5el"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_lh55n"]
 [ext_resource type="PackedScene" uid="uid://thwaf74pde5f" path="res://enemies/boss/wave2/phase.tscn" id="4_mtimd"]
-[ext_resource type="Texture2D" uid="uid://b567qopwvbqja" path="res://icon.svg" id="5_04x26"]
 [ext_resource type="PackedScene" uid="uid://c8dvumb0wnvnt" path="res://enemies/boss/loop/phase.tscn" id="5_a01x7"]
 [ext_resource type="PackedScene" uid="uid://cbuqyyg43op63" path="res://enemies/boss/geometric/phase.tscn" id="6_rkfnh"]
 [ext_resource type="PackedScene" uid="uid://bfuwu8ykpaa14" path="res://enemies/boss/liquid_crystal/phase.tscn" id="8_y303a"]
@@ -15,9 +14,24 @@
 [ext_resource type="AudioStream" uid="uid://dypy6j3yd7nfw" path="res://sounds/effects/up.wav" id="11_mtimd"]
 [ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="13_a01x7"]
 [ext_resource type="AudioStream" uid="uid://bko5jbxt577e0" path="res://sounds/effects/explosion_big.wav" id="14_a01x7"]
+[ext_resource type="Script" uid="uid://dr23d7xks0mth" path="res://scripts/Enemy/EnemyPolyhedron.cs" id="16_rkfnh"]
+[ext_resource type="FontFile" uid="uid://d34t13ols1dhi" path="res://fonts/DSEG14Modern-Regular.ttf" id="16_y303a"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_qi2p4"]
-size = Vector2(40, 40)
+[sub_resource type="CircleShape2D" id="CircleShape2D_a01x7"]
+radius = 60.0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_rkfnh"]
+_surfaces = [{
+"aabb": AABB(-0.7, -0.7, -0.7, 1.4, 1.4, 1.4),
+"format": 34359738375,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("MzMzPwAAAAAAAAAAAAAAAAAAAAAzMzM/AAAAADMzMz8AAAAAMzMzPwAAAAAAAAAAAAAAADMzMz8AAAAAAAAAAAAAAAAzMzO/MzMzPwAAAAAAAAAAAAAAAAAAAAAzMzO/AAAAADMzM78AAAAAMzMzPwAAAAAAAAAAAAAAADMzM78AAAAAAAAAAAAAAAAzMzM/MzMzvwAAAAAAAAAAAAAAADMzMz8AAAAAAAAAAAAAAAAzMzM/MzMzvwAAAAAAAAAAAAAAAAAAAAAzMzO/AAAAADMzMz8AAAAAMzMzvwAAAAAAAAAAAAAAADMzM78AAAAAAAAAAAAAAAAzMzO/MzMzvwAAAAAAAAAAAAAAAAAAAAAzMzM/AAAAADMzM78AAAAA////f/9//7//f/9//38AgP9///8AAP+/////f/9//7//f///AAD/v///////fwCA////f/9//7///////38AgP9/AAAAAP+/////f/9//7//fwAAAAD/v/9//3//fwCAAAD/f/9//7//f///AAD/v/9//3//fwCAAAD/f/9//7///////38AgP9///8AAP+/AAD/f/9//7//fwAAAAD/v///////fwCAAAD/f/9//7//f/9//38AgP9/AAAAAP+/")
+}]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y303a"]
+albedo_color = Color(0.3882353, 0.42745098, 0.5137255, 1)
 
 [node name="Boss" type="CharacterBody2D" groups=["enemies"]]
 z_index = 2
@@ -32,13 +46,8 @@ TimeShardScene = ExtResource("4_lh55n")
 AttackSound = ExtResource("13_a01x7")
 DeathSound = ExtResource("14_a01x7")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-visible = false
-scale = Vector2(0.3, 0.3)
-texture = ExtResource("5_04x26")
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_qi2p4")
+shape = SubResource("CircleShape2D_a01x7")
 
 [node name="HitTimer" type="Timer" parent="."]
 wait_time = 0.1
@@ -46,32 +55,17 @@ one_shot = true
 
 [node name="Visualizer" type="Node3D" parent="."]
 
-[node name="Sprite" type="Sprite3D" parent="Visualizer"]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)
-sorting_offset = 70.0
-texture_filter = 0
-texture = ExtResource("5_04x26")
-
-[node name="HealthLabel1" type="Label" parent="Visualizer"]
-visible = false
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -426.0
-offset_top = -643.0
-offset_right = -374.0
-offset_bottom = -620.0
-grow_horizontal = 2
-grow_vertical = 0
-text = "Health"
-horizontal_alignment = 1
-vertical_alignment = 1
+[node name="EnemyPolyhedron" type="MeshInstance3D" parent="Visualizer"]
+mesh = SubResource("ArrayMesh_rkfnh")
+surface_material_override/0 = SubResource("StandardMaterial3D_y303a")
+script = ExtResource("16_rkfnh")
+Size = 0.7
+Color = Color(0.3882353, 0.42745098, 0.5137255, 1)
 
 [node name="HealthLabel" type="Label3D" parent="Visualizer"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
-billboard = 2
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+billboard = 1
 text = "Health"
+font = ExtResource("16_y303a")
 
 [connection signal="timeout" from="HitTimer" to="." method="OnHitTimerTimeout"]

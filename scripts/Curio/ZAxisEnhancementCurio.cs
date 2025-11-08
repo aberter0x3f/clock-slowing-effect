@@ -11,7 +11,7 @@ public partial class ZAxisEnhancementCurio : BaseCurio {
   public override bool HasPassiveEffect => false;
   public override float Cooldown => 20f;
 
-  public override void OnUseReleased(Player player) {
+  public override void OnUsePressed(Player player) {
     if (CurrentCooldown > 0 || player.IsJumping) {
       SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
       return;

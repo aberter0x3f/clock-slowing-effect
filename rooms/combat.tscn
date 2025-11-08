@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://wngnk3v6gahp"]
+[gd_scene load_steps=25 format=3 uid="uid://wngnk3v6gahp"]
 
 [ext_resource type="PackedScene" uid="uid://clq42dr4qhnpb" path="res://player.tscn" id="1_xj5yv"]
 [ext_resource type="Script" uid="uid://u4t27m71rfwv" path="res://scripts/Room/Combat.cs" id="1_y7vi5"]
@@ -23,6 +23,7 @@
 [ext_resource type="Resource" uid="uid://c32pgymbawkmy" path="res://enemies/drummer.tres" id="11_1uov0"]
 [ext_resource type="Resource" uid="uid://buj1ymolwiapl" path="res://enemies/violinist.tres" id="12_i2rhi"]
 [ext_resource type="Resource" uid="uid://ckqpio203plex" path="res://enemies/firework.tres" id="14_0pxas"]
+[ext_resource type="AudioStream" uid="uid://bbisydfgmjhj0" path="res://sounds/boss.ogg" id="24_04rph"]
 
 [node name="GameRoot" type="Node3D"]
 script = ExtResource("1_y7vi5")
@@ -61,3 +62,8 @@ EnemyDatabase = Array[Object]([ExtResource("5_8tlgu"), ExtResource("6_soos4"), E
 metadata/_custom_type_script = "uid://ddv4ypiw0mqcp"
 
 [node name="Player" parent="." instance=ExtResource("1_xj5yv")]
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("24_04rph")
+autoplay = true
+parameters/looping = true

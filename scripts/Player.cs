@@ -8,7 +8,7 @@ using Rewind;
 public class PlayerState : RewindState {
   public Vector2 GlobalPosition;
   public Vector2 Velocity;
-  public Player.AnimationState CurrentAnimationState;
+  public bool FlipSprite;
   public int CurrentAmmo;
   public bool IsReloading;
   public float TimeToReloaded;
@@ -29,17 +29,11 @@ public partial class Player : CharacterBody2D, IRewindable {
   private const float MAX_JUMP_HEIGHT = 200f;
   private const float JUMP_TIME = 1f;
 
-  public enum AnimationState {
-    Idle,
-    Walk,
-  }
-
   [Signal]
   public delegate void DiedPermanentlyEventHandler();
 
-  private AnimationState _currentAnimationState = AnimationState.Idle;
-  private AnimationState _lastAnimationState = AnimationState.Idle;
   private AnimatedSprite3D _sprite;
+  private bool _flipSprite = false;
   private Node2D _currentTarget = null;
   private Area2D _grazeArea; // 擦弹区域的引用
   private CollisionShape2D _grazeAreaShape;
@@ -80,6 +74,9 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   [Export]
+  public float SpriteBasePositionX { get; set; }
+
+  [Export]
   public PackedScene BulletScene { get; set; }
   [Export]
   public PackedScene DecoyTargetScene { get; set; }
@@ -110,7 +107,11 @@ public partial class Player : CharacterBody2D, IRewindable {
   [Export]
   public AudioStream SkillAvailableSound { get; set; }
   [Export]
+  public AudioStream CurioSwitchSound { get; set; }
+  [Export]
   public AudioStream ShootSound { get; set; }
+  [Export]
+  public AudioStream ReloadCompleteSound { get; set; }
 
   public float ShootTimer { get; set; } = 0.0f;
   public int CurrentAmmo { get; private set; }
@@ -158,15 +159,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     UpdateCameraTransform((float) delta);
 
     if (RewindManager.Instance.IsPreviewing) {
-      // 在预览时，我们只更新 3D 可视化对象的位置，不做任何逻辑
-      // 结束回溯预览的逻辑除外
-      if (Input.IsActionJustReleased("curio_use") && _curioUsePressed) {
-        var currentCurio = GameManager.Instance.GetCurrentActiveCurio();
-        if (currentCurio != null && currentCurio.Type == CurioType.TAxisEnhancement) {
-          currentCurio?.OnUseReleased(this);
-          _curioUsePressed = false;
-        }
-      }
+      HandleCurioInput(false);
       UpdateVisualizer();
       return;
     }
@@ -178,11 +171,9 @@ public partial class Player : CharacterBody2D, IRewindable {
     Stats.RecalculateStats(GameManager.Instance.GetCurrentAndPendingUpgrades(), Health);
     (_grazeAreaShape.Shape as CircleShape2D).Radius = Stats.GrazeRadius;
 
-    _currentAnimationState = AnimationState.Idle;
-
     UpdateInteractionTarget();
     HandleInteractionInput();
-    HandleCurioInput();
+    HandleCurioInput(true);
     UpdateCurios(scaledDelta);
 
     if (IsJumping) {
@@ -215,7 +206,6 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
 
     ShootTimer -= (float) delta;
-    UpdateAnimationState();
 
     UpdateVisualizer();
   }
@@ -244,7 +234,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
   }
 
-  private void HandleCurioInput() {
+  private void HandleCurioInput(bool allowUse) {
     var gm = GameManager.Instance;
     if (gm == null) return;
 
@@ -255,16 +245,18 @@ public partial class Player : CharacterBody2D, IRewindable {
         currentCurio?.OnUseCancelled(this);
         _curioUsePressed = false;
       }
-      gm.SwitchToNextActiveCurio();
+      if (gm.SwitchToNextActiveCurio()) {
+        SoundManager.Instance.PlaySoundEffect(CurioSwitchSound, cooldown: 0.05f);
+      }
     }
 
-    if (Input.IsActionJustPressed("curio_use")) {
+    if (allowUse && Input.IsActionJustPressed("curio_use")) {
       _curioUsePressed = true;
       currentCurio?.OnUsePressed(this);
     }
 
-    if (Input.IsActionJustReleased("curio_use")) {
-      if (_curioUsePressed) {
+    if (Input.IsActionJustReleased("curio_use") && _curioUsePressed) {
+      if (allowUse || (currentCurio != null && currentCurio.Type == CurioType.TAxisEnhancement)) {
         currentCurio?.OnUseReleased(this);
         _curioUsePressed = false;
       }
@@ -295,6 +287,9 @@ public partial class Player : CharacterBody2D, IRewindable {
     _hitPointSprite.Visible = _timeSlowPressed;
     _landingIndicator.Visible = IsJumping;
     _landingIndicator.GlobalPosition = _visualizer.GlobalPosition with { Y = GameConstants.GamePlaneY };
+
+    _sprite.FlipH = _flipSprite;
+    _sprite.Position = _sprite.Position with { X = SpriteBasePositionX * (_flipSprite ? -1 : 1) };
   }
 
   private void StartReload() {
@@ -304,6 +299,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   private void FinishReload() {
+    SoundManager.Instance.PlaySoundEffect(ReloadCompleteSound, cooldown: 0.2f);
     IsReloading = false;
     CurrentAmmo = Stats.MaxAmmoInt;
     TimeToReloaded = 0.0f;
@@ -468,10 +464,13 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
     Vector2 direction = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
     Velocity = direction * Stats.MovementSpeed * (_timeSlowPressed ? Stats.SlowMovementSpeedScale : 1f);
-    if (!direction.IsZeroApprox()) {
-      _currentAnimationState = AnimationState.Walk;
-    }
     MoveAndSlide();
+
+    if (direction.X < 0) {
+      _flipSprite = true;
+    } else if (direction.X > 0) {
+      _flipSprite = false;
+    }
   }
 
   public void ResetState() {
@@ -486,7 +485,6 @@ public partial class Player : CharacterBody2D, IRewindable {
     ShootTimer = 0.0f;
     CurrentAmmo = Stats.MaxAmmoInt;
     IsPermanentlyDead = false;
-    _currentAnimationState = AnimationState.Idle;
     IsJumping = false;
     _jumpTimer = 0f;
     IsInvincible = false;
@@ -495,7 +493,6 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
     RemoveDecoyTarget();
     _hitPointShape.Disabled = false;
-    UpdateAnimationState();
     UpdateVisualizer();
   }
 
@@ -522,20 +519,6 @@ public partial class Player : CharacterBody2D, IRewindable {
       EmitSignal(SignalName.DiedPermanently);
     }
     // 如果回溯成功，玩家将「复活」到几秒前的状态，游戏继续
-  }
-
-  private void UpdateAnimationState() {
-    if (_currentAnimationState == _lastAnimationState) {
-      return;
-    }
-    switch (_currentAnimationState) {
-      case AnimationState.Idle:
-        _sprite.Play("idle");
-        break;
-      case AnimationState.Walk:
-        _sprite.Play("walk");
-        break;
-    }
   }
 
   public void Jump() {
@@ -593,7 +576,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     return new PlayerState {
       GlobalPosition = this.GlobalPosition,
       Velocity = this.Velocity,
-      CurrentAnimationState = this._currentAnimationState,
+      FlipSprite = this._flipSprite,
       CurrentAmmo = this.CurrentAmmo,
       IsReloading = this.IsReloading,
       TimeToReloaded = this.TimeToReloaded,
@@ -616,7 +599,7 @@ public partial class Player : CharacterBody2D, IRewindable {
 
     this.GlobalPosition = ps.GlobalPosition;
     this.Velocity = ps.Velocity;
-    this._currentAnimationState = ps.CurrentAnimationState;
+    this._flipSprite = ps.FlipSprite;
     this.CurrentAmmo = ps.CurrentAmmo;
     this.IsReloading = ps.IsReloading;
     this.TimeToReloaded = ps.TimeToReloaded;
@@ -658,9 +641,6 @@ public partial class Player : CharacterBody2D, IRewindable {
 
     // 注意：回溯系统不应该恢复 Health 和 TimeBond，
     // 但「从当前阶段重来」功能会手动恢复它们．
-
-    // 恢复状态后可能需要更新一些依赖状态的视觉效果
-    UpdateAnimationState();
   }
 
   // Player 不会被 Destroy 或 Resurrect，所以提供空实现

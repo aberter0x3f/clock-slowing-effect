@@ -177,7 +177,7 @@ public partial class Violinist : BaseEnemy {
       Velocity = baseState.Velocity,
       Health = baseState.Health,
       HitTimerLeft = baseState.HitTimerLeft,
-      SpriteModulate = baseState.SpriteModulate,
+      IsInHitState = baseState.IsInHitState,
       CurrentAttackState = this._attackState,
       AttackTimer = this._attackTimer,
       StaffCreationDist = this._staffCreationDist,

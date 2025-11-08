@@ -218,7 +218,7 @@ public partial class Boss : BaseEnemy {
   public override void TakeDamage(float damage) {
     // 这里不调用基类的 TakeDamage，因为 Boss 的生命值由其阶段控制
     // 将伤害传递给当前激活的阶段
-    _sprite.Modulate = HIT_COLOR;
+    _enemyPolyhedron.SetHitState(true);
     _hitTimer.Start();
     if (_activePhaseInstance != null && !IsDestroyed) {
       _activePhaseInstance.TakeDamage(damage);
@@ -232,7 +232,7 @@ public partial class Boss : BaseEnemy {
       Velocity = baseState.Velocity,
       Health = baseState.Health,
       HitTimerLeft = baseState.HitTimerLeft,
-      SpriteModulate = baseState.SpriteModulate,
+      IsInHitState = baseState.IsInHitState,
       InternalState = this.InternalState,
       RestTimerLeft = this._restTimerLeft,
       ActivePhaseState = _activePhaseInstance?.CaptureInternalState(),

@@ -321,12 +321,13 @@ public partial class GameManager : Node {
   }
 
   /// <summary>
-  /// 切换到下一个拥有主动技能的奇物．
+  /// 切换到下一个拥有主动技能的奇物．返回是否成功切换．
   /// </summary>
-  public void SwitchToNextActiveCurio() {
+  public bool SwitchToNextActiveCurio() {
     if (_activeCurios.Count > 1) {
       _currentActiveCurioIndex = (_currentActiveCurioIndex + 1) % _activeCurios.Count;
     }
+    return _activeCurios.Count > 1;
   }
 
   /// <summary>

@@ -113,7 +113,7 @@ public partial class SimpleEnemy3 : BaseEnemy {
       Velocity = baseState.Velocity,
       Health = baseState.Health,
       HitTimerLeft = baseState.HitTimerLeft,
-      SpriteModulate = baseState.SpriteModulate,
+      IsInHitState = baseState.IsInHitState,
       IsAttacking = this._isAttacking,
       ShootTimer = this._shootTimer,
       AttackTimer = this._attackTimer,
