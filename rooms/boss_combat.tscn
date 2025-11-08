@@ -25,6 +25,7 @@ UpgradeSelectionMenuScene = ExtResource("4_7g3sr")
 CurioSelectionMenuScene = ExtResource("5_kxt71")
 BossScene = ExtResource("5_7g3sr")
 InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
+TitleScenePath = "uid://bqtbfjrfe5x52"
 
 [node name="WorldEnvironment" parent="." instance=ExtResource("6_sbsf0")]
 

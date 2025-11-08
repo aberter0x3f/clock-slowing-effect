@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://bqtbfjrfe5x52"]
+[gd_scene load_steps=19 format=3 uid="uid://bqtbfjrfe5x52"]
 
 [ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="1_7vrkn"]
 [ext_resource type="Script" uid="uid://bvjdkwu2pid2q" path="res://scripts/Room/Title.cs" id="1_8qtwp"]
@@ -8,12 +8,14 @@
 [ext_resource type="PackedScene" uid="uid://c6vnywdveemsw" path="res://world_environment.tscn" id="3_bn480"]
 [ext_resource type="PackedScene" uid="uid://3fjshysy5akb" path="res://title_menu_interactable/start_game.tscn" id="3_nlkkf"]
 [ext_resource type="PackedScene" uid="uid://cr4j0chissibb" path="res://ui/curio_selection_menu.tscn" id="3_sumwy"]
+[ext_resource type="PackedScene" uid="uid://trm3q0j6i0rp" path="res://ui/boss_practice_selection_menu.tscn" id="4_bnip2"]
 [ext_resource type="PackedScene" uid="uid://dynj33onwm4qh" path="res://rewind_label.tscn" id="4_hb045"]
 [ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="4_j5v2v"]
-[ext_resource type="PackedScene" uid="uid://b4na7v3y56t7w" path="res://title_menu_interactable/change_character.tscn" id="4_qe12f"]
+[ext_resource type="PackedScene" uid="uid://b4na7v3y56t7w" path="res://title_menu_interactable/boss_practice.tscn" id="4_qe12f"]
 [ext_resource type="PackedScene" uid="uid://cddiolkpjm4i2" path="res://title_menu_interactable/settings.tscn" id="5_8qtwp"]
 [ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="5_iotk1"]
 [ext_resource type="PackedScene" uid="uid://8tp11lig65w" path="res://ui/heads_up_display.tscn" id="5_jok1v"]
+[ext_resource type="Resource" uid="uid://jogkufq70a76" path="res://enemies/boss/phase_data.tres" id="5_uwgf0"]
 [ext_resource type="PackedScene" uid="uid://jppmfh2mxeel" path="res://title_menu_interactable/exit_game.tscn" id="6_dy7ct"]
 [ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="6_w44g7"]
 
@@ -21,6 +23,9 @@
 script = ExtResource("1_8qtwp")
 DifficultyMenuScene = ExtResource("2_npp43")
 CurioSelectionMenuScene = ExtResource("3_sumwy")
+BossPracticeMenuScene = ExtResource("4_bnip2")
+BossPhaseDataResource = ExtResource("5_uwgf0")
+BossScenePath = "uid://d312i4tukca50"
 InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
 
 [node name="WorldEnvironment" parent="." instance=ExtResource("3_bn480")]
@@ -55,7 +60,7 @@ metadata/_custom_type_script = "uid://vn61cc2q0j34"
 [node name="StartGame" parent="." instance=ExtResource("3_nlkkf")]
 position = Vector2(-300, -200)
 
-[node name="ChangeCharacter" parent="." instance=ExtResource("4_qe12f")]
+[node name="BossPractice" parent="." instance=ExtResource("4_qe12f")]
 position = Vector2(-100, -200)
 
 [node name="Settings" parent="." instance=ExtResource("5_8qtwp")]

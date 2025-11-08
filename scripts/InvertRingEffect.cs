@@ -15,7 +15,6 @@ public partial class InvertRingEffect : CanvasLayer {
     } else {
       GD.PrintErr("InvertRingEffect: ShaderMaterial not found on ColorRect.");
     }
-    // --- 修改结束 ---
   }
 
   /// <summary>

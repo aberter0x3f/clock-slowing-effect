@@ -56,6 +56,11 @@ public partial class GameManager : Node {
   public Godot.Collections.Array<EnemyData> SubCombatEnemies { get; set; }
   public float SubCombatDifficultyMultiplier { get; set; } = 1.0f;
 
+  // Boss 练习模式
+  public bool IsInBossPractice { get; private set; } = false;
+  public int PracticePlane { get; private set; } = 1;
+  public int PracticePhaseIndex { get; private set; } = 0;
+
   public override void _Ready() {
     Instance = this;
     ResetPlayerStats();
@@ -65,6 +70,7 @@ public partial class GameManager : Node {
   /// 当玩家从难度菜单开始新游戏时调用．
   /// </summary>
   public void InitializeNewRun(DifficultySetting difficulty) {
+    IsInBossPractice = false;
     CurrentDifficulty = difficulty;
     GameMap = new HexMap();
     LevelsCleared = 0;
@@ -77,6 +83,34 @@ public partial class GameManager : Node {
     ResetPlayerStats();
 
     GD.Print($"New run started with difficulty '{difficulty.Name}'.");
+  }
+
+  /// <summary>
+  /// 初始化 Boss 练习模式．
+  /// </summary>
+  public void InitializeBossPractice(DifficultySetting difficulty, int plane, int phaseIndex) {
+    CurrentDifficulty = difficulty;
+    GameMap = null;
+    LevelsCleared = 0;
+    DifficultyMultiplier = 1.0f;
+    EnemyRank = difficulty.EnemyRank + plane - 1;
+    PlayerMapPosition = null;
+    ActiveEvent = null;
+
+    IsInBossPractice = true;
+    PracticePlane = plane;
+    PracticePhaseIndex = phaseIndex;
+
+    ResetPlayerStats();
+
+    GD.Print($"Starting Boss Practice: Plane {plane}, Phase {phaseIndex + 1}, Enemy Rank {EnemyRank}.");
+  }
+
+  /// <summary>
+  /// 结束 Boss 练习模式．
+  /// </summary>
+  public void EndBossPractice() {
+    IsInBossPractice = false;
   }
 
   /// <summary>

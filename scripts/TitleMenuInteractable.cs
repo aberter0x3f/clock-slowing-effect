@@ -7,13 +7,15 @@ using Godot;
 public partial class TitleMenuInteractable : Area2D, IInteractable {
   public enum ActionType {
     StartGame,
-    ChangeCharacter,
+    BossPractice,
     Settings,
     ExitGame
   }
 
   [Signal]
   public delegate void StartGameRequestedEventHandler();
+  [Signal]
+  public delegate void BossPracticeRequestedEventHandler();
 
   [Export]
   public ActionType Action { get; set; } = ActionType.StartGame;
@@ -48,8 +50,8 @@ public partial class TitleMenuInteractable : Area2D, IInteractable {
         EmitSignal(SignalName.StartGameRequested);
         break;
 
-      case ActionType.ChangeCharacter:
-        GD.Print("Action: Change Character (Not Implemented)");
+      case ActionType.BossPractice:
+        EmitSignal(SignalName.BossPracticeRequested);
         break;
 
       case ActionType.Settings:

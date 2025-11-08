@@ -122,6 +122,7 @@ public partial class PhaseStellar : BasePhase {
     var rank = GameManager.Instance.EnemyRank;
     TimeScaleSensitivity = 3f / (rank + 3);
     InitialOrbiterSpeed *= rank / 5f;
+    SmallBulletSpeed *= (rank + 20) / 25f;
 
     SpawnOrbiters();
     TransitionTo(Phase.OrbiterWait);

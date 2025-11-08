@@ -35,13 +35,9 @@ public partial class Boss : BaseEnemy {
     }
   }
 
-  [ExportGroup("Phase Sets")]
+  [ExportGroup("Phase Data")]
   [Export]
-  public Godot.Collections.Array<PackedScene> PhaseSet1 { get; set; }
-  [Export]
-  public Godot.Collections.Array<PackedScene> PhaseSet2 { get; set; }
-  [Export]
-  public Godot.Collections.Array<PackedScene> PhaseSet3 { get; set; }
+  public BossPhaseData PhaseData { get; set; }
 
   [ExportGroup("Phase Transition")]
   [Export]
@@ -73,6 +69,17 @@ public partial class Boss : BaseEnemy {
   /// </summary>
   public void SetActivePhases(Godot.Collections.Array<PackedScene> phases) {
     _activePhaseSet = phases;
+  }
+
+  /// <summary>
+  /// 在练习模式下，直接开始指定的阶段．
+  /// </summary>
+  public void StartSpecificPhase(int phaseIndex) {
+    if (_activePhaseSet == null || phaseIndex < 0 || phaseIndex >= _activePhaseSet.Count) {
+      GD.PrintErr($"Cannot start specific phase: Invalid index {phaseIndex} or phase set not configured.");
+      return;
+    }
+    _currentPhaseIndex = phaseIndex;
   }
 
   public override void _Process(double delta) {

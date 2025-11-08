@@ -30,7 +30,7 @@ public partial class PhaseLiquidCrystal : BasePhase {
   [Export]
   public float WaitDuration { get; set; } = 2f;
   [Export]
-  public float BulletSpacing { get; set; } = 60f;
+  public float BulletSpacing { get; set; } = 65f;
   [Export]
   public float BossChaseSpeed { get; set; } = 100f;
   [Export(PropertyHint.Range, "0.0, 2.0, 0.01")]
@@ -74,8 +74,8 @@ public partial class PhaseLiquidCrystal : BasePhase {
     // 根据难度调整参数
     float rank = GameManager.Instance.EnemyRank;
     TimeScaleSensitivity = 5f / (rank + 5);
-    BulletSpacing = Mathf.Max(45f, (BulletSpacing - 15f) * 10f / (rank + 5) + 15f);
-    BossChaseSpeed *= (rank + 5f) / 10f;
+    BulletSpacing = Mathf.Max(50f, (BulletSpacing - 15f) * 15f / (rank + 10) + 15f);
+    BossChaseSpeed *= (rank + 10f) / 15f;
 
     PlayAttackSound();
 

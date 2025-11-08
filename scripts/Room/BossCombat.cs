@@ -31,6 +31,8 @@ public partial class BossCombat : Node {
   public PackedScene BossScene { get; set; }
   [Export(PropertyHint.File, "*.tscn")]
   public string InterLevelMenuScenePath { get; set; }
+  [Export(PropertyHint.File, "*.tscn")]
+  public string TitleScenePath { get; set; }
 
   public override void _Ready() {
     GameRootProvider.CurrentGameRoot = this;
@@ -59,32 +61,42 @@ public partial class BossCombat : Node {
     _curioRng.Seed = _levelSeed + 1; // 使用不同的种子
 
     InitializeBoss();
+
+    if (GameManager.Instance.IsInBossPractice) {
+      _boss.StartSpecificPhase(GameManager.Instance.PracticePhaseIndex);
+    }
   }
 
   private void InitializeBoss() {
     _boss = BossScene.Instantiate<Boss>();
 
+    if (_boss.PhaseData == null) {
+      GD.PrintErr("Boss instance is missing its PhaseData resource!");
+      return;
+    }
+
     // 根据位面选择阶段组合
-    var plane = GameManager.Instance.CurrentPlane;
+    var gm = GameManager.Instance;
+    var plane = gm.IsInBossPractice ? gm.PracticePlane : gm.CurrentPlane;
     // `plane` 从 1 开始，所以我们需要 `(plane - 1)` 来得到从 0 开始的索引
     var setIndex = (plane - 1) % 3;
     Godot.Collections.Array<PackedScene> selectedPhases;
 
     switch (setIndex) {
       case 0: // 位面 1, 4, 7, ...
-        selectedPhases = _boss.PhaseSet1;
+        selectedPhases = _boss.PhaseData.PhaseSet1;
         GD.Print($"Current plane is {plane}, selecting Boss Phase Set 1.");
         break;
       case 1: // 位面 2, 5, 8, ...
-        selectedPhases = _boss.PhaseSet2;
+        selectedPhases = _boss.PhaseData.PhaseSet2;
         GD.Print($"Current plane is {plane}, selecting Boss Phase Set 2.");
         break;
       case 2: // 位面 3, 6, 9, ...
-        selectedPhases = _boss.PhaseSet3;
+        selectedPhases = _boss.PhaseData.PhaseSet3;
         GD.Print($"Current plane is {plane}, selecting Boss Phase Set 3.");
         break;
       default: // 备用
-        selectedPhases = _boss.PhaseSet1;
+        selectedPhases = _boss.PhaseData.PhaseSet1;
         GD.PrintErr($"Invalid plane set index {setIndex}, defaulting to Set 1.");
         break;
     }
@@ -112,6 +124,13 @@ public partial class BossCombat : Node {
   }
 
   private void OnLevelCompleted(HexMap.ClearScore score) {
+    var gm = GameManager.Instance;
+    if (gm.IsInBossPractice) {
+      gm.EndBossPractice();
+      GetTree().ChangeSceneToFile(TitleScenePath);
+      return;
+    }
+
     // Boss 战固定奖励一个 3 级强化
     var upgradeMenu = UpgradeSelectionMenuScene.Instantiate<UpgradeSelectionMenu>();
     AddChild(upgradeMenu);
@@ -156,6 +175,11 @@ public partial class BossCombat : Node {
   }
 
   private void OnRestartRequested() {
+    if (GameManager.Instance.IsInBossPractice) {
+      OnRestartFromPhaseRequested();
+      return;
+    }
+
     GD.Print("Restarting level...");
 
     if (IsInstanceValid(_spawnedPortal)) {
