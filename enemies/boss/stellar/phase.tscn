@@ -1,24 +1,18 @@
-[gd_scene load_steps=11 format=3 uid="uid://buxkq13puqqwx"]
+[gd_scene load_steps=8 format=3 uid="uid://buxkq13puqqwx"]
 
 [ext_resource type="Script" uid="uid://btmr0wt3ugit6" path="res://scripts/Enemy/Boss/PhaseStellar.cs" id="1_b1vo0"]
-[ext_resource type="PackedScene" uid="uid://btssylr121vr1" path="res://enemies/boss/stellar/bullet_big.tscn" id="2_3uiai"]
-[ext_resource type="PackedScene" uid="uid://bio3i4ny0yq31" path="res://enemies/boss/stellar/bullet_blue.tscn" id="2_ol7jo"]
-[ext_resource type="PackedScene" uid="uid://cdr7vypm7fluj" path="res://enemies/boss/stellar/bullet_green.tscn" id="3_nxqqf"]
-[ext_resource type="PackedScene" uid="uid://rjomace0nig1" path="res://enemies/boss/stellar/bullet_yellow.tscn" id="4_3uiai"]
-[ext_resource type="PackedScene" uid="uid://de0q1a44rbth8" path="res://enemies/boss/stellar/bullet_orange.tscn" id="5_uux1g"]
-[ext_resource type="PackedScene" uid="uid://gmp0llgu4mt8" path="res://enemies/boss/stellar/bullet_red.tscn" id="6_dthqa"]
-[ext_resource type="PackedScene" uid="uid://c86qayfwx1bay" path="res://enemies/boss/stellar/bullet_defense.tscn" id="7_nxqqf"]
-[ext_resource type="PackedScene" uid="uid://ba68poqtns0rw" path="res://enemies/boss/stellar/bullet_jet.tscn" id="8_uux1g"]
+[ext_resource type="PackedScene" uid="uid://btssylr121vr1" path="res://enemies/boss/stellar~/bullet_big.tscn" id="2_3uiai"]
+[ext_resource type="PackedScene" uid="uid://g3n87bqw0gub" path="res://enemies/boss/stellar/bullet_small.tscn" id="3_nxqqf"]
+[ext_resource type="AudioStream" uid="uid://dypy6j3yd7nfw" path="res://sounds/effects/up.wav" id="6_3uiai"]
+[ext_resource type="PackedScene" uid="uid://c86qayfwx1bay" path="res://enemies/boss/stellar~/bullet_defense.tscn" id="7_nxqqf"]
+[ext_resource type="PackedScene" uid="uid://ba68poqtns0rw" path="res://enemies/boss/stellar~/bullet_jet.tscn" id="8_uux1g"]
 [ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="10_dthqa"]
 
 [node name="PhaseStellar" type="Node"]
 script = ExtResource("1_b1vo0")
 BigBulletScene = ExtResource("2_3uiai")
-BlueBulletScene = ExtResource("2_ol7jo")
-GreenBulletScene = ExtResource("3_nxqqf")
-YellowBulletScene = ExtResource("4_3uiai")
-OrangeBulletScene = ExtResource("5_uux1g")
-RedBulletScene = ExtResource("6_dthqa")
+SmallBulletScene = ExtResource("3_nxqqf")
 JetBulletScene = ExtResource("8_uux1g")
 DefenseBulletScene = ExtResource("7_nxqqf")
+PowerUpSound = ExtResource("6_3uiai")
 AttackSound = ExtResource("10_dthqa")

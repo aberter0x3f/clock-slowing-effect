@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="DifficultySetting" load_steps=2 format=3 uid="uid://x2b64fn5ytpl"]
+
+[ext_resource type="Script" uid="uid://26i87xlp1ear" path="res://scripts/DifficultySetting.cs" id="1_p4ddu"]
+
+[resource]
+script = ExtResource("1_p4ddu")
+Name = "Lunatic"
+Description = "\"Good luck.\""
+InitialTotalDifficulty = 80.0
+InitialMaxConcurrentDifficulty = 30.0
+EnemyRank = 9
+metadata/_custom_type_script = "uid://26i87xlp1ear"

@@ -199,14 +199,14 @@ public partial class FallingBullet : BaseBullet {
 
 
   public override void Destroy() {
-    base.Destroy();
     if (IsDestroyed) return;
+    base.Destroy();
     _landingIndicator.Visible = false;
   }
 
   public override void Resurrect() {
-    base.Resurrect();
     if (!IsDestroyed) return;
+    base.Resurrect();
     _landingIndicator.Visible = true;
   }
 }

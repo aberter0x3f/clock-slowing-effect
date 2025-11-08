@@ -12,7 +12,7 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_3wvkw"]
 radius = 20.0
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_3wvkw"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_q68d7"]
 _surfaces = [{
 "aabb": AABB(-0.17320508, -0.17320508, -0.17320508, 0.34641016, 0.34641016, 0.34641016),
 "format": 34359738375,
@@ -50,7 +50,7 @@ metadata/_custom_type_script = "uid://b7y3ayqdya65s"
 [node name="Visualizer" type="Node3D" parent="."]
 
 [node name="EnemyPolyhedron" type="MeshInstance3D" parent="Visualizer"]
-mesh = SubResource("ArrayMesh_3wvkw")
+mesh = SubResource("ArrayMesh_q68d7")
 surface_material_override/0 = SubResource("StandardMaterial3D_6we1p")
 script = ExtResource("8_q68d7")
 Shape = 0
@@ -62,5 +62,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
 billboard = 1
 text = "Health"
 font = ExtResource("8_y3h72")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="Visualizer"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 4, 0)
+light_energy = 5.0
+light_volumetric_fog_energy = 5.0
+shadow_enabled = true
+spot_attenuation = 0.1
+spot_angle = 10.0
 
 [connection signal="timeout" from="HitTimer" to="." method="OnHitTimerTimeout"]

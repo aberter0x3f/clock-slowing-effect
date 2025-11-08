@@ -13,6 +13,14 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
   [Signal]
   public delegate void ReachedTargetEventHandler(int ringIndex);
 
+  public enum BulletColor {
+    Blue,
+    Green,
+    Yellow,
+    Orange,
+    Red
+  }
+
   public enum BulletType {
     BlackHole,
     Supernova
@@ -28,9 +36,17 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
     BlackHoleAccretion
   }
 
+  [ExportGroup("Sprites")]
+  [Export] public SpriteFrames BlueSprite { get; set; }
+  [Export] public SpriteFrames GreenSprite { get; set; }
+  [Export] public SpriteFrames YellowSprite { get; set; }
+  [Export] public SpriteFrames OrangeSprite { get; set; }
+  [Export] public SpriteFrames RedSprite { get; set; }
+
   [Export]
   public BulletType Type { get; set; }
   public State CurrentState { get; private set; } = State.Inactive;
+  public BulletColor CurrentColor { get; set; }
   public Vector2 TargetPosition { get; set; }
   public float MoveSpeed { get; set; }
   public int RingIndex { get; set; }
@@ -42,12 +58,16 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
   private Vector2 _velocity;
   private Player _playerNode;
   private float _supernovaTimer = 0f;
+  private AnimatedSprite3D _animatedSprite;
 
   public override void _Ready() {
     base._Ready();
+    // _animatedSprite = GetNode<AnimatedSprite3D>("Visualizer/Sprite");
+    _animatedSprite = _sprite as AnimatedSprite3D;
     SetProcess(false);
     Visible = false;
     _playerNode = GameRootProvider.CurrentGameRoot.GetNode<Player>("Player");
+    UpdateSpriteForColor();
   }
 
   public void Activate(Vector2 startPosition) {
@@ -134,6 +154,26 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
     _sprite.Modulate = Colors.Black;
   }
 
+  /// <summary>
+  /// 在生成时设置子弹的初始颜色．
+  /// </summary>
+  public void SetColor(BulletColor color) {
+    CurrentColor = color;
+    UpdateSpriteForColor();
+  }
+
+  private void UpdateSpriteForColor() {
+    _animatedSprite.SpriteFrames = CurrentColor switch {
+      BulletColor.Blue => BlueSprite,
+      BulletColor.Green => GreenSprite,
+      BulletColor.Yellow => YellowSprite,
+      BulletColor.Orange => OrangeSprite,
+      BulletColor.Red => RedSprite,
+      _ => _animatedSprite.SpriteFrames
+    };
+    _animatedSprite.Play();
+  }
+
   public override RewindState CaptureState() {
     var baseState = (BaseBulletState) base.CaptureState();
     return new PhaseStellarSmallBulletState {
@@ -154,10 +194,10 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
     this._supernovaTimer = sss.SupernovaTimer;
 
     bool shouldBeActive = sss.IsActive;
-    if (shouldBeActive && !IsProcessing()) {
+    if (shouldBeActive) {
       SetProcess(true);
       Visible = true;
-    } else if (!shouldBeActive && IsProcessing()) {
+    } else if (!shouldBeActive) {
       SetProcess(false);
       Visible = false;
     }

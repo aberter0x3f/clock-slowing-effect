@@ -76,8 +76,8 @@ public partial class PhaseMaze : BasePhase {
 
     // 根据难度调整属性
     float rank = GameManager.Instance.EnemyRank;
-    _hexSize = Mathf.Max(MinHexSize, BaseHexSize * 12f / (rank + 7f));
-    BulletDownwardSpeed *= (rank + 5f) / 10f;
+    _hexSize = Mathf.Max(MinHexSize, BaseHexSize * 30f / (rank + 25f));
+    BulletDownwardSpeed *= (rank + 15f) / 20f;
 
     // 预计算点朝上 (point-top) 六边形尺寸
     _hexWidth = Mathf.Sqrt(3) * _hexSize;

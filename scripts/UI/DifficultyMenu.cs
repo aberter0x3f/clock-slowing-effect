@@ -22,8 +22,8 @@ public partial class DifficultyMenu : CanvasLayer { // 继承 CanvasLayer
     // 确保在游戏暂停时也能处理输入
     ProcessMode = ProcessModeEnum.Always;
 
-    _buttonContainer = GetNode<VBoxContainer>("CenterContainer/HBoxContainer/VBoxContainer");
-    _descriptionLabel = GetNode<RichTextLabel>("CenterContainer/HBoxContainer/RichTextLabel");
+    _buttonContainer = GetNode<VBoxContainer>("Panel/CenterContainer/HBoxContainer/VBoxContainer");
+    _descriptionLabel = GetNode<RichTextLabel>("Panel/CenterContainer/HBoxContainer/RichTextLabel");
 
     PopulateButtons();
     UpdateDescription();

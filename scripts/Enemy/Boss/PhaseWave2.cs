@@ -37,7 +37,7 @@ public partial class PhaseWave2 : BasePhase {
   private MapGenerator _mapGenerator;
   private readonly RandomNumberGenerator _rng = new();
 
-  public override float MaxHealth { get; protected set; } = 25f;
+  public override float MaxHealth { get; protected set; } = 35f;
 
   [ExportGroup("Movement")]
   [Export]

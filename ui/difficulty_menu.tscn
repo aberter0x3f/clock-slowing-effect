@@ -1,33 +1,42 @@
-[gd_scene load_steps=6 format=3 uid="uid://br6keneknyhnm"]
+[gd_scene load_steps=7 format=3 uid="uid://br6keneknyhnm"]
 
 [ext_resource type="Script" uid="uid://cdhgxj76i87cu" path="res://scripts/UI/DifficultyMenu.cs" id="1_xwoa2"]
 [ext_resource type="Resource" uid="uid://bkplvg8gd8vjs" path="res://difficulty_settings/easy.tres" id="2_00nr2"]
 [ext_resource type="Resource" uid="uid://cov1tp7pupkcu" path="res://difficulty_settings/normal.tres" id="3_00baa"]
 [ext_resource type="Resource" uid="uid://i14njqjt2x8r" path="res://difficulty_settings/hard.tres" id="4_vsugp"]
 [ext_resource type="PackedScene" uid="uid://4cij013tbb2d" path="res://ui/difficulty_menu_button.tscn" id="5_00baa"]
+[ext_resource type="Resource" uid="uid://x2b64fn5ytpl" path="res://difficulty_settings/lunatic.tres" id="5_vsugp"]
 
 [node name="DifficultyMenu" type="CanvasLayer"]
 script = ExtResource("1_xwoa2")
-Difficulties = Array[Object]([ExtResource("2_00nr2"), ExtResource("3_00baa"), ExtResource("4_vsugp")])
+Difficulties = Array[Object]([ExtResource("2_00nr2"), ExtResource("3_00baa"), ExtResource("4_vsugp"), ExtResource("5_vsugp")])
 DifficultyButtonScene = ExtResource("5_00baa")
 metadata/_custom_type_script = "uid://cdhgxj76i87cu"
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="Panel" type="Panel" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer"]
+[node name="CenterContainer" type="CenterContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/CenterContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/HBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/CenterContainer/HBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="RichTextLabel" type="RichTextLabel" parent="CenterContainer/HBoxContainer"]
+[node name="RichTextLabel" type="RichTextLabel" parent="Panel/CenterContainer/HBoxContainer"]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 bbcode_enabled = true

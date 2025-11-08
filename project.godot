@@ -41,6 +41,7 @@ project/assembly_name="ClockSlowingEffect"
 enemies=""
 bullets=""
 pickups=""
+enemy_creations=""
 
 [input]
 

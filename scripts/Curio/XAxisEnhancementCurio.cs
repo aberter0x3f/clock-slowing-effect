@@ -23,9 +23,8 @@ public partial class XAxisEnhancementCurio : BaseCurio {
       return;
     }
 
-    SoundManager.Instance.PlaySoundEffect(SkillSound, cooldown: 0.1f);
-
     if (_mapGenerator == null) {
+      SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
       GD.PrintErr("XAxisEnhancementCurio: MapGenerator not found.");
       return;
     }
@@ -47,9 +46,12 @@ public partial class XAxisEnhancementCurio : BaseCurio {
     }
 
     if (teleported) {
+      SoundManager.Instance.PlaySoundEffect(SkillSound, cooldown: 0.1f);
       player.GlobalPosition = newPos;
       CurrentCooldown = Cooldown;
       if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;
+    } else {
+      SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
     }
   }
 }

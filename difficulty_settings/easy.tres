@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_3yu18")
 Name = "Easy"
-Description = "Easy"
+Description = "Recommended for players new to STG."
 InitialTotalDifficulty = 25.0
 InitialMaxConcurrentDifficulty = 15.0
 EnemyRank = 3

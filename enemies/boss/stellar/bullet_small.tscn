@@ -1,0 +1,109 @@
+[gd_scene load_steps=16 format=3 uid="uid://g3n87bqw0gub"]
+
+[ext_resource type="Script" uid="uid://bytsvy4konfok" path="res://scripts/Bullet/PhaseStellarSmallBullet.cs" id="1_vwi86"]
+[ext_resource type="Texture2D" uid="uid://da45jlnn5x48c" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7B Free.png" id="2_vwi86"]
+[ext_resource type="Texture2D" uid="uid://dfd5f6i0nm7t5" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7A Free.png" id="3_61ejt"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tymd0"]
+atlas = ExtResource("2_vwi86")
+region = Rect2(192, 96, 24, 24)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8dbbk"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tymd0")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ym7cd"]
+atlas = ExtResource("2_vwi86")
+region = Rect2(192, 216, 24, 24)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_tw1hh"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ym7cd")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nfbuv"]
+atlas = ExtResource("3_61ejt")
+region = Rect2(192, 96, 24, 24)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_64y4k"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nfbuv")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_78war"]
+atlas = ExtResource("2_vwi86")
+region = Rect2(192, 336, 24, 24)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_2vgku"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_78war")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oo3t0"]
+atlas = ExtResource("3_61ejt")
+region = Rect2(192, 216, 24, 24)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xuthe"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oo3t0")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fkmd6"]
+radius = 7.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_61ejt"]
+
+[node name="EnemyBullet" type="Area2D" groups=["bullets"]]
+z_index = 3
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_vwi86")
+BlueSprite = SubResource("SpriteFrames_8dbbk")
+GreenSprite = SubResource("SpriteFrames_tw1hh")
+YellowSprite = SubResource("SpriteFrames_64y4k")
+OrangeSprite = SubResource("SpriteFrames_2vgku")
+RedSprite = SubResource("SpriteFrames_xuthe")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_fkmd6")
+
+[node name="Visualizer" type="Node3D" parent="."]
+
+[node name="Sprite" type="AnimatedSprite3D" parent="Visualizer"]
+sorting_offset = 80.0
+billboard = 1
+texture_filter = 0
+sprite_frames = SubResource("SpriteFrames_61ejt")
+
+[connection signal="body_entered" from="." to="." method="OnBodyEntered"]

@@ -189,13 +189,16 @@ public partial class Combat : Node {
     _rewindManager.ResetHistory();
     _enemySpawner.ResetSpawner();
 
-    foreach (var node in GetTree().GetNodesInGroup("enemies").ToList()) {
-      node.QueueFree();
+    foreach (IRewindable node in GetTree().GetNodesInGroup("enemies").ToList()) {
+      node.Destroy();
     }
-    foreach (var node in GetTree().GetNodesInGroup("bullets").ToList()) {
-      node.QueueFree();
+    foreach (IRewindable node in GetTree().GetNodesInGroup("bullets").ToList()) {
+      node.Destroy();
     }
-    foreach (var node in GetTree().GetNodesInGroup("pickups").ToList()) {
+    foreach (IRewindable node in GetTree().GetNodesInGroup("pickups").ToList()) {
+      node.Destroy();
+    }
+    foreach (var node in GetTree().GetNodesInGroup("enemy_creations").ToList()) {
       node.QueueFree();
     }
 

@@ -174,6 +174,9 @@ public partial class BossCombat : Node {
     foreach (IRewindable node in GetTree().GetNodesInGroup("pickups").ToList()) {
       node.Destroy();
     }
+    foreach (var node in GetTree().GetNodesInGroup("enemy_creations").ToList()) {
+      node.QueueFree();
+    }
 
     _player.ResetState();
     _rewindManager.ResetHistory();

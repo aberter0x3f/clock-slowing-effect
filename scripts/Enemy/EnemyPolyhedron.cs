@@ -113,11 +113,7 @@ public partial class EnemyPolyhedron : MeshInstance3D {
       }
     }
 
-    var finalColor = _color;
-    if (EnableHitColor) {
-      finalColor *= HIT_COLOR;
-    }
-    _material.AlbedoColor = finalColor;
+    _material.AlbedoColor = EnableHitColor ? HIT_COLOR : _color;
   }
 
   private void GenerateMesh() {

@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://36vkr16tucay" path="res://scripts/GameWorldEnvironment.cs" id="1_x16oa"]
 
 [sub_resource type="Environment" id="Environment_wjtrd"]
+volumetric_fog_enabled = true
 
 [sub_resource type="Gradient" id="Gradient_x16oa"]
 colors = PackedColorArray(0, 0, 0.12156863, 1, 1, 1, 1, 1)

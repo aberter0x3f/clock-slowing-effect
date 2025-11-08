@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_otnob")
 Name = "Hard"
-Description = "Hard"
+Description = "For players who love the challenge of intense bullet patterns."
 InitialTotalDifficulty = 60.0
 InitialMaxConcurrentDifficulty = 25.0
 EnemyRank = 7

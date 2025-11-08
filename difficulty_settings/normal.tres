@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_2pq4m")
 Name = "Normal"
-Description = "Normal"
+Description = "The standard experience for all players."
 metadata/_custom_type_script = "uid://26i87xlp1ear"

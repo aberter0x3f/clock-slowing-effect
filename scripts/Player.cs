@@ -143,10 +143,12 @@ public partial class Player : CharacterBody2D, IRewindable {
     _beginningHealth = Health;
     _beginningTimeBond = GameManager.Instance.TimeBond;
 
-    ResetState();
-
     _sprite.Play();
     _hitPointSprite.Play();
+
+    UpdateVisualizer();
+
+    ResetState();
 
     RewindManager.Instance.Register(this);
   }

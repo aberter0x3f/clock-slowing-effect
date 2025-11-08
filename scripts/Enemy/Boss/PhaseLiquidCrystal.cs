@@ -38,7 +38,7 @@ public partial class PhaseLiquidCrystal : BasePhase {
 
   [ExportGroup("Orbiting Bullet")]
   [Export]
-  public float OrbitRadius { get; set; } = 50f;
+  public float OrbitRadius { get; set; } = 100f;
   [Export]
   public float OrbitSpeed { get; set; } = 2.0f; // rad/s
 

@@ -76,7 +76,7 @@ public abstract partial class BasePhase : Node {
   /// <summary>
   /// 外部（通常是 Boss 节点）调用的受伤处理函数．
   /// </summary>
-  public void TakeDamage(float amount) {
+  public virtual void TakeDamage(float amount) {
     Health -= amount * (1.0f - DamageReduction);
   }
 

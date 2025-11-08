@@ -41,7 +41,7 @@ public partial class PhaseStellar : BasePhase {
 
   [ExportGroup("Timing")]
   [Export] public float OrbiterSpawnWaitDuration { get; set; } = 1.0f;
-  [Export] public float BlackHoleDuration { get; set; } = 15.0f;
+  [Export] public float BlackHoleDuration { get; set; } = 10.0f;
   [Export] public float JetFireInterval { get; set; } = 0.2f;
 
   [ExportGroup("Orbiters")]
@@ -53,19 +53,15 @@ public partial class PhaseStellar : BasePhase {
   [Export] public int RoundsPerLayer { get; set; } = 1;
 
   [ExportGroup("Rings")]
-  [Export] public float Radius0 { get; set; } = 50f;
+  [Export] public float Radius0 { get; set; } = 100f;
   [Export] public float DeltaR { get; set; } = 10f;
   [Export] public float BulletSpacing { get; set; } = 15f;
-  [Export] public Godot.Collections.Array<int> LayerCounts { get; set; } = new() { 2, 2, 5, 6, 6 };
-  [Export] public float SmallBulletSpeed { get; set; } = 400f;
+  [Export] public Godot.Collections.Array<int> LayerCounts { get; set; } = new() { 2, 2, 5, 6, 8 };
+  [Export] public float SmallBulletSpeed { get; set; } = 300f;
   [Export] public float RingRotationSpeed { get; set; } = 2f;
 
   [ExportGroup("Bullet Scenes")]
-  [Export] public PackedScene BlueBulletScene { get; set; }
-  [Export] public PackedScene GreenBulletScene { get; set; }
-  [Export] public PackedScene YellowBulletScene { get; set; }
-  [Export] public PackedScene OrangeBulletScene { get; set; }
-  [Export] public PackedScene RedBulletScene { get; set; }
+  [Export] public PackedScene SmallBulletScene { get; set; }
 
   [ExportGroup("Supernova")]
   [Export(PropertyHint.Range, "1, 10, 0.01")] public float SupernovaMaxDelay { get; set; } = 5f;
@@ -74,13 +70,17 @@ public partial class PhaseStellar : BasePhase {
   [Export] public PackedScene JetBulletScene { get; set; }
 
   [ExportGroup("Defense")]
-  [Export] public float DefenseTriggerDistance { get; set; } = 50f;
+  [Export] public float DefenseTriggerDistance { get; set; } = 100f;
   [Export] public float DefenseCooldown { get; set; } = 0.2f;
   [Export] public PackedScene DefenseBulletScene { get; set; }
 
-  [ExportGroup("")]
+  [ExportGroup("Time")]
   [Export]
   public float TimeScaleSensitivity { get; set; } = 1f;
+
+  [ExportGroup("Sound Effects")]
+  [Export]
+  public AudioStream PowerUpSound { get; set; }
 
   // --- 状态 ---
   private Phase _currentPhase = Phase.OrbiterWait;
@@ -92,6 +92,11 @@ public partial class PhaseStellar : BasePhase {
   // --- 层状态 ---
   private int _currentPhaseLayerIndex = 0;
   private int _layersInCurrentColorPhase = 0;
+  // --- 颜色转换状态 ---
+  private bool _isTransformingColor = false;
+  private float _colorTransformTimer = 0f;
+  private int _colorTransformRingIndex = -1;
+  private PhaseStellarSmallBullet.BulletColor _colorTransformTarget;
 
   private readonly List<BaseBullet> _orbiters = new();
   private readonly List<List<PhaseStellarSmallBullet>> _rings = new();
@@ -104,6 +109,9 @@ public partial class PhaseStellar : BasePhase {
 
   public override void StartPhase(Boss parent) {
     base.StartPhase(parent);
+
+    parent.SetCollisionEnabled(false);
+
     _orbiterSpeed = InitialOrbiterSpeed;
     var mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
     if (mapGenerator != null) {
@@ -126,6 +134,13 @@ public partial class PhaseStellar : BasePhase {
     }
     float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
     var scaledDelta = (float) delta * effectiveTimeScale;
+
+    // 在颜色转换期间，暂停所有其他逻辑
+    if (_isTransformingColor) {
+      ProcessColorTransformation(scaledDelta);
+      return;
+    }
+
     _timer -= scaledDelta;
 
     _defenseTimer -= scaledDelta;
@@ -166,8 +181,8 @@ public partial class PhaseStellar : BasePhase {
                                 _ringArrivalCounters[lastRingIndex] >= _rings[lastRingIndex].Count;
 
               if (allArrived) {
-                // 最后一层的所有子弹都已到达．转换到下一个阶段．
-                TransitionTo(_currentPhase + 1);
+                // 最后一层的所有子弹都已到达．开始颜色转换效果．
+                StartColorTransformation(GetColorForPhase(_currentPhase));
               }
             }
             // 如果还没有全部到达，我们什么都不做，等待下一帧．
@@ -192,16 +207,16 @@ public partial class PhaseStellar : BasePhase {
           FireJet();
           _timer = JetFireInterval;
         }
-        Health -= scaledDelta;
         break;
     }
   }
 
   private void TransitionTo(Phase nextPhase) {
-    PlayAttackSound();
+    PlayPowerUpSound();
 
     GD.Print($"Stellar Phase transitioning from {_currentPhase} to {nextPhase}");
     _currentPhase = nextPhase;
+    UpdateTemperature();
 
     switch (_currentPhase) {
       case Phase.OrbiterWait:
@@ -272,7 +287,7 @@ public partial class PhaseStellar : BasePhase {
       _orbiterQueues[orbiter].Clear();
     }
 
-    PackedScene bulletScene = GetBulletSceneForPhase(_currentPhase);
+    var bulletColor = GetColorForPhase(_currentPhase);
 
     // ringIndex 是已创建环的总数，这能确保半径和旋转方向正确递增
     int ringIndex = _rings.Count;
@@ -285,7 +300,9 @@ public partial class PhaseStellar : BasePhase {
       float theta = theta0 + Mathf.Tau / count * j;
       var targetPos = Vector2.Right.Rotated(theta) * radius;
 
-      var bullet = bulletScene.Instantiate<PhaseStellarSmallBullet>();
+      var bullet = SmallBulletScene.Instantiate<PhaseStellarSmallBullet>();
+      bullet.CurrentColor = bulletColor;
+      bullet.Type = _currentPhase <= Phase.Yellow ? PhaseStellarSmallBullet.BulletType.BlackHole : PhaseStellarSmallBullet.BulletType.Supernova;
       bullet.TimeScaleSensitivity = TimeScaleSensitivity;
       bullet.TargetPosition = targetPos;
       bullet.MoveSpeed = SmallBulletSpeed;
@@ -338,6 +355,7 @@ public partial class PhaseStellar : BasePhase {
   private void OnSmallBulletArrived(int ringIndex) {
     ++_ringArrivalCounters[ringIndex];
     if (_ringArrivalCounters[ringIndex] >= _rings[ringIndex].Count) {
+      PlayAttackSound();
       _rotatingRingIndices.Add(ringIndex);
       foreach (var bullet in _rings[ringIndex]) {
         bullet.StartRotation();
@@ -363,19 +381,64 @@ public partial class PhaseStellar : BasePhase {
     }
   }
 
-  private PackedScene GetBulletSceneForPhase(Phase phase) {
+  private void StartColorTransformation(PhaseStellarSmallBullet.BulletColor targetColor) {
+    if (_isTransformingColor) return;
+
+    GD.Print($"Starting color transformation to {targetColor}.");
+    _isTransformingColor = true;
+    _colorTransformTarget = targetColor;
+    _colorTransformRingIndex = _rings.Count - 1; // 从最外圈开始
+    _colorTransformTimer = 0.05f; // 第一次转换前的延迟
+  }
+
+  private void ProcessColorTransformation(float scaledDelta) {
+    _colorTransformTimer -= scaledDelta;
+    if (_colorTransformTimer <= 0) {
+      if (_colorTransformRingIndex >= 0) {
+        var ring = _rings[_colorTransformRingIndex];
+        foreach (var bullet in ring) {
+          if (IsInstanceValid(bullet) && !bullet.IsDestroyed && bullet.CurrentColor != _colorTransformTarget) {
+            bullet.SetColor(_colorTransformTarget);
+          }
+        }
+        --_colorTransformRingIndex;
+        _colorTransformTimer = 0.05f; // 为下一圈重置计时器
+      } else {
+        // 转换完成
+        _isTransformingColor = false;
+        // 现在，转换到下一阶段
+        TransitionTo(_currentPhase + 1);
+      }
+    }
+  }
+
+  private void UpdateTemperature() {
+    // 为每个阶段设置一个主题性的「温度」值
+    Health = _currentPhase switch {
+      Phase.OrbiterWait => 30000f,
+      Phase.Blue => 20000f,
+      Phase.Green => 10000f,
+      Phase.Yellow => 6000f,
+      Phase.Orange => 4000f,
+      Phase.Red => 3000f,
+      Phase.Supernova => 1e9f,
+      Phase.BlackHole => BlackHoleDuration, // 黑洞阶段使用 Health 作为计时器
+      _ => Health
+    };
+  }
+
+  private PhaseStellarSmallBullet.BulletColor GetColorForPhase(Phase phase) {
     return phase switch {
-      Phase.Blue => BlueBulletScene,
-      Phase.Green => GreenBulletScene,
-      Phase.Yellow => YellowBulletScene,
-      Phase.Orange => OrangeBulletScene,
-      Phase.Red => RedBulletScene,
-      _ => null
+      Phase.Blue => PhaseStellarSmallBullet.BulletColor.Blue,
+      Phase.Green => PhaseStellarSmallBullet.BulletColor.Green,
+      Phase.Yellow => PhaseStellarSmallBullet.BulletColor.Yellow,
+      Phase.Orange => PhaseStellarSmallBullet.BulletColor.Orange,
+      Phase.Red => PhaseStellarSmallBullet.BulletColor.Red,
+      _ => PhaseStellarSmallBullet.BulletColor.Blue,
     };
   }
 
   public override RewindState CaptureInternalState() {
-    // --- 保存集合状态 ---
     var ringsState = new Godot.Collections.Array<Godot.Collections.Array<ulong>>();
     foreach (var ring in _rings) {
       var ringIds = new Godot.Collections.Array<ulong>();
@@ -420,7 +483,6 @@ public partial class PhaseStellar : BasePhase {
     base.RestoreInternalState(state);
     if (state is not PhaseStellarState pss) return;
 
-    // --- 恢复简单状态 ---
     this._currentPhase = pss.CurrentPhase;
     this._timer = pss.Timer;
     this._orbiterAngle = pss.OrbiterAngle;
@@ -430,13 +492,11 @@ public partial class PhaseStellar : BasePhase {
     this._currentPhaseLayerIndex = pss.CurrentPhaseLayerIndex;
     this._layersInCurrentColorPhase = pss.LayersInCurrentColorPhase;
 
-    // --- 恢复集合状态 ---
     _rings.Clear();
     if (pss.Rings != null) {
       foreach (var ringIds in pss.Rings) {
         var newRing = new List<PhaseStellarSmallBullet>();
         foreach (var id in ringIds) {
-          // 使用 InstanceFromId 从 Godot 引擎获取节点实例
           var bullet = InstanceFromId(id) as PhaseStellarSmallBullet;
           if (IsInstanceValid(bullet)) {
             newRing.Add(bullet);
@@ -486,5 +546,9 @@ public partial class PhaseStellar : BasePhase {
         }
       }
     }
+  }
+
+  private void PlayPowerUpSound() {
+    SoundManager.Instance.PlaySoundEffect(PowerUpSound, cooldown: 0.2f, volumeDb: 5f);
   }
 }
