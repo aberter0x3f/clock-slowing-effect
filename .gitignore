@@ -418,3 +418,5 @@ mono_crash.*.json
 images/
 sounds/
 fonts/
+
+*.pdf

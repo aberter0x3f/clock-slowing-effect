@@ -41,7 +41,7 @@ public partial class PhaseStellar : BasePhase {
 
   [ExportGroup("Timing")]
   [Export] public float OrbiterSpawnWaitDuration { get; set; } = 1.0f;
-  [Export] public float BlackHoleDuration { get; set; } = 10.0f;
+  [Export] public float BlackHoleDuration { get; set; } = 7.0f;
   [Export] public float JetFireInterval { get; set; } = 0.2f;
 
   [ExportGroup("Orbiters")]

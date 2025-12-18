@@ -66,7 +66,8 @@ public partial class Player : CharacterBody2D, IRewindable {
     set {
       if (value <= 0) {
         GameManager.Instance.CurrentPlayerHealth = 0; // 确保不会变成负数
-        Die();
+        IsPermanentlyDead = true;
+        EmitSignal(SignalName.DiedPermanently);
       } else {
         GameManager.Instance.CurrentPlayerHealth = Mathf.Min(value, Stats.MaxHealth);
       }
