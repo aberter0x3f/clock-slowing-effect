@@ -6,45 +6,39 @@ using Godot;
 using Rewind;
 
 public class PlayerState : RewindState {
-  public Vector2 GlobalPosition;
-  public Vector2 Velocity;
+  public Vector3 GlobalPosition;
+  public Vector3 Velocity;
   public bool FlipSprite;
   public int CurrentAmmo;
   public bool IsReloading;
   public float TimeToReloaded;
   public float ShootTimer;
-  public bool IsJumping;
-  public float JumpTimer;
   public bool IsInvincible;
   public Dictionary<CurioType, float> CurioCooldowns = new();
   public bool DecoyActive;
-  public Vector2 DecoyPosition;
-  public float DecoyTimerLeft;
+  public Vector3 DecoyPosition;
+  public float DecoyRemoveTimer;
   // 以下字段仅用于「从当前阶段重来」，回溯系统会忽略它们
   public float Health;
   public float TimeBond;
 }
 
-public partial class Player : CharacterBody2D, IRewindable {
-  private const float MAX_JUMP_HEIGHT = 200f;
-  private const float JUMP_TIME = 1f;
-
+public partial class Player : CharacterBody3D, IRewindable {
   [Signal]
   public delegate void DiedPermanentlyEventHandler();
 
   private AnimatedSprite3D _sprite;
   private bool _flipSprite = false;
-  private Node2D _currentTarget = null;
-  private Area2D _grazeArea; // 擦弹区域的引用
-  private CollisionShape2D _grazeAreaShape;
+  private Node3D _currentTarget = null;
+  private Area3D _grazeArea; // 擦弹区域的引用
+  private CollisionShape3D _grazeAreaShape;
   private AnimatedSprite3D _hitPointSprite;
-  private CollisionShape2D _hitPointShape;
+  private CollisionShape3D _hitPointShape;
   private Node3D _landingIndicator;
   private bool _timeSlowPressed = false;
   private RandomNumberGenerator _rnd = new RandomNumberGenerator();
-  private Node3D _visualizer;
   private MapGenerator _mapGenerator;
-  private Area2D _interactionArea;
+  private Area3D _interactionArea;
   private readonly List<IInteractable> _nearbyInteractables = new();
   private IInteractable _closestInteractable = null;
   private float _beginningHealth;
@@ -53,11 +47,9 @@ public partial class Player : CharacterBody2D, IRewindable {
 
   // 奇物系统状态
   private bool _curioUsePressed = false;
-  public bool IsJumping { get; private set; } = false;
-  private float _jumpTimer = 0f;
   public bool IsInvincible { get; set; } = false;
-  private Timer _decoyTimer;
-  public Node2D DecoyTarget { get; private set; }
+  public Node3D DecoyTarget { get; private set; }
+  private float _decoyRemoveTimer = 0;
 
   public PlayerStats Stats => GameManager.Instance.PlayerStats;
 
@@ -86,6 +78,9 @@ public partial class Player : CharacterBody2D, IRewindable {
   [Export]
   public float AutoRewindOnHitDuration { get; set; } = 3.0f;  // 被击中时自动回溯的时长
 
+  [Export]
+  public float Gravity { get; set; } = 6.4f;
+
   [ExportGroup("Camera")]
   [Export]
   private Vector3 _normalCameraPosition = new Vector3(0, 2.5f, 3.0f);
@@ -100,41 +95,26 @@ public partial class Player : CharacterBody2D, IRewindable {
   [Export]
   public PackedScene DeathRingEffectScene { get; set; }
 
-  [ExportGroup("Sound Effects")]
-  [Export]
-  public AudioStream GrazeSound { get; set; }
-  [Export]
-  public AudioStream DeathSound { get; set; }
-  [Export]
-  public AudioStream SkillAvailableSound { get; set; }
-  [Export]
-  public AudioStream CurioSwitchSound { get; set; }
-  [Export]
-  public AudioStream ShootSound { get; set; }
-  [Export]
-  public AudioStream ReloadCompleteSound { get; set; }
-
   public float ShootTimer { get; set; } = 0.0f;
   public int CurrentAmmo { get; private set; }
   public bool IsReloading { get; private set; } = false;
   public float TimeToReloaded { get; private set; } // 当前还有多长时间换完子弹
-  public Vector2 SpawnPosition { get; set; }
+  public Vector3 SpawnPosition { get; set; }
   public bool IsPermanentlyDead = false;
 
   public ulong InstanceId => GetInstanceId();
 
   public override void _Ready() {
-    _grazeArea = GetNode<Area2D>("GrazeArea");
-    _grazeAreaShape = _grazeArea.GetNode<CollisionShape2D>("CollisionShape2D");
-    _visualizer = GetNode<Node3D>("Visualizer");
-    _sprite = _visualizer.GetNode<AnimatedSprite3D>("AnimatedSprite3D");
-    _hitPointSprite = _visualizer.GetNode<AnimatedSprite3D>("HitPointSprite");
-    _hitPointShape = GetNode<CollisionShape2D>("HitArea/CollisionShape2D");
+    _grazeArea = GetNode<Area3D>("GrazeArea");
+    _grazeAreaShape = _grazeArea.GetNode<CollisionShape3D>("CollisionShape3D");
+    _sprite = GetNode<AnimatedSprite3D>("AnimatedSprite3D");
+    _hitPointSprite = GetNode<AnimatedSprite3D>("HitPointSprite");
+    _hitPointShape = GetNode<CollisionShape3D>("HitArea/CollisionShape3D");
     _landingIndicator = GetNode<Node3D>("LandingIndicator");
-    _interactionArea = GetNode<Area2D>("InteractionArea");
+    _interactionArea = GetNode<Area3D>("InteractionArea");
     _interactionArea.AreaEntered += OnInteractionAreaEntered;
     _interactionArea.AreaExited += OnInteractionAreaExited;
-    _camera = _visualizer.GetNode<Camera3D>("Camera3D");
+    _camera = GetNode<Camera3D>("Camera3D");
 
     _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
     if (_mapGenerator == null) {
@@ -172,16 +152,12 @@ public partial class Player : CharacterBody2D, IRewindable {
 
     // 每帧更新动态属性
     Stats.RecalculateStats(GameManager.Instance.GetCurrentAndPendingUpgrades(), Health);
-    (_grazeAreaShape.Shape as CircleShape2D).Radius = Stats.GrazeRadius;
+    (_grazeAreaShape.Shape as SphereShape3D).Radius = Stats.GrazeRadius;
 
     UpdateInteractionTarget();
     HandleInteractionInput();
     HandleCurioInput(true);
     UpdateCurios(scaledDelta);
-
-    if (IsJumping) {
-      UpdateJump(scaledDelta);
-    }
 
     if (IsReloading) {
       TimeToReloaded -= (float) delta * TimeManager.Instance.TimeScale; // 换弹时间不受时间缩放影响
@@ -197,7 +173,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
 
     FindAndAimTarget();
-    HandleMovement();
+    HandleMovement(scaledDelta);
 
     if (Input.IsActionPressed("shoot")) {
       if (!IsReloading && CurrentAmmo <= 0) {
@@ -209,6 +185,13 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
 
     ShootTimer -= (float) delta;
+
+    if (IsInstanceValid(DecoyTarget)) {
+      _decoyRemoveTimer -= scaledDelta;
+      if (_decoyRemoveTimer <= 0) {
+        RemoveDecoyTarget();
+      }
+    }
 
     UpdateVisualizer();
   }
@@ -222,7 +205,7 @@ public partial class Player : CharacterBody2D, IRewindable {
       if (curio.CurrentCooldown > 0) {
         curio.CurrentCooldown -= scaledDelta;
         if (curio.CurrentCooldown <= 0 && curio == gm.GetCurrentActiveCurio()) {
-          SoundManager.Instance.PlaySoundEffect(SkillAvailableSound, cooldown: 0.1f);
+          SoundManager.Instance.Play(SoundEffect.PlayerSkillAvailable);
         }
       }
       // 更新被动效果
@@ -249,7 +232,7 @@ public partial class Player : CharacterBody2D, IRewindable {
         _curioUsePressed = false;
       }
       if (gm.SwitchToNextActiveCurio()) {
-        SoundManager.Instance.PlaySoundEffect(CurioSwitchSound, cooldown: 0.05f);
+        SoundManager.Instance.Play(SoundEffect.CurioSwitch);
       }
     }
 
@@ -276,20 +259,9 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   private void UpdateVisualizer() {
-    float jumpHeight = 0f;
-    if (IsJumping) {
-      jumpHeight = Mathf.Sin(_jumpTimer * Mathf.Pi / JUMP_TIME) * MAX_JUMP_HEIGHT;
-    }
-
-    _visualizer.GlobalPosition = new Vector3(
-      GlobalPosition.X * GameConstants.WorldScaleFactor,
-      GameConstants.GamePlaneY + jumpHeight * GameConstants.WorldScaleFactor,
-      GlobalPosition.Y * GameConstants.WorldScaleFactor
-    );
-
     _hitPointSprite.Visible = _timeSlowPressed;
-    _landingIndicator.Visible = IsJumping;
-    _landingIndicator.GlobalPosition = _visualizer.GlobalPosition with { Y = GameConstants.GamePlaneY };
+    _landingIndicator.Visible = GlobalPosition.Y > 0;
+    _landingIndicator.GlobalPosition = GlobalPosition with { Y = 0 };
 
     _sprite.FlipH = _flipSprite;
     _sprite.Position = _sprite.Position with { X = SpriteBasePositionX * (_flipSprite ? -1 : 1) };
@@ -302,41 +274,39 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   private void FinishReload() {
-    SoundManager.Instance.PlaySoundEffect(ReloadCompleteSound, cooldown: 0.2f);
+    SoundManager.Instance.Play(SoundEffect.PlayerReloadComplete);
     IsReloading = false;
     CurrentAmmo = Stats.MaxAmmoInt;
     TimeToReloaded = 0.0f;
   }
 
-  private void OnGrazeAreaBodyEntered(Node2D body) {
+  private void OnGrazeAreaBodyEntered(Node3D body) {
     if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
       bullet.OnGrazeEnter();
       if (bullet.WasGrazed) return;
       bullet.WasGrazed = true;
 
-      if (GrazeSound != null) {
-        SoundManager.Instance.PlaySoundEffect(GrazeSound, cooldown: 0.05f);
-      }
+      SoundManager.Instance.Play(SoundEffect.Graze);
 
       var shard = GrazeTimeShard.Instantiate<TimeShard>();
       shard.TimeBonus = Stats.GrazeTimeBonus;
-      shard.SpawnCenter = bullet.GlobalPosition;
+      shard.StartPosition = bullet.GlobalPosition;
       shard.MapGeneratorRef = _mapGenerator;
       GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, shard);
     }
   }
 
-  private void OnGrazeAreaBodyExited(Node2D body) {
+  private void OnGrazeAreaBodyExited(Node3D body) {
     if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
       bullet.OnGrazeExit();
     }
   }
 
-  private void OnHitAreaBodyEntered(Node2D body) {
-    // 玩家在回溯预览、跳跃、金身期间是无敌的
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding || IsJumping || IsInvincible) return;
+  private void OnHitAreaBodyEntered(Node3D body) {
+    // 玩家在回溯预览、金身期间是无敌的
+    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding || IsInvincible) return;
 
     if (body.IsInGroup("enemies")) {
       GD.Print("Player hit by enemy");
@@ -364,7 +334,7 @@ public partial class Player : CharacterBody2D, IRewindable {
 
     // 遍历所有在范围内的可交互对象
     foreach (var interactable in _nearbyInteractables) {
-      if (interactable is not Node2D node) continue;
+      if (interactable is not Node3D node) continue;
 
       float distanceSq = this.GlobalPosition.DistanceSquaredTo(node.GlobalPosition);
       if (distanceSq < minDistanceSq) {
@@ -385,7 +355,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   // 处理进入交互范围的信号
-  private void OnInteractionAreaEntered(Area2D area) {
+  private void OnInteractionAreaEntered(Area3D area) {
     if (area is IInteractable interactable) {
       if (!_nearbyInteractables.Contains(interactable)) {
         _nearbyInteractables.Add(interactable);
@@ -394,7 +364,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   }
 
   // 处理离开交互范围的信号
-  private void OnInteractionAreaExited(Area2D area) {
+  private void OnInteractionAreaExited(Area3D area) {
     if (area is IInteractable interactable) {
       // 如果离开的是当前高亮的目标，取消高亮
       if (interactable == _closestInteractable) {
@@ -408,7 +378,11 @@ public partial class Player : CharacterBody2D, IRewindable {
   private void FindAndAimTarget() {
     _currentTarget = null;
     float closestDistance = float.MaxValue;
-    var enemies = GetTree().GetNodesInGroup("enemies");
+
+    var tree = GetTree();
+    if (tree == null) return;
+
+    var enemies = tree.GetNodesInGroup("enemies");
     foreach (BaseEnemy enemy in enemies) {
       if (enemy.IsDestroyed) {
         continue;
@@ -416,7 +390,7 @@ public partial class Player : CharacterBody2D, IRewindable {
       if (enemy.IsDestroyed) {
         continue;
       }
-      var collider = enemy.GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
+      var collider = enemy.GetNodeOrNull<CollisionShape3D>("CollisionShape3D");
       if (collider == null || collider.Disabled) {
         continue;
       }
@@ -434,40 +408,51 @@ public partial class Player : CharacterBody2D, IRewindable {
     --CurrentAmmo;
     ShootTimer = Stats.ShootCooldown;
 
-    SoundManager.Instance.PlaySoundEffect(ShootSound, cooldown: 0.05f, volumeDb: -5f);
+    SoundManager.Instance.Play(SoundEffect.PlayerShoot);
 
-    // 实例化 SimpleBullet
     var bullet = BulletScene.Instantiate<SimpleBullet>();
-    bullet.IsPlayerBullet = true; // 明确设置这是玩家子弹
+    bullet.IsPlayerBullet = true;
     bullet.Damage = Stats.BulletDamage;
-    bullet.GlobalPosition = GlobalPosition;
 
     var randomRotationSigma = _timeSlowPressed ? Stats.BulletSpreadSlow : Stats.BulletSpreadNormal;
     var randomRotation = _rnd.Randfn(0, randomRotationSigma);
 
-    Vector2 direction;
+    Vector3 direction;
     if (_currentTarget != null) {
-      direction = (_currentTarget.GlobalPosition - GlobalPosition).Normalized().Rotated(randomRotation);
+      direction = (_currentTarget.GlobalPosition - GlobalPosition).Normalized().Rotated(Vector3.Up, randomRotation);
     } else {
-      direction = Vector2.Right.Rotated(randomRotation);
+      direction = Vector3.Right.Rotated(Vector3.Up, randomRotation);
     }
 
-    // 设置初始速度和旋转
-    bullet.Velocity = direction * bullet.InitialSpeed;
-    bullet.GlobalRotation = direction.Angle();
+    var startPos = GlobalPosition;
+    bullet.UpdateFunc = (time) => {
+      SimpleBullet.UpdateState state = new();
+      state.position = startPos + direction * (time * 10f);
+      state.rotation = Basis.LookingAt(direction).GetEuler();
+      state.modulate = new Color(1, 1, 1, 0.5f);
+      return state;
+    };
 
     GameRootProvider.CurrentGameRoot.AddChild(bullet);
   }
 
-  private void HandleMovement() {
+  private void HandleMovement(float scaledDelta) {
     if (IsInvincible) {
-      Velocity = Vector2.Zero;
+      Velocity = Vector3.Zero;
       MoveAndSlide();
       return;
     }
     Vector2 direction = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
-    Velocity = direction * Stats.MovementSpeed * (_timeSlowPressed ? Stats.SlowMovementSpeedScale : 1f);
+    var velocity2D = direction * Stats.MovementSpeed * (_timeSlowPressed ? Stats.SlowMovementSpeedScale : 1f);
+
+    Velocity = new Vector3(velocity2D.X, Velocity.Y, velocity2D.Y);
     MoveAndSlide();
+    if (GlobalPosition.Y < 0) {
+      GlobalPosition = GlobalPosition with { Y = 0 };
+      Velocity = Velocity with { Y = 0 };
+    } else {
+      Velocity = Velocity with { Y = Velocity.Y - Gravity * scaledDelta };
+    }
 
     if (direction.X < 0) {
       _flipSprite = true;
@@ -478,18 +463,16 @@ public partial class Player : CharacterBody2D, IRewindable {
 
   public void ResetState() {
     GlobalPosition = SpawnPosition;
-    Velocity = Vector2.Zero;
+    Velocity = Vector3.Zero;
     Health = _beginningHealth;
     GameManager.Instance.TimeBond = _beginningTimeBond;
     Stats.RecalculateStats(GameManager.Instance.GetCurrentAndPendingUpgrades(), Health);
-    (_grazeAreaShape.Shape as CircleShape2D).Radius = Stats.GrazeRadius;
+    (_grazeAreaShape.Shape as SphereShape3D).Radius = Stats.GrazeRadius;
     IsReloading = false;
     TimeToReloaded = 0.0f;
     ShootTimer = 0.0f;
     CurrentAmmo = Stats.MaxAmmoInt;
     IsPermanentlyDead = false;
-    IsJumping = false;
-    _jumpTimer = 0f;
     IsInvincible = false;
     foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
       curio.CurrentCooldown = 0f;
@@ -502,9 +485,7 @@ public partial class Player : CharacterBody2D, IRewindable {
   public void Die() {
     if (IsPermanentlyDead) return;
 
-    if (DeathSound != null) {
-      SoundManager.Instance.PlaySoundEffect(DeathSound, cooldown: 0.2f);
-    }
+    SoundManager.Instance.Play(SoundEffect.PlayerDeath);
 
     if (DeathRingEffectScene != null) {
       var effect = DeathRingEffectScene.Instantiate<InvertRingEffect>();
@@ -524,50 +505,25 @@ public partial class Player : CharacterBody2D, IRewindable {
     // 如果回溯成功，玩家将「复活」到几秒前的状态，游戏继续
   }
 
-  public void Jump() {
-    if (IsJumping) return;
-    IsJumping = true;
-    _jumpTimer = 0f;
-    _hitPointShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
-  }
-
-  private void UpdateJump(float delta) {
-    _jumpTimer += delta;
-    if (_jumpTimer >= JUMP_TIME) {
-      IsJumping = false;
-      _jumpTimer = 0f;
-      _hitPointShape.SetDeferred(CollisionShape2D.PropertyName.Disabled, false);
-    }
-  }
-
   public void CreateDecoyTarget(float duration) {
     if (DecoyTargetScene == null || IsInstanceValid(DecoyTarget)) {
       return;
     }
 
-    DecoyTarget = DecoyTargetScene.Instantiate<Node2D>();
+    DecoyTarget = DecoyTargetScene.Instantiate<Node3D>();
     DecoyTarget.GlobalPosition = this.GlobalPosition;
     GameRootProvider.CurrentGameRoot.AddChild(DecoyTarget);
 
     // 创建一个计时器来移除诱饵
-    _decoyTimer = new Timer();
-    _decoyTimer.WaitTime = duration;
-    _decoyTimer.OneShot = true;
-    _decoyTimer.Timeout += RemoveDecoyTarget;
-    AddChild(_decoyTimer);
-    _decoyTimer.Start();
+    _decoyRemoveTimer = duration;
   }
 
   public void RemoveDecoyTarget() {
     if (IsInstanceValid(DecoyTarget)) {
       DecoyTarget.QueueFree();
-      DecoyTarget = null;
     }
-    if (IsInstanceValid(_decoyTimer)) {
-      _decoyTimer.Stop();
-      _decoyTimer.QueueFree();
-      _decoyTimer = null;
-    }
+    DecoyTarget = null;
+    _decoyRemoveTimer = 0;
   }
 
   public RewindState CaptureState() {
@@ -584,13 +540,11 @@ public partial class Player : CharacterBody2D, IRewindable {
       IsReloading = this.IsReloading,
       TimeToReloaded = this.TimeToReloaded,
       ShootTimer = this.ShootTimer,
-      IsJumping = this.IsJumping,
-      JumpTimer = this._jumpTimer,
       IsInvincible = this.IsInvincible,
       CurioCooldowns = curioCooldowns,
       DecoyActive = IsInstanceValid(DecoyTarget),
-      DecoyPosition = IsInstanceValid(DecoyTarget) ? DecoyTarget.GlobalPosition : Vector2.Zero,
-      DecoyTimerLeft = IsInstanceValid(_decoyTimer) ? (float) _decoyTimer.TimeLeft : 0f,
+      DecoyPosition = IsInstanceValid(DecoyTarget) ? DecoyTarget.GlobalPosition : Vector3.Zero,
+      DecoyRemoveTimer = _decoyRemoveTimer,
       // Health 和 TimeBond 仅用于阶段重启，回溯系统不会使用它们
       Health = this.Health,
       TimeBond = GameManager.Instance.TimeBond
@@ -607,10 +561,7 @@ public partial class Player : CharacterBody2D, IRewindable {
     this.IsReloading = ps.IsReloading;
     this.TimeToReloaded = ps.TimeToReloaded;
     this.ShootTimer = ps.ShootTimer;
-    this.IsJumping = ps.IsJumping;
-    this._jumpTimer = ps.JumpTimer;
     this.IsInvincible = ps.IsInvincible;
-    _hitPointShape.Disabled = this.IsJumping;
     foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
       if (ps.CurioCooldowns.TryGetValue(curio.Type, out var cd)) {
         curio.CurrentCooldown = cd;
@@ -618,18 +569,16 @@ public partial class Player : CharacterBody2D, IRewindable {
     }
 
     // --- 诱饵状态恢复 ---
+    _decoyRemoveTimer = ps.DecoyRemoveTimer;
+
     bool shouldBeActive = ps.DecoyActive;
     bool isActive = IsInstanceValid(DecoyTarget);
 
     if (shouldBeActive && !isActive) {
       // 诱饵需要被创建
       if (DecoyTargetScene != null) {
-        DecoyTarget = DecoyTargetScene.Instantiate<Node2D>();
+        DecoyTarget = DecoyTargetScene.Instantiate<Node3D>();
         GameRootProvider.CurrentGameRoot.AddChild(DecoyTarget);
-        _decoyTimer = new Timer();
-        _decoyTimer.OneShot = true;
-        _decoyTimer.Timeout += RemoveDecoyTarget;
-        AddChild(_decoyTimer);
       }
     } else if (!shouldBeActive && isActive) {
       // 诱饵需要被移除
@@ -639,7 +588,6 @@ public partial class Player : CharacterBody2D, IRewindable {
     // 如果诱饵应该激活（并且现在是），更新其状态
     if (shouldBeActive && IsInstanceValid(DecoyTarget)) {
       DecoyTarget.GlobalPosition = ps.DecoyPosition;
-      _decoyTimer.Start(ps.DecoyTimerLeft);
     }
 
     // 注意：回溯系统不应该恢复 Health 和 TimeBond，

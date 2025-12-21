@@ -17,11 +17,7 @@ public partial class InvertRingEffect : CanvasLayer {
     }
   }
 
-  /// <summary>
-  /// 启动扩散环效果．
-  /// </summary>
-  /// <param name="worldPosition">效果在 2D 游戏世界中的中心点．</param>
-  public void StartEffect(Vector2 worldPosition) {
+  public void StartEffect(Vector3 worldPosition) {
     float duration = 0.5f;
     float thickness = 0.1f;
 
@@ -45,15 +41,8 @@ public partial class InvertRingEffect : CanvasLayer {
       return;
     }
 
-    // 将 2D 世界坐标转换为 3D 空间中的游戏平面坐标
-    var worldPosition3D = new Vector3(
-        worldPosition.X * GameConstants.WorldScaleFactor,
-        GameConstants.GamePlaneY,
-        worldPosition.Y * GameConstants.WorldScaleFactor
-    );
-
     // 将 3D 世界坐标投影到 2D 屏幕坐标
-    Vector2 screenPoint = camera.UnprojectPosition(worldPosition3D);
+    Vector2 screenPoint = camera.UnprojectPosition(worldPosition);
     // 将屏幕坐标转换为 UV 坐标 (0-1范围)
     Vector2 uv = screenPoint / viewportSize;
 

@@ -9,7 +9,7 @@ public partial class Transmuter : Node {
   private MapGenerator _mapGenerator;
   private RewindManager _rewindManager;
   private PauseMenu _pauseMenu;
-  private Vector2 _playerSpawnPosition;
+  private Vector3 _playerSpawnPosition;
   private Portal _spawnedPortal;
   private TransmuterDevice _transmuterDevice;
 
@@ -60,7 +60,7 @@ public partial class Transmuter : Node {
     }
     _transmuterDevice = TransmuterDeviceScene.Instantiate<TransmuterDevice>();
     Vector2I centerCell = new Vector2I(_mapGenerator.MapWidth / 2 - 4, _mapGenerator.MapHeight / 2);
-    _transmuterDevice.GlobalPosition = _mapGenerator.MapToWorld(centerCell);
+    _transmuterDevice.Position = _mapGenerator.MapToWorld(centerCell);
     _transmuterDevice.TransmuterMenuScene = TransmuterMenuScene;
     _transmuterDevice.UpgradeSelectionMenuScene = UpgradeSelectionMenuScene;
     _transmuterDevice.LevelSeed = _levelSeed;
@@ -74,7 +74,7 @@ public partial class Transmuter : Node {
     }
     Vector2I portalCell = new Vector2I(_mapGenerator.MapWidth / 2 + 4, _mapGenerator.MapHeight / 2);
     _spawnedPortal = PortalScene.Instantiate<Portal>();
-    _spawnedPortal.GlobalPosition = _mapGenerator.MapToWorld(portalCell);
+    _spawnedPortal.Position = _mapGenerator.MapToWorld(portalCell);
     _spawnedPortal.LevelCompleted += OnLevelCompleted;
     AddChild(_spawnedPortal);
   }

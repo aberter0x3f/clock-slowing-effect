@@ -51,14 +51,14 @@ public partial class Boss : BaseEnemy {
   private BasePhase _activePhaseInstance;
   private float _restTimerLeft;
   private PlayerState _playerPhaseStartState;
-  private CollisionShape2D _collisionShape;
-  private Vector2 _startPosition;
+  private CollisionShape3D _collisionShape;
+  private Vector3 _startPosition;
   private Godot.Collections.Array<PackedScene> _activePhaseSet;
 
   public override void _Ready() {
     base._Ready();
     _startPosition = GlobalPosition;
-    _collisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
+    _collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
     _restTimerLeft = RestDuration / 2; // 首次休息时间
 
     SetCollisionEnabled(false);
@@ -96,7 +96,11 @@ public partial class Boss : BaseEnemy {
       }
     }
 
-    UpdateVisualizer();
+    if (InternalState == BossInternalState.Fighting) {
+      float phaseEffectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, _activePhaseInstance.TimeScaleSensitivity);
+      var phaseScaledDelta = (float) delta * phaseEffectiveTimeScale;
+      _activePhaseInstance.UpdatePhase(phaseScaledDelta, phaseEffectiveTimeScale);
+    }
   }
 
   /// <summary>
@@ -149,7 +153,7 @@ public partial class Boss : BaseEnemy {
 
     GD.Print($"Starting Boss Phase {_currentPhaseIndex}.");
 
-    SoundManager.Instance.PlaySoundEffect(PowerUpSound, cooldown: 0.2f, volumeDb: 5f);
+    SoundManager.Instance.Play(PowerUpSound, cooldown: 0.2f, volumeDb: 5f);
 
     // 启用碰撞，让玩家可以攻击
     SetCollisionEnabled(true);
@@ -159,7 +163,7 @@ public partial class Boss : BaseEnemy {
     _activePhaseInstance = phaseScene.Instantiate<BasePhase>();
     AddChild(_activePhaseInstance);
     _activePhaseInstance.PhaseCompleted += OnPhaseEnded;
-    _activePhaseInstance.StartPhase(this);
+    _activePhaseInstance.PhaseStart(this);
 
     // 重置回溯历史，防止跨阶段回溯引起状态混乱
     RewindManager.Instance.ResetHistory();
@@ -175,7 +179,7 @@ public partial class Boss : BaseEnemy {
   private void OnPhaseEnded() {
     GD.Print($"Boss Phase {_currentPhaseIndex} completed!");
 
-    SoundManager.Instance.PlaySoundEffect(DeathSound, cooldown: 0.2f, volumeDb: 5f);
+    SoundManager.Instance.Play(SoundEffect.BossDeath);
 
     CallDeferred(nameof(SetCollisionEnabled), false);
     ClearAllBullets();

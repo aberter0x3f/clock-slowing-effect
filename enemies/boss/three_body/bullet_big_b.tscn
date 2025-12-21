@@ -3,23 +3,19 @@
 [ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_dm2jo"]
 [ext_resource type="Texture2D" uid="uid://da45jlnn5x48c" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7B Free.png" id="1_yk64n"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_fkxxp"]
-radius = 20.0
+[sub_resource type="SphereShape3D" id="SphereShape3D_fkxxp"]
+radius = 0.2
 
-[node name="EnemyBullet" type="Area2D" groups=["bullets"]]
-z_index = 3
+[node name="EnemyBullet" type="Area3D" groups=["bullets"]]
 collision_layer = 16
 collision_mask = 4
 script = ExtResource("1_dm2jo")
-InitialSpeed = 200.0
 MaxLifetime = 1000.0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_fkxxp")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_fkxxp")
 
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="Sprite" type="Sprite3D" parent="Visualizer"]
+[node name="Sprite" type="Sprite3D" parent="."]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 sorting_offset = 80.0
 billboard = 1

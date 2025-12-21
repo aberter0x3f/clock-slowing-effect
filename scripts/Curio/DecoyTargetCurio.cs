@@ -5,7 +5,7 @@ namespace Curio;
 [GlobalClass]
 public partial class DecoyTargetCurio : BaseCurio {
   private const float DECOY_DURATION = 5.0f;
-  private Node2D _decoyInstance;
+  private Node _decoyInstance;
 
   public override CurioType Type => CurioType.DecoyTarget;
   public override string Name => "Decoy Target";
@@ -16,11 +16,11 @@ public partial class DecoyTargetCurio : BaseCurio {
 
   public override void OnUsePressed(Player player) {
     if (CurrentCooldown > 0 || IsInstanceValid(_decoyInstance)) {
-      SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
+      SoundManager.Instance.Play(SoundEffect.CurioWrong);
       return;
     }
 
-    SoundManager.Instance.PlaySoundEffect(SkillSound, cooldown: 0.1f);
+    SoundManager.Instance.Play(SoundEffect.CurioUse);
     player.CreateDecoyTarget(DECOY_DURATION);
     CurrentCooldown = Cooldown;
     if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;

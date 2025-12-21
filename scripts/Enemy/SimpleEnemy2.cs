@@ -1,16 +1,9 @@
 using Bullet;
 using Godot;
-using Rewind;
 
 namespace Enemy;
 
-public class SimpleEnemy2State : BaseEnemyState {
-  public float ShootTimer;
-}
-
-public partial class SimpleEnemy2 : BaseEnemy {
-  private float _shootTimer;
-
+public partial class SimpleEnemy2 : SimpleEnemy {
   [Export]
   public PackedScene BulletScene { get; set; }
   [Export]
@@ -20,40 +13,11 @@ public partial class SimpleEnemy2 : BaseEnemy {
   [Export]
   public float SafeAngle { get; set; } = 0.25f;
 
-  private RandomWalkComponent _randomWalkComponent;
-
-  public override void _Ready() {
-    base._Ready();
-    _randomWalkComponent = GetNode<RandomWalkComponent>("RandomWalkComponent");
-    _shootTimer = ShootInterval;
-  }
-
-  public override void _Process(double delta) {
-    base._Process(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-
-    _shootTimer -= TimeManager.Instance.TimeScale * (float) delta;
-    if (_shootTimer <= 0) {
-      Shoot();
-      _shootTimer = ShootInterval;
-    }
-
-    UpdateVisualizer();
-  }
-
-  public override void _PhysicsProcess(double delta) {
-    base._PhysicsProcess(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-
-    Velocity = _randomWalkComponent.TargetVelocity * TimeManager.Instance.TimeScale;
-    MoveAndSlide();
-  }
-
-  private void Shoot() {
+  public override (float, bool) Shoot() {
     var target = PlayerNode;
-    if (target == null || !IsInstanceValid(target)) return;
+    if (target == null || !IsInstanceValid(target)) return (0.1f, true);
 
-    PlayAttackSound();
+    SoundManager.Instance.Play(SoundEffect.FireBig);
 
     var baseDirection = (target.GlobalPosition - GlobalPosition).Normalized();
     for (int i = 0; i < ShootCount; ++i) {
@@ -64,30 +28,17 @@ public partial class SimpleEnemy2 : BaseEnemy {
       if (float.Abs(rotationAngle) < SafeAngle) {
         continue;
       }
-      var dir = baseDirection.Rotated(rotationAngle);
+      var direction = baseDirection.Rotated(Vector3.Up, rotationAngle);
+      var startPos = GlobalPosition;
       var bullet = BulletScene.Instantiate<SimpleBullet>();
-      bullet.GlobalPosition = GlobalPosition;
-      bullet.Velocity = dir * bullet.InitialSpeed;
-      bullet.Rotation = dir.Angle();
+      bullet.UpdateFunc = (time) => {
+        SimpleBullet.UpdateState state = new();
+        state.position = startPos + direction * (time * 2.5f);
+        return state;
+      };
       GameRootProvider.CurrentGameRoot.AddChild(bullet);
     }
-  }
 
-  public override RewindState CaptureState() {
-    var baseState = (BaseEnemyState) base.CaptureState();
-    return new SimpleEnemy2State {
-      GlobalPosition = baseState.GlobalPosition,
-      Velocity = baseState.Velocity,
-      Health = baseState.Health,
-      HitTimerLeft = baseState.HitTimerLeft,
-      IsInHitState = baseState.IsInHitState,
-      ShootTimer = this._shootTimer
-    };
-  }
-
-  public override void RestoreState(RewindState state) {
-    base.RestoreState(state);
-    if (state is not SimpleEnemy2State ses) return;
-    this._shootTimer = ses.ShootTimer;
+    return (ShootInterval, true);
   }
 }

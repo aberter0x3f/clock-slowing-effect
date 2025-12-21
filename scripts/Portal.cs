@@ -3,7 +3,7 @@ using Rewind;
 
 public class PortalState : RewindState { }
 
-public partial class Portal : RewindableArea2D, IInteractable {
+public partial class Portal : RewindableArea3D, IInteractable {
   [Signal]
   public delegate void LevelCompletedEventHandler(HexMap.ClearScore score);
 
@@ -12,24 +12,16 @@ public partial class Portal : RewindableArea2D, IInteractable {
   public AudioStream EnterSound { get; set; }
 
   private Label3D _label;
-  private Node3D _visualizer;
 
   public override void _Ready() {
     base._Ready();
-    _visualizer = GetNode<Node3D>("Visualizer");
-    _label = _visualizer.GetNode<Label3D>("Label3D");
+    _label = GetNode<Label3D>("Label3D");
 
-    _visualizer.GlobalPosition = new Vector3(
-      GlobalPosition.X * GameConstants.WorldScaleFactor,
-      GameConstants.GamePlaneY + 0.66f,
-      GlobalPosition.Y * GameConstants.WorldScaleFactor
-    );
-
-    _visualizer.GetNode<AnimatedSprite3D>("AnimatedSprite3D").Play();
+    GetNode<AnimatedSprite3D>("AnimatedSprite3D").Play();
   }
 
   public void Interact() {
-    SoundManager.Instance.PlaySoundEffect(EnterSound);
+    SoundManager.Instance.Play(EnterSound);
 
     // 根据本关表现计算得分
     var gm = GameManager.Instance;

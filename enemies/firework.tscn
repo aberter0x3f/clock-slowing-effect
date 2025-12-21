@@ -1,19 +1,16 @@
-[gd_scene load_steps=13 format=4 uid="uid://cr3bruas086hy"]
+[gd_scene load_steps=10 format=4 uid="uid://cr3bruas086hy"]
 
 [ext_resource type="Script" uid="uid://dty0xg4cntgxs" path="res://scripts/Enemy/Firework.cs" id="1_hc1he"]
-[ext_resource type="PackedScene" uid="uid://co2ju4gcsf2j3" path="res://enemies/firework/projectile_visualizer.tscn" id="2_to1ct"]
 [ext_resource type="PackedScene" uid="uid://w6ulf8nf1snd" path="res://enemies/firework/bullet.tscn" id="3_6cwcf"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_6cwcf"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_y54bg"]
-[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="5_6cwcf"]
-[ext_resource type="AudioStream" uid="uid://dhc88mnrkuak" path="res://sounds/effects/explosion_small.wav" id="6_skcn6"]
 [ext_resource type="FontFile" uid="uid://d34t13ols1dhi" path="res://fonts/DSEG14Modern-Regular.ttf" id="9_r4afa"]
 [ext_resource type="Script" uid="uid://dr23d7xks0mth" path="res://scripts/Enemy/EnemyPolyhedron.cs" id="9_rxcd7"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_skcn6"]
-radius = 20.0
+[sub_resource type="SphereShape3D" id="SphereShape3D_to1ct"]
+radius = 0.2
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_rxcd7"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_y54bg"]
 _surfaces = [{
 "aabb": AABB(-0.17320508, -0.17320508, -0.17320508, 0.34641016, 0.34641016, 0.34641016),
 "format": 34359738375,
@@ -26,20 +23,19 @@ _surfaces = [{
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rxcd7"]
 albedo_color = Color(0.8980392, 0.7529412, 0.48235294, 1)
 
-[node name="Firework" type="CharacterBody2D" groups=["enemies"]]
-z_index = 2
+[node name="Firework" type="CharacterBody3D" groups=["enemies"]]
 collision_layer = 8
 collision_mask = 21
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
 script = ExtResource("1_hc1he")
-FireworkProjectileVisualizerScene = ExtResource("2_to1ct")
-FallingBulletScene = ExtResource("3_6cwcf")
+BulletScene = ExtResource("3_6cwcf")
 TimeShardScene = ExtResource("4_y54bg")
 TimeShardCount = 5
-AttackSound = ExtResource("5_6cwcf")
-DeathSound = ExtResource("6_skcn6")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_skcn6")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_to1ct")
 
 [node name="HitTimer" type="Timer" parent="."]
 wait_time = 0.1
@@ -49,23 +45,22 @@ one_shot = true
 script = ExtResource("4_6cwcf")
 metadata/_custom_type_script = "uid://b7y3ayqdya65s"
 
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="EnemyPolyhedron" type="MeshInstance3D" parent="Visualizer"]
-mesh = SubResource("ArrayMesh_rxcd7")
+[node name="EnemyPolyhedron" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_y54bg")
+skeleton = NodePath("")
 surface_material_override/0 = SubResource("StandardMaterial3D_rxcd7")
 script = ExtResource("9_rxcd7")
 Shape = 0
 Size = 0.3
 Color = Color(0.8980392, 0.7529412, 0.48235294, 1)
 
-[node name="HealthLabel" type="Label3D" parent="Visualizer"]
+[node name="HealthLabel" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
 billboard = 1
 text = "Health"
 font = ExtResource("9_r4afa")
 
-[node name="SpotLight3D" type="SpotLight3D" parent="Visualizer"]
+[node name="SpotLight3D" type="SpotLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 4, 0)
 light_energy = 5.0
 light_volumetric_fog_energy = 5.0

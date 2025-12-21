@@ -3,25 +3,23 @@ using Rewind;
 
 namespace Enemy;
 
-// 所有敌人状态快照的基类，包含通用属性
 public class BaseEnemyState : RewindState {
-  public Vector2 GlobalPosition;
-  public Vector2 Velocity;
+  public Vector3 GlobalPosition;
+  public Vector3 Velocity;
   public float Health;
   public float HitTimerLeft;
   public bool IsInHitState;
 }
 
-public abstract partial class BaseEnemy : RewindableCharacterBody2D {
+public abstract partial class BaseEnemy : RewindableCharacterBody3D {
   private float _health;
   protected Player _player;
   protected Timer _hitTimer;
   protected Label3D _healthLabel;
-  protected Node3D _visualizer;
   protected EnemyPolyhedron _enemyPolyhedron;
   protected MapGenerator _mapGenerator;
 
-  protected Node2D PlayerNode => _player.DecoyTarget ?? _player;
+  protected Node3D PlayerNode => _player.DecoyTarget ?? _player;
 
   [Export]
   public virtual float MaxHealth { get; protected set; } = 20.0f;
@@ -32,11 +30,9 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
   [Export(PropertyHint.Range, "0, 50, 1")]
   public int TimeShardCount { get; set; } = 0; // 死亡时掉落的碎片数量
 
-  [ExportGroup("Sound Effects")]
-  [Export]
-  public AudioStream AttackSound { get; set; }
-  [Export]
-  public AudioStream DeathSound { get; set; }
+  [ExportGroup("Time")]
+  [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
+  public float TimeScaleSensitivity { get; set; } = 1.0f; // 时间缩放敏感度．0=完全忽略, 1=完全受影响．
 
   [Signal]
   public delegate void DiedEventHandler(float difficulty);
@@ -62,9 +58,7 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
   protected virtual void Die() {
     if (IsDestroyed) return; // 使用基类的 IsDestroyed 属性检查
 
-    if (DeathSound != null) {
-      SoundManager.Instance.PlaySoundEffect(DeathSound, cooldown: 0.2f, volumeDb: -5f);
-    }
+    SoundManager.Instance.Play(SoundEffect.EnemyDeath);
 
     SpawnTimeShards(TimeShardCount);
     Destroy();
@@ -76,9 +70,8 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
     _health = MaxHealth;
     _player = GetTree().Root.GetNode<Player>("GameRoot/Player");
     _hitTimer = GetNode<Timer>("HitTimer");
-    _visualizer = GetNode<Node3D>("Visualizer");
-    _enemyPolyhedron = _visualizer.GetNode<EnemyPolyhedron>("EnemyPolyhedron");
-    _healthLabel = _visualizer.GetNode<Label3D>("HealthLabel");
+    _enemyPolyhedron = GetNode<EnemyPolyhedron>("EnemyPolyhedron");
+    _healthLabel = GetNode<Label3D>("HealthLabel");
 
     // 获取并缓存地图生成器的引用，以提高性能和鲁棒性
     _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
@@ -87,18 +80,21 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
     }
 
     UpdateHealthLabel();
-    UpdateVisualizer();
+
+    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
+    UpdateEnemy(0, effectiveTimeScale);
   }
 
   public override void _Process(double delta) {
-    if (RewindManager.Instance.IsPreviewing) {
-      UpdateVisualizer();
-      return;
-    }
+    if (RewindManager.Instance.IsPreviewing) return;
     if (RewindManager.Instance.IsRewinding) return;
 
     Health -= (float) delta * TimeManager.Instance.TimeScale;
-    UpdateVisualizer();
+
+    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
+    var scaledDelta = (float) delta * effectiveTimeScale;
+
+    UpdateEnemy(scaledDelta, effectiveTimeScale);
   }
 
   public virtual void TakeDamage(float damage) {
@@ -117,13 +113,7 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
     }
   }
 
-  protected virtual void UpdateVisualizer() {
-    _visualizer.GlobalPosition = new Vector3(
-      GlobalPosition.X * GameConstants.WorldScaleFactor,
-      GameConstants.GamePlaneY,
-      GlobalPosition.Y * GameConstants.WorldScaleFactor
-    );
-  }
+  public virtual void UpdateEnemy(float scaledDelta, float effectiveTimeScale) { }
 
   /// <summary>
   /// 在敌人死亡的位置生成一堆时间碎片．
@@ -138,16 +128,12 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
       var shard = TimeShardScene.Instantiate<TimeShard>();
 
       // 在添加到场景前，设置好初始化所需的属性
-      shard.SpawnCenter = GlobalPosition;
+      shard.StartPosition = GlobalPosition;
       shard.MapGeneratorRef = _mapGenerator;
 
       // 使用 CallDeferred 将节点添加到场景树，以避免在物理帧内修改物理世界
       GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, shard);
     }
-  }
-
-  protected void PlayAttackSound() {
-    SoundManager.Instance.PlaySoundEffect(AttackSound, cooldown: 0.2f, volumeDb: -5f);
   }
 
   public override RewindState CaptureState() {
@@ -171,6 +157,5 @@ public abstract partial class BaseEnemy : RewindableCharacterBody2D {
     } else {
       _hitTimer.Stop();
     }
-    UpdateHealthLabel();
   }
 }

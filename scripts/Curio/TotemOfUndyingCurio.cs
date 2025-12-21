@@ -14,7 +14,7 @@ public partial class TotemOfUndyingCurio : BaseCurio {
   public override void OnUpdate(Player player, float scaledDelta) {
     if (player.Health <= 1.0f) {
       GD.Print("Totem of Undying triggered!");
-      SoundManager.Instance.PlaySoundEffect(SkillSound, cooldown: 0.1f);
+      SoundManager.Instance.Play(SoundEffect.CurioUse);
       player.Health = player.Stats.MaxHealth * 0.5f;
       GameManager.Instance.RemoveCurio(this, player);
     }

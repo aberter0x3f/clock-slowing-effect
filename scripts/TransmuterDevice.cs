@@ -1,9 +1,8 @@
 using Godot;
 using UI;
 
-public partial class TransmuterDevice : Area2D, IInteractable {
+public partial class TransmuterDevice : Area3D, IInteractable {
   private Label3D _label;
-  private Node3D _visualizer;
   private TransmuterMenu _transmuterMenuInstance;
   private bool _hasBeenUsed = false;
 
@@ -12,14 +11,7 @@ public partial class TransmuterDevice : Area2D, IInteractable {
   public ulong LevelSeed { get; set; }
 
   public override void _Ready() {
-    _visualizer = GetNode<Node3D>("Visualizer");
-    _label = _visualizer.GetNode<Label3D>("Label3D");
-
-    _visualizer.GlobalPosition = new Vector3(
-      GlobalPosition.X * GameConstants.WorldScaleFactor,
-      GameConstants.GamePlaneY + 0.2f,
-      GlobalPosition.Y * GameConstants.WorldScaleFactor
-    );
+    _label = GetNode<Label3D>("Label3D");
   }
 
   public void Interact() {

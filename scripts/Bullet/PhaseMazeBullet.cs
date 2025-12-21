@@ -3,93 +3,53 @@ using Rewind;
 
 namespace Bullet;
 
-public class PhaseMazeBulletState : BaseBullet3DState {
-  public float TargetZ;
+public class PhaseMazeBulletState : BaseBulletState {
+  public float CurrentY;
 }
 
-/// <summary>
-/// PhaseMaze 专用的子弹，具有根据玩家状态改变自身行为的能力．
-/// </summary>
-public partial class PhaseMazeBullet : BaseBullet3D {
-  public enum MazeBulletType {
-    Normal, // 无特殊效果
-    LowSpeedPhase, // 低速时 Z 轴上移
-    HighSpeedPhase, // 高速时 Z 轴上移
-    Graze // 擦弹时 Y 轴减速
-  }
+public partial class PhaseMazeBullet : BaseBullet {
+  public enum MazeBulletType { Normal, LowSpeedPhase, HighSpeedPhase, Graze }
 
-  [Export]
-  public MazeBulletType Type { get; set; } = MazeBulletType.Normal;
+  [Export] public MazeBulletType Type { get; set; } = MazeBulletType.Normal;
+  [Export] public float PhaseHeight { get; set; } = 0.5f;
+  [Export] public float PhaseSpeed { get; set; } = 4.0f;
 
-  [ExportGroup("Phasing")]
-  [Export]
-  public float PhaseHeight { get; set; } = 50f;
-  [Export]
-  public float PhaseSpeed { get; set; } = 400f; // Z 轴移动速度
+  public float VelocityZ { get; set; }
+  private float _currentY = 0f;
 
-  public float VelocityY { get; set; }
+  public override void UpdateBullet(float scaledDelta) {
+    GlobalPosition += Vector3.Back * VelocityZ * scaledDelta;
 
-  private float _targetZ;
-
-  protected override void UpdatePosition(float scaledDelta) {
-    RawPosition = RawPosition with { Y = RawPosition.Y + VelocityY * scaledDelta };
-  }
-
-  public override void _Process(double delta) {
-    // 基类 _Process 会处理回溯检查并调用 UpdatePosition
-    base._Process(delta);
-
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
-
-    // 处理 Z 轴相位移动
-    bool isSlowMo = Input.IsActionPressed("time_slow");
-    _targetZ = 0f; // 默认在游戏平面
+    // 2. 处理相位逻辑 (3D Y 轴)
+    float targetY = 0f;
+    bool isSlow = Input.IsActionPressed("time_slow");
 
     switch (Type) {
-      case MazeBulletType.LowSpeedPhase:
-        if (isSlowMo) {
-          _targetZ = PhaseHeight;
-        }
-        break;
-      case MazeBulletType.HighSpeedPhase:
-        if (!isSlowMo) {
-          _targetZ = PhaseHeight;
-        }
-        break;
-      case MazeBulletType.Graze:
-        if (WasGrazed) {
-          _targetZ = PhaseHeight;
-        }
-        break;
+      case MazeBulletType.LowSpeedPhase: if (isSlow) targetY = PhaseHeight; break;
+      case MazeBulletType.HighSpeedPhase: if (!isSlow) targetY = PhaseHeight; break;
+      case MazeBulletType.Graze: if (WasGrazed) targetY = PhaseHeight; break;
     }
 
-    // 平滑地移动到目标 Z 轴高度
-    if (!Mathf.IsEqualApprox(RawPosition.Z, _targetZ)) {
-      float newZ = Mathf.MoveToward(RawPosition.Z, _targetZ, PhaseSpeed * scaledDelta);
-      RawPosition = RawPosition with { Z = newZ };
-    }
+    _currentY = Mathf.MoveToward(_currentY, targetY, PhaseSpeed * scaledDelta);
+    GlobalPosition = GlobalPosition with { Y = _currentY };
   }
 
   public override RewindState CaptureState() {
-    var baseState = (BaseBullet3DState) base.CaptureState();
+    var bs = (BaseBulletState) base.CaptureState();
     return new PhaseMazeBulletState {
-      GlobalPosition = baseState.GlobalPosition,
-      GlobalRotation = baseState.GlobalRotation,
-      WasGrazed = baseState.WasGrazed,
-      Modulate = baseState.Modulate,
-      RawPosition = baseState.RawPosition,
-      TimeAlive = baseState.TimeAlive,
-      LandingIndicatorVisible = baseState.LandingIndicatorVisible,
-      LandingIndicatorScale = baseState.LandingIndicatorScale,
-      TargetZ = this._targetZ,
+      GlobalPosition = bs.GlobalPosition,
+      GlobalRotation = bs.GlobalRotation,
+      WasGrazed = bs.WasGrazed,
+      IsGrazing = bs.IsGrazing,
+      Modulate = bs.Modulate,
+      TimeAlive = bs.TimeAlive,
+      CurrentY = _currentY
     };
   }
 
   public override void RestoreState(RewindState state) {
     base.RestoreState(state);
-    if (state is not PhaseMazeBulletState pms) return;
-    this._targetZ = pms.TargetZ;
+    if (state is not PhaseMazeBulletState s) return;
+    _currentY = s.CurrentY;
   }
 }

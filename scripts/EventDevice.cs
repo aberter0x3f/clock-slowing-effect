@@ -3,12 +3,11 @@ using Event;
 using Godot;
 using UI;
 
-public partial class EventDevice : Area2D, IInteractable {
+public partial class EventDevice : Area3D, IInteractable {
   [Signal]
   public delegate void EventResolvedEventHandler();
 
   private Label3D _label;
-  private Node3D _visualizer;
   private EventMenu _eventMenuInstance;
   private bool _hasBeenUsed = false;
   private RandomNumberGenerator _rng;
@@ -20,14 +19,7 @@ public partial class EventDevice : Area2D, IInteractable {
   public ulong LevelSeed { get; set; }
 
   public override void _Ready() {
-    _visualizer = GetNode<Node3D>("Visualizer");
-    _label = _visualizer.GetNode<Label3D>("Label3D");
-
-    _visualizer.GlobalPosition = new Vector3(
-      GlobalPosition.X * GameConstants.WorldScaleFactor,
-      GameConstants.GamePlaneY + 0.2f,
-      GlobalPosition.Y * GameConstants.WorldScaleFactor
-    );
+    _label = GetNode<Label3D>("Label3D");
 
     _rng = new RandomNumberGenerator();
     _rng.Seed = LevelSeed;

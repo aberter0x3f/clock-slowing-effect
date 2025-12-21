@@ -19,7 +19,7 @@ config/icon="res://icon.svg"
 
 TimeManager="*res://scripts/TimeManager.cs"
 GameManager="*res://game_manager.tscn"
-SoundManager="*res://scripts/SoundManager.cs"
+SoundManager="*res://sound_manager.tscn"
 
 [debug]
 

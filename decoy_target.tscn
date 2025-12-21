@@ -1,14 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://boswatb52hcs"]
+[gd_scene load_steps=2 format=3 uid="uid://boswatb52hcs"]
 
-[ext_resource type="Script" uid="uid://b4bt15f42otd7" path="res://scripts/DecoyTarget.cs" id="1_8l3j2"]
 [ext_resource type="Texture2D" uid="uid://cmp5pyd2hhcou" path="res://images/target.png" id="5_tqagg"]
 
-[node name="DecoyTarget" type="Node2D"]
-script = ExtResource("1_8l3j2")
+[node name="DecoyTarget" type="Node3D"]
 
-[node name="Node3D" type="Node3D" parent="."]
-
-[node name="Sprite3D" type="Sprite3D" parent="Node3D"]
+[node name="Sprite3D" type="Sprite3D" parent="."]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 sorting_offset = 51.0
 billboard = 1

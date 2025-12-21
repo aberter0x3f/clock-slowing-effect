@@ -51,7 +51,7 @@ public partial class BossCombat : Node {
     _mapGenerator.GenerateMap();
 
     _player.DiedPermanently += OnPlayerDiedPermanently;
-    _player.SpawnPosition = new Vector2(0, 300);
+    _player.SpawnPosition = new Vector3(0, 0, 3);
     _player.GlobalPosition = _player.SpawnPosition;
 
     _levelSeed = ((ulong) GD.Randi() << 32) | (ulong) GD.Randi();
@@ -117,7 +117,7 @@ public partial class BossCombat : Node {
     if (!IsInstanceValid(_spawnedPortal)) {
       Vector2I centerCell = new Vector2I(_mapGenerator.MapWidth / 2, _mapGenerator.MapHeight / 2);
       _spawnedPortal = PortalScene.Instantiate<Portal>();
-      _spawnedPortal.GlobalPosition = _mapGenerator.MapToWorld(centerCell);
+      _spawnedPortal.Position = _mapGenerator.MapToWorld(centerCell);
       _spawnedPortal.LevelCompleted += OnLevelCompleted;
       GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, _spawnedPortal);
     }

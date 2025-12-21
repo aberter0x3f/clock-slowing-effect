@@ -4,131 +4,82 @@ using Rewind;
 
 namespace Enemy;
 
-public class SimpleEnemy3State : BaseEnemyState {
-  public bool IsAttacking;
-  public float ShootTimer;
-  public float AttackTimer;
+public class SimpleEnemy3State : SimpleEnemyState {
   public int AttackOuterLoopCounter;
   public Vector2 AttackBaseDirection;
 }
 
-public partial class SimpleEnemy3 : BaseEnemy {
-  // 攻击状态机
-  private float _attackTimer;
+public partial class SimpleEnemy3 : SimpleEnemy {
+  [Export] public PackedScene BulletScene { get; set; }
+  [Export] public float ShootInterval { get; set; } = 3f;
+
   private int _attackOuterLoopCounter;
   private Vector2 _attackBaseDirection;
 
-  [Export]
-  public PackedScene BulletScene { get; set; }
-
-  [Export]
-  public float ShootInterval { get; set; } = 4f;
-
-  private RandomWalkComponent _randomWalkComponent;
-  private bool _isAttacking = false;
-  private float _shootTimer;
-
-  public override void _Ready() {
-    base._Ready();
-    _randomWalkComponent = GetNode<RandomWalkComponent>("RandomWalkComponent");
-    _shootTimer = ShootInterval;
-  }
-
-  public override void _Process(double delta) {
-    base._Process(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
-
-    if (!_isAttacking) {
-      _shootTimer -= scaledDelta;
-      if (_shootTimer <= 0) {
-        StartAttackSequence();
-        _shootTimer = ShootInterval;
-      }
-    } else {
-      HandleAttackState(scaledDelta);
-    }
-    UpdateVisualizer();
-  }
-
-  public override void _PhysicsProcess(double delta) {
-    base._PhysicsProcess(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-
-    if (_isAttacking) {
-      Velocity = Vector2.Zero;
-    } else {
-      Velocity = _randomWalkComponent.TargetVelocity * TimeManager.Instance.TimeScale;
-      MoveAndSlide();
-    }
-  }
-
-  private void StartAttackSequence() {
-    _isAttacking = true;
-    _attackOuterLoopCounter = 1;
-    _attackTimer = 0; // 立即开始
+  public override (float nextDelay, bool canWalk) Shoot() {
     var target = PlayerNode;
-    if (target == null || !IsInstanceValid(target)) {
-      _isAttacking = false;
-      return;
-    }
-    _attackBaseDirection = (target.GlobalPosition - GlobalPosition).Normalized();
-    PlayAttackSound();
-  }
+    if (target == null || !IsInstanceValid(target)) return (0.1f, true);
 
-  private void HandleAttackState(float scaledDelta) {
-    _attackTimer -= scaledDelta;
-    if (_attackTimer > 0) return;
-
-    // 检查攻击是否完成
-    if (_attackOuterLoopCounter > 10) {
-      _isAttacking = false;
-      return;
+    if (_attackOuterLoopCounter == 1) {
+      var dir = (target.GlobalPosition - GlobalPosition);
+      _attackBaseDirection = new Vector2(dir.X, dir.Z).Normalized();
+      SoundManager.Instance.Play(SoundEffect.FireBig);
+    } else {
+      SoundManager.Instance.Play(SoundEffect.FireSmall);
     }
 
-    const float len = 10f;
+    const float len = 0.1f;
     int i = _attackOuterLoopCounter;
+    for (int k = 0; k < 6; ++k) {
+      var direction2d = _attackBaseDirection.Rotated(Mathf.Tau * k / 6);
+      var direction = new Vector3(direction2d.X, 0, direction2d.Y);
+      var unit = direction.Rotated(Vector3.Up, Mathf.Pi / 2);
+      var startPosition = GlobalPosition - unit * ((i - 1) * len / 2);
 
-    for (int j = 0; j < i; ++j) {
-      for (int k = 0; k < 6; ++k) {
-        var direction = _attackBaseDirection.Rotated(Mathf.Tau * k / 6);
-        var unit = direction.Rotated(Mathf.Pi / 2);
-        var startPosition = GlobalPosition - unit * ((i - 1) * len / 2);
+      for (int j = 0; j < i; ++j) {
         var position = startPosition + unit * (j * len);
         var bullet = BulletScene.Instantiate<SimpleBullet>();
-        bullet.GlobalPosition = position;
-        bullet.Rotation = direction.Angle();
+        bullet.UpdateFunc = (time) => {
+          SimpleBullet.UpdateState state = new();
+          state.position = position + direction * (time * 1.7f);
+          state.rotation = Basis.LookingAt(direction).GetEuler();
+          return state;
+        };
         GameRootProvider.CurrentGameRoot.AddChild(bullet);
       }
     }
 
     ++_attackOuterLoopCounter;
-    _attackTimer = 0.1f; // 重置计时器
+
+    if (_attackOuterLoopCounter > 10) {
+      _attackOuterLoopCounter = 1;
+      return (ShootInterval, true);
+    }
+
+    return (0.1f, false);
   }
 
   public override RewindState CaptureState() {
-    var baseState = (BaseEnemyState) base.CaptureState();
+    var baseState = (SimpleEnemyState) base.CaptureState();
+
     return new SimpleEnemy3State {
       GlobalPosition = baseState.GlobalPosition,
       Velocity = baseState.Velocity,
       Health = baseState.Health,
       HitTimerLeft = baseState.HitTimerLeft,
       IsInHitState = baseState.IsInHitState,
-      IsAttacking = this._isAttacking,
-      ShootTimer = this._shootTimer,
-      AttackTimer = this._attackTimer,
-      AttackOuterLoopCounter = this._attackOuterLoopCounter,
-      AttackBaseDirection = this._attackBaseDirection
+      ShootTimer = baseState.ShootTimer,
+      CanWalk = baseState.CanWalk,
+      AttackOuterLoopCounter = _attackOuterLoopCounter,
+      AttackBaseDirection = _attackBaseDirection
     };
   }
 
   public override void RestoreState(RewindState state) {
     base.RestoreState(state);
     if (state is not SimpleEnemy3State ses) return;
-    this._isAttacking = ses.IsAttacking;
-    this._shootTimer = ses.ShootTimer;
-    this._attackTimer = ses.AttackTimer;
-    this._attackOuterLoopCounter = ses.AttackOuterLoopCounter;
-    this._attackBaseDirection = ses.AttackBaseDirection;
+
+    _attackOuterLoopCounter = ses.AttackOuterLoopCounter;
+    _attackBaseDirection = ses.AttackBaseDirection;
   }
 }

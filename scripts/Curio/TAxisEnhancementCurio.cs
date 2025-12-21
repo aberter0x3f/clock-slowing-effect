@@ -13,7 +13,7 @@ public partial class TAxisEnhancementCurio : BaseCurio {
   public override float Cooldown => 0f; // 无冷却
 
   public override void OnUsePressed(Player player) {
-    SoundManager.Instance.PlaySoundEffect(SkillSound, cooldown: 0.1f);
+    SoundManager.Instance.Play(SoundEffect.CurioUse);
     if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;
     RewindManager.Instance.StartRewindPreview();
   }

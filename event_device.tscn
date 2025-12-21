@@ -3,22 +3,20 @@
 [ext_resource type="Script" uid="uid://de1hm7mag54rr" path="res://scripts/EventDevice.cs" id="1_ufgef"]
 [ext_resource type="Texture2D" uid="uid://b0ii52052sghy" path="res://images/question.png" id="2_ufgef"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_6tddx"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_ufgef"]
 
-[node name="EventDevice" type="Area2D"]
+[node name="EventDevice" type="Area3D"]
 script = ExtResource("1_ufgef")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_6tddx")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CylinderShape3D_ufgef")
 
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="Sprite3D" type="Sprite3D" parent="Visualizer"]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0.2, 0)
 alpha_cut = 1
 texture_filter = 0
 texture = ExtResource("2_ufgef")
 
-[node name="Label3D" type="Label3D" parent="Visualizer"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 text = "Event"

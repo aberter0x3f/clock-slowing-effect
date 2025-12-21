@@ -4,10 +4,10 @@ using Godot;
 [GlobalClass]
 public partial class RandomWalkComponent : Node {
   [Export(PropertyHint.Range, "0, 500, 1")]
-  public float MoveSpeedMean { get; set; } = 80.0f;
+  public float MoveSpeedMean { get; set; } = 0.8f;
 
   [Export(PropertyHint.Range, "0, 200, 1")]
-  public float MoveSpeedSigma { get; set; } = 25.0f;
+  public float MoveSpeedSigma { get; set; } = 0.25f;
 
   [Export(PropertyHint.Range, "0.5, 10.0, 0.1")]
   public float MoveDuration { get; set; } = 2.0f;
@@ -15,18 +15,16 @@ public partial class RandomWalkComponent : Node {
   /// <summary>
   /// 计算出的当前期望速度，供父节点读取．
   /// </summary>
-  public Vector2 TargetVelocity { get; private set; } = Vector2.Zero;
+  public Vector3 TargetVelocity { get; set; } = Vector3.Zero;
 
   private float _moveTimer;
-  private Vector2 _currentMoveDirection;
+  private Vector3 _currentMoveDirection;
   private float _currentMoveSpeed;
-  private CharacterBody2D _parentBody; // 父节点的引用
-
-  private readonly RandomNumberGenerator _rnd = new();
+  private CharacterBody3D _parentBody; // 父节点的引用
 
   public override void _Ready() {
-    // 获取父节点，确保它是一个 CharacterBody2D
-    _parentBody = GetParent<CharacterBody2D>();
+    // 获取父节点，确保它是一个 CharacterBod32D
+    _parentBody = GetParent<CharacterBody3D>();
     if (_parentBody == null) {
       GD.PrintErr("RandomWalkComponent must be a child of a CharacterBody2D.");
       SetProcess(false); // 如果父节点不对，就禁用自己
@@ -48,14 +46,10 @@ public partial class RandomWalkComponent : Node {
     TargetVelocity = _currentMoveDirection * _currentMoveSpeed;
   }
 
-  /// <summary>
-  /// 随机选择一个新的移动方向和速度，并重置计时器．
-  /// 父节点可以在撞墙时调用此方法．
-  /// </summary>
   public void PickNewMovement() {
     _moveTimer = MoveDuration;
-    _currentMoveSpeed = Mathf.Max(0, (float) _rnd.Randfn(MoveSpeedMean, MoveSpeedSigma));
-    float randomAngle = (float) _rnd.RandfRange(0, Mathf.Tau);
-    _currentMoveDirection = Vector2.Right.Rotated(randomAngle);
+    _currentMoveSpeed = Mathf.Max(0, (float) GD.Randfn(MoveSpeedMean, MoveSpeedSigma));
+    float randomAngle = (float) GD.RandRange(0, Mathf.Tau);
+    _currentMoveDirection = new Vector3(Mathf.Sin(randomAngle), 0, Mathf.Cos(randomAngle));
   }
 }

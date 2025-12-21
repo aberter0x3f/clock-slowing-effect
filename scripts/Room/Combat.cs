@@ -95,7 +95,7 @@ public partial class Combat : Node {
         centerCell = _mapGenerator.WorldToMap(_player.SpawnPosition);
       }
       _spawnedPortal = PortalScene.Instantiate<Portal>();
-      _spawnedPortal.GlobalPosition = _mapGenerator.MapToWorld(centerCell);
+      _spawnedPortal.Position = _mapGenerator.MapToWorld(centerCell);
       // 连接传送门的信号
       _spawnedPortal.LevelCompleted += OnLevelCompleted;
       GameRootProvider.CurrentGameRoot.CallDeferred(Node.MethodName.AddChild, _spawnedPortal);

@@ -13,11 +13,9 @@ public partial class PhaseGeometric : BasePhase {
   // --- 状态变量 ---
   private float _timer;
   private int _volleysFiredThisCycle;
-  private readonly RandomNumberGenerator _rng = new();
 
   [ExportGroup("Scene References")]
-  [Export]
-  public PackedScene BulletScene { get; set; }
+  [Export] public PackedScene BulletScene { get; set; }
 
   [ExportGroup("Pattern Configuration")]
   [Export(PropertyHint.Range, "0.1, 5.0, 0.1")]
@@ -33,16 +31,11 @@ public partial class PhaseGeometric : BasePhase {
   [Export(PropertyHint.Range, "0.1, 5.0, 0.1")]
   public float BaseSpeed { get; set; } = 0.5f;
   [Export(PropertyHint.Range, "1, 1000, 1")]
-  public float BulletSpeed { get; set; } = 150f;
+  public float BulletSpeed { get; set; } = 1.5f;
 
-  [ExportGroup("")]
-  [Export]
-  public float TimeScaleSensitivity { get; set; } = 1f;
-
-  public override void StartPhase(Boss parent) {
-    base.StartPhase(parent);
+  public override void PhaseStart(Boss parent) {
+    base.PhaseStart(parent);
     _volleysFiredThisCycle = 0;
-    // 设置第一次攻击前的初始延迟
     _timer = ActivePhaseStartTime;
 
     var rank = GameManager.Instance.EnemyRank;
@@ -50,26 +43,17 @@ public partial class PhaseGeometric : BasePhase {
     BulletsPerVolley = Mathf.RoundToInt(40f * rank / 5f);
   }
 
-  public override void _Process(double delta) {
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-
-    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
-    var scaledDelta = (float) delta * effectiveTimeScale;
-
+  public override void UpdatePhase(float scaledDelta, float effectiveTimeScale) {
     if (_timer <= 0) {
-      if (_volleysFiredThisCycle == 0) {
-        PlayAttackSound();
-      }
-
-      // ID 根据已发射的数量计算，从 (VolleysPerCycle - 1) 倒数到 0
+      // ID 从 (VolleysPerCycle - 1) 倒数到 0
       int id = (VolleysPerCycle - 1) - _volleysFiredThisCycle;
       FireVolley(id);
 
       ++_volleysFiredThisCycle;
 
-      // 检查当前攻击序列是否完成
       if (_volleysFiredThisCycle >= VolleysPerCycle) {
         _volleysFiredThisCycle = 0;
+        _timer = VolleyInterval * 2f; // 一个循环后的额外停顿
       } else {
         _timer += VolleyInterval;
       }
@@ -79,50 +63,70 @@ public partial class PhaseGeometric : BasePhase {
   }
 
   private void FireVolley(int id) {
-    if (BulletScene == null) {
-      GD.PrintErr("PhaseGeometric: BulletScene is not set!");
-      return;
-    }
+    if (BulletScene == null) return;
 
-    float baseAngleDegrees = id * 10f;
-    float randomOffsetDegrees = (float) _rng.RandfRange(0, 10.0f);
+    SoundManager.Instance.Play(SoundEffect.FireSmall);
+
+    Vector3 bossPos = ParentBoss.GlobalPosition;
+    float baseAngleDeg = id * 10f;
+    float randomOffsetDeg = (float) GD.RandRange(0, 10.0f);
+
+    // 预计算 lambda 需要的常量
+    float stopTime = (id * 18f + 5f) / 60f;
+    float restartTime = (id * 18f + 65f) / 60f;
+    float speedReturn = BulletSpeed * 1.5f;
 
     for (int i = 0; i < BulletsPerVolley; ++i) {
-      // 角度 1: 用于计算速度，它包含基准角度，模拟一个旋转的方形发射源
-      var baseRotationDegrees = i * 360f / BulletsPerVolley;
-      float angleForSpeedCalcDegrees = baseRotationDegrees + baseAngleDegrees;
-      float angleForSpeedCalcRad = Mathf.DegToRad(angleForSpeedCalcDegrees);
-
-      // 角度 2: 用于决定子弹的实际飞行方向，它不包含基准角度
-      float finalAngleDegrees = baseRotationDegrees + randomOffsetDegrees;
-
-      // --- 计算速度 ---
-      // 单位正方形边框距离
-      float speedFactor = Mathf.Max(Mathf.Abs(Mathf.Sin(angleForSpeedCalcRad)), Mathf.Abs(Mathf.Cos(angleForSpeedCalcRad)));
-      float speed = BaseSpeed * (2.0f - speedFactor) * BulletSpeed;
-
-      // --- 实例化并设置子弹 ---
-      var bullet = BulletScene.Instantiate<PhaseGeometricBullet>();
-      bullet.GlobalPosition = ParentBoss.GlobalPosition;
-      bullet.InitialSpeed = speed;
-      bullet.RotationDegrees = finalAngleDegrees;
+      var bullet = BulletScene.Instantiate<SimpleBullet>();
       bullet.TimeScaleSensitivity = TimeScaleSensitivity;
-      bullet.VolleyId = id;
-      bullet.SpeedAfterReverse = BulletSpeed * 1.5f;
+
+      // 角度 1: 用于计算速度分布（正方形外观）
+      float baseRotationDeg = i * 360f / BulletsPerVolley;
+      float angleForSpeedRad = Mathf.DegToRad(baseRotationDeg + baseAngleDeg);
+
+      // 角度 2: 实际发射角度
+      float finalAngleRad = Mathf.DegToRad(baseRotationDeg + randomOffsetDeg);
+      Vector3 direction = new Vector3(Mathf.Cos(finalAngleRad), 0, Mathf.Sin(finalAngleRad));
+
+      // 原始正方形速度因子逻辑
+      float speedFactor = Mathf.Max(Mathf.Abs(Mathf.Sin(angleForSpeedRad)), Mathf.Abs(Mathf.Cos(angleForSpeedRad)));
+      float initialSpeed = BaseSpeed * (2.0f - speedFactor) * BulletSpeed;
+
+      bullet.UpdateFunc = (t) => {
+        SimpleBullet.UpdateState s = new();
+        Vector3 pos;
+
+        if (t < stopTime) {
+          // 初始阶段：匀速前进
+          pos = bossPos + direction * (initialSpeed * t);
+        } else if (t < restartTime) {
+          // 停止阶段：保持在停止点
+          pos = bossPos + direction * (initialSpeed * stopTime);
+        } else {
+          // 返回阶段：反向加速（此处使用位移公式：停止点 - 方向 * 速度 * 时间）
+          float dt = t - restartTime;
+          Vector3 stopPoint = bossPos + direction * (initialSpeed * stopTime);
+          pos = stopPoint - direction * (speedReturn * dt);
+        }
+
+        s.position = pos;
+        // 旋转：始终朝向当前移动轴（返回时 180 度翻转）
+        float visualAngle = (t < restartTime) ? finalAngleRad : finalAngleRad + Mathf.Pi;
+        s.rotation = new Vector3(0, -visualAngle, 0); // 对应 3D 坐标系
+
+        return s;
+      };
 
       GameRootProvider.CurrentGameRoot.AddChild(bullet);
     }
   }
 
-  public override RewindState CaptureInternalState() {
-    return new PhaseGeometricState {
-      Timer = this._timer,
-      VolleysFiredThisCycle = this._volleysFiredThisCycle,
-    };
-  }
+  public override RewindState CaptureInternalState() => new PhaseGeometricState {
+    Timer = _timer,
+    VolleysFiredThisCycle = _volleysFiredThisCycle,
+  };
 
   public override void RestoreInternalState(RewindState state) {
-    base.RestoreInternalState(state);
     if (state is not PhaseGeometricState pgs) return;
     this._timer = pgs.Timer;
     this._volleysFiredThisCycle = pgs.VolleysFiredThisCycle;

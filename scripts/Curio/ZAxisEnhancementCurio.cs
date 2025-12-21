@@ -12,14 +12,14 @@ public partial class ZAxisEnhancementCurio : BaseCurio {
   public override float Cooldown => 20f;
 
   public override void OnUsePressed(Player player) {
-    if (CurrentCooldown > 0 || player.IsJumping) {
-      SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
+    if (CurrentCooldown > 0) {
+      SoundManager.Instance.Play(SoundEffect.CurioWrong);
       return;
     }
 
-    SoundManager.Instance.PlaySoundEffect(SkillSound, cooldown: 0.1f);
+    SoundManager.Instance.Play(SoundEffect.CurioUse);
 
-    player.Jump();
+    player.Velocity += new Vector3(0, 3.2f, 0);
     CurrentCooldown = Cooldown;
     if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;
   }

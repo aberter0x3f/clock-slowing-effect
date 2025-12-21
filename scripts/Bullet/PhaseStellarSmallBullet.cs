@@ -10,31 +10,11 @@ public class PhaseStellarSmallBulletState : BaseBulletState {
 }
 
 public partial class PhaseStellarSmallBullet : BaseBullet {
-  [Signal]
-  public delegate void ReachedTargetEventHandler(int ringIndex);
+  [Signal] public delegate void ReachedTargetEventHandler(int ringIndex);
 
-  public enum BulletColor {
-    Blue,
-    Green,
-    Yellow,
-    Orange,
-    Red
-  }
-
-  public enum BulletType {
-    BlackHole,
-    Supernova
-  }
-
-  public enum State {
-    Inactive,
-    MovingToTarget,
-    WaitingForRingCompletion,
-    Rotating,
-    SupernovaSeeking,
-    SupernovaHoming,
-    BlackHoleAccretion
-  }
+  public enum BulletColor { Blue, Green, Yellow, Orange, Red }
+  public enum BulletType { BlackHole, Supernova }
+  public enum State { Inactive, MovingToTarget, WaitingForRingCompletion, Rotating, SupernovaSeeking, SupernovaHoming, BlackHoleAccretion }
 
   [ExportGroup("Sprites")]
   [Export] public SpriteFrames BlueSprite { get; set; }
@@ -43,34 +23,29 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
   [Export] public SpriteFrames OrangeSprite { get; set; }
   [Export] public SpriteFrames RedSprite { get; set; }
 
-  [Export]
-  public BulletType Type { get; set; }
+  [Export] public BulletType Type { get; set; }
   public State CurrentState { get; private set; } = State.Inactive;
   public BulletColor CurrentColor { get; set; }
-  public Vector2 TargetPosition { get; set; }
+  public Vector3 TargetPosition { get; set; }
   public float MoveSpeed { get; set; }
   public int RingIndex { get; set; }
   public float RingRotationSpeed { get; set; }
   public float SupernovaDelay { get; set; }
   public float FireAngleOffset { get; set; }
-  public float TimeScaleSensitivity { get; set; }
 
-  private Vector2 _velocity;
-  private Player _playerNode;
+  private Vector3 _velocity;
   private float _supernovaTimer = 0f;
   private AnimatedSprite3D _animatedSprite;
 
   public override void _Ready() {
     base._Ready();
-    // _animatedSprite = GetNode<AnimatedSprite3D>("Visualizer/Sprite");
     _animatedSprite = _sprite as AnimatedSprite3D;
     SetProcess(false);
     Visible = false;
-    _playerNode = GameRootProvider.CurrentGameRoot.GetNode<Player>("Player");
     UpdateSpriteForColor();
   }
 
-  public void Activate(Vector2 startPosition) {
+  public void Activate(Vector3 startPosition) {
     if (CurrentState != State.Inactive) return;
 
     GlobalPosition = startPosition;
@@ -81,17 +56,13 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
     Visible = true;
   }
 
-  public override void _Process(double delta) {
-    base._Process(delta);
+  public override void UpdateBullet(float scaledDelta) {
     if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-
-    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
-    var scaledDelta = (float) delta * effectiveTimeScale;
 
     switch (CurrentState) {
       case State.MovingToTarget:
         GlobalPosition = GlobalPosition.MoveToward(TargetPosition, MoveSpeed * scaledDelta);
-        if (GlobalPosition.DistanceSquaredTo(TargetPosition) < 1f) {
+        if (GlobalPosition.DistanceSquaredTo(TargetPosition) < 0.0001f) {
           GlobalPosition = TargetPosition;
           CurrentState = State.WaitingForRingCompletion;
           EmitSignal(SignalName.ReachedTarget, RingIndex);
@@ -99,14 +70,11 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
         break;
 
       case State.Rotating:
-      case State.BlackHoleAccretion:
-        GlobalPosition = GlobalPosition.Rotated(RingRotationSpeed * scaledDelta);
+        GlobalPosition = GlobalPosition.Rotated(Vector3.Up, RingRotationSpeed * scaledDelta);
         break;
 
       case State.SupernovaSeeking:
-        // 继续旋转
-        GlobalPosition = GlobalPosition.Rotated(RingRotationSpeed * scaledDelta);
-        // 更新计时器并检查是否到了该变轨的时间
+        GlobalPosition = GlobalPosition.Rotated(Vector3.Up, RingRotationSpeed * scaledDelta);
         _supernovaTimer -= scaledDelta;
         if (_supernovaTimer <= 0) {
           SwitchToSupernovaHoming();
@@ -116,8 +84,12 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
       case State.SupernovaHoming:
         GlobalPosition += _velocity * scaledDelta;
         break;
+
+      case State.BlackHoleAccretion:
+        GlobalPosition = GlobalPosition.Rotated(Vector3.Up, RingRotationSpeed * scaledDelta);
+        _sprite.Modulate = Colors.Black;
+        break;
     }
-    UpdateVisualizer();
   }
 
   public void StartRotation() {
@@ -138,20 +110,18 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
 
   private void SwitchToSupernovaHoming() {
     CurrentState = State.SupernovaHoming;
-    var target = _playerNode.DecoyTarget ?? _playerNode;
+    var player = GameRootProvider.CurrentGameRoot.GetNode<Player>("Player");
+    var target = player.DecoyTarget ?? player;
     if (IsInstanceValid(target)) {
       var dir = (target.GlobalPosition - GlobalPosition).Normalized();
-      dir = dir.Rotated((float) GD.Randfn(0, 0.1));
-      if (GD.Randi() % 2 == 0) {
-        dir *= -1;
-      }
+      dir = dir.Rotated(Vector3.Up, (float) GD.Randfn(0, 0.1));
+      if (GD.Randi() % 2 == 0) dir *= -1;
       _velocity = dir * MoveSpeed;
     }
   }
 
   public void SwitchToBlackHole() {
     CurrentState = State.BlackHoleAccretion;
-    _sprite.Modulate = Colors.Black;
   }
 
   /// <summary>
@@ -175,12 +145,14 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
   }
 
   public override RewindState CaptureState() {
-    var baseState = (BaseBulletState) base.CaptureState();
+    var bs = (BaseBulletState) base.CaptureState();
     return new PhaseStellarSmallBulletState {
-      GlobalPosition = baseState.GlobalPosition,
-      GlobalRotation = baseState.GlobalRotation,
-      WasGrazed = baseState.WasGrazed,
-      Modulate = baseState.Modulate,
+      GlobalPosition = bs.GlobalPosition,
+      GlobalRotation = bs.GlobalRotation,
+      WasGrazed = bs.WasGrazed,
+      IsGrazing = bs.IsGrazing,
+      Modulate = bs.Modulate,
+      TimeAlive = bs.TimeAlive,
       CurrentState = this.CurrentState,
       IsActive = this.IsProcessing(),
       SupernovaTimer = this._supernovaTimer,
@@ -189,17 +161,10 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
 
   public override void RestoreState(RewindState state) {
     base.RestoreState(state);
-    if (state is not PhaseStellarSmallBulletState sss) return;
-    this.CurrentState = sss.CurrentState;
-    this._supernovaTimer = sss.SupernovaTimer;
-
-    bool shouldBeActive = sss.IsActive;
-    if (shouldBeActive) {
-      SetProcess(true);
-      Visible = true;
-    } else if (!shouldBeActive) {
-      SetProcess(false);
-      Visible = false;
-    }
+    if (state is not PhaseStellarSmallBulletState s) return;
+    CurrentState = s.CurrentState;
+    _supernovaTimer = s.SupernovaTimer;
+    SetProcess(s.IsActive);
+    Visible = s.IsActive;
   }
 }

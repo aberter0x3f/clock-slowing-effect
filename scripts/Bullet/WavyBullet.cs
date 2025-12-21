@@ -1,136 +1,61 @@
 using Godot;
-using Rewind;
 
 namespace Bullet;
-
-public class WavyBulletState : BaseBulletState {
-  public float TimeAlive;
-}
 
 public partial class WavyBullet : BaseBullet {
   [ExportGroup("Wavy Movement")]
   [Export]
-  public float ForwardSpeed { get; set; } = 250.0f; // 沿主轴前进的速度
+  public float ForwardSpeed { get; set; } = 3.0f;
   [Export]
-  public float Amplitude { get; set; } = 50.0f; // 振幅，即偏离中心的距离
+  public float Amplitude { get; set; } = 0.5f;
   [Export]
-  public float Frequency { get; set; } = 1.0f; // 频率，即每秒完成多少次振荡
+  public float Frequency { get; set; } = 1.0f;
   [Export]
-  public bool InvertSine { get; set; } = false; // 用于创建镜像弹道（DNA 的另一条链）
+  public bool InvertSine { get; set; } = false;
 
-  [ExportGroup("Time")]
-  [Export]
-  public float MaxLifetime { get; set; } = 10.0f;
-  [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
-  public float TimeScaleSensitivity { get; set; } = 1.0f; // 时间缩放敏感度．0=完全忽略, 1=完全受影响．
+  public Vector3 InitialPosition { get; set; }
 
-  private float _timeAlive = 0.0f;
-  private Vector2 _initialPosition;
-  private Vector2 _forwardDirection;
-  private Vector2 _perpendicularDirection;
-
-  // 用于边界检查的变量
-  private Rect2 _despawnBounds;
-  private bool _boundsInitialized = false;
+  private Vector3 _forwardVector;
+  private Vector3 _sideVector;
 
   public override void _Ready() {
+    GlobalPosition = InitialPosition;
+    // 获取由 Dna 敌人通过 LookAt 设置好的 3D 局部坐标系
+    // 在 Godot 中，LookAt 默认让 -Z 轴指向目标
+    _forwardVector = -GlobalTransform.Basis.Z.Normalized();
+    // X 轴即为垂直于前进方向的横向轴，用于正弦偏移
+    _sideVector = GlobalTransform.Basis.X.Normalized();
     base._Ready();
-    // 记录初始状态，后续所有计算都基于此，以避免浮点误差累积
-    _initialPosition = GlobalPosition;
-    _forwardDirection = Vector2.Right.Rotated(GlobalRotation);
-    _perpendicularDirection = _forwardDirection.Rotated(Mathf.Pi / 2.0f);
-
-    // 初始化销毁边界
-    InitializeDespawnBounds();
-
-    UpdateVisualizer();
   }
 
-  /// <summary>
-  /// 获取 MapGenerator 并计算销毁边界．
-  /// </summary>
-  private void InitializeDespawnBounds() {
-    // 尝试从场景树中获取 MapGenerator 节点
-    var mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
-    if (mapGenerator != null) {
-      float worldWidth = mapGenerator.MapWidth * mapGenerator.TileSize;
-      float worldHeight = mapGenerator.MapHeight * mapGenerator.TileSize;
+  public override void UpdateBullet(float scaledDelta) {
+    base.UpdateBullet(scaledDelta);
 
-      // 地图中心是 (0,0)，所以边界是半宽/半高
-      float halfWidth = worldWidth / 2.0f;
-      float halfHeight = worldHeight / 2.0f;
+    // 1. 计算 3D 空间中的位置
+    // 沿瞄准线前进的距离
+    float forwardDist = ForwardSpeed * TimeAlive;
 
-      // 创建一个比地图大 1.5 倍的销毁矩形区域
-      float despawnHalfWidth = halfWidth * 1.5f;
-      float despawnHalfHeight = halfHeight * 1.5f;
+    // 正弦波偏移值
+    float phase = TimeAlive * Frequency * Mathf.Tau;
+    float sineVal = Mathf.Sin(phase);
+    if (InvertSine) sineVal *= -1;
+    float sideDist = Amplitude * sineVal;
 
-      _despawnBounds = new Rect2(
-          -despawnHalfWidth,
-          -despawnHalfHeight,
-          despawnHalfWidth * 2,
-          despawnHalfHeight * 2
-      );
-      _boundsInitialized = true;
-    } else {
-      // 如果找不到 MapGenerator，打印一个错误，但不影响游戏运行
-      GD.PrintErr("WavyBullet: MapGenerator not found at 'GameRoot/MapGenerator'. Off-screen despawn check will be disabled.");
+    // 最终 3D 位置 = 起点 + (前进方向 * 距离) + (侧向方向 * 偏移)
+    GlobalPosition = InitialPosition + (_forwardVector * forwardDist) + (_sideVector * sideDist);
+
+    // 2. 更新模型旋转（使其指向 3D 运动轨迹的切线）
+    // 瞬时速度矢量 = (前进速度 * 前进向量) + (正弦波变化率 * 侧向向量)
+    // 根据复合函数求导：[A * sin(t*f*2PI)]' = A * f * 2PI * cos(t*f*2PI)
+    float cosPart = Amplitude * Frequency * Mathf.Tau * Mathf.Cos(phase);
+    if (InvertSine) cosPart *= -1;
+
+    Vector3 currentVelocity = (_forwardVector * ForwardSpeed) + (_sideVector * cosPart);
+
+    if (!currentVelocity.IsZeroApprox()) {
+      // 使用 Basis.LookingAt 将模型朝向当前的 3D 速度矢量方向
+      // 使用原始 Basis 的 Y 轴作为参考上方向，以保持螺旋轴的连贯性
+      GlobalRotation = Basis.LookingAt(currentVelocity, GlobalTransform.Basis.Y).GetEuler();
     }
-  }
-
-  public override void _Process(double delta) {
-    base._Process(delta);
-
-    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
-    var scaledDelta = (float) delta * effectiveTimeScale;
-
-    _timeAlive += scaledDelta;
-    if (_timeAlive > MaxLifetime) {
-      Destroy();
-      return;
-    }
-
-    // 1. 计算沿中心轴前进的位置
-    Vector2 centerPosition = _initialPosition + _forwardDirection * ForwardSpeed * _timeAlive;
-
-    // 2. 计算垂直于中心轴的正弦偏移
-    // Mathf.Tau 是 2 * PI，这样频率就代表每秒的周期数
-    float sineOffset = Amplitude * Mathf.Sin(_timeAlive * Frequency * Mathf.Tau);
-    if (InvertSine) {
-      sineOffset *= -1;
-    }
-    Vector2 offset = _perpendicularDirection * sineOffset;
-
-    // 3. 设置最终位置
-    GlobalPosition = centerPosition + offset;
-
-    // 边界检查
-    // 如果边界已初始化，并且子弹的全局位置不在边界矩形内
-    if (_boundsInitialized && !_despawnBounds.HasPoint(GlobalPosition)) {
-      Destroy(); // 使用 Destroy
-      return;
-    }
-
-    // 子弹的朝向也随着波浪路径变化
-    Vector2 currentVelocity = (_forwardDirection * ForwardSpeed) + (_perpendicularDirection * Amplitude * Frequency * Mathf.Tau * Mathf.Cos(_timeAlive * Frequency * Mathf.Tau));
-    GlobalRotation = currentVelocity.Angle();
-
-    UpdateVisualizer();
-  }
-
-  public override RewindState CaptureState() {
-    var baseState = (BaseBulletState) base.CaptureState();
-    return new WavyBulletState {
-      GlobalPosition = baseState.GlobalPosition,
-      GlobalRotation = baseState.GlobalRotation,
-      WasGrazed = baseState.WasGrazed,
-      Modulate = baseState.Modulate,
-      TimeAlive = this._timeAlive
-    };
-  }
-
-  public override void RestoreState(RewindState state) {
-    base.RestoreState(state);
-    if (state is not WavyBulletState wbs) return;
-    this._timeAlive = wbs.TimeAlive;
   }
 }

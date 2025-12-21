@@ -236,8 +236,8 @@ script = ExtResource("1_w5vlj")
 Type = 8
 Name = "Grazing Bonus Increase 1"
 ShortName = "Gb₁"
-Description = "Increases the reward gained from grazing bullets by [color=orange]20%.[/color]"
-Value1 = 0.2
+Description = "Increases the reward gained from grazing bullets by [color=orange]10%.[/color]"
+Value1 = 0.1
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_e1f2g"]
@@ -246,8 +246,8 @@ Type = 8
 Level = 2
 Name = "Grazing Bonus Increase 2"
 ShortName = "Gb₂"
-Description = "Increases the reward gained from grazing bullets by [color=orange]40%.[/color]"
-Value1 = 0.4
+Description = "Increases the reward gained from grazing bullets by [color=orange]20%.[/color]"
+Value1 = 0.2
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_h3i4j"]
@@ -256,7 +256,8 @@ Type = 8
 Level = 3
 Name = "Grazing Bonus Increase 3"
 ShortName = "Gb₃"
-Description = "Increases the reward gained from grazing bullets by [color=orange]100%.[/color]"
+Description = "Increases the reward gained from grazing bullets by [color=orange]40%.[/color]"
+Value1 = 0.4
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_k5l6m"]

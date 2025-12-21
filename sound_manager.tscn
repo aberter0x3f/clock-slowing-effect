@@ -1,0 +1,111 @@
+[gd_scene load_steps=29 format=3 uid="uid://ngmhst45d630"]
+
+[ext_resource type="Script" uid="uid://dqtowxk2vgcys" path="res://scripts/SoundManager.cs" id="1_g5net"]
+[ext_resource type="Script" uid="uid://cftmt8fk41r7q" path="res://scripts/SoundResource.cs" id="2_22ksp"]
+[ext_resource type="AudioStream" uid="uid://dhc88mnrkuak" path="res://sounds/effects/explosion_small.wav" id="3_ndygv"]
+[ext_resource type="AudioStream" uid="uid://bko5jbxt577e0" path="res://sounds/effects/explosion_big.wav" id="4_ndygv"]
+[ext_resource type="AudioStream" uid="uid://bnfy1dhlnv8br" path="res://sounds/effects/player_death.wav" id="5_7jwsb"]
+[ext_resource type="AudioStream" uid="uid://cwltmlyx4lrne" path="res://sounds/effects/bling.wav" id="6_7jwsb"]
+[ext_resource type="AudioStream" uid="uid://bx255wnhebckj" path="res://sounds/effects/fire_small.wav" id="6_h42hm"]
+[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="7_h42hm"]
+[ext_resource type="AudioStream" uid="uid://dt4ib6ejks0dx" path="res://sounds/effects/graze.wav" id="8_lxsk3"]
+[ext_resource type="AudioStream" uid="uid://dcnqnd0chphl4" path="res://sounds/effects/violin.wav" id="8_m3oho"]
+[ext_resource type="AudioStream" uid="uid://dcx2xwippr34u" path="res://sounds/effects/skill.wav" id="9_rt03n"]
+[ext_resource type="AudioStream" uid="uid://cfvujfyw2y53v" path="res://sounds/effects/wrong.wav" id="10_vgaxf"]
+[ext_resource type="AudioStream" uid="uid://dho4cb2kse2po" path="res://sounds/effects/change_item.wav" id="11_vgaxf"]
+[ext_resource type="AudioStream" uid="uid://i7822ekvsgsr" path="res://sounds/effects/reload_complete.wav" id="12_70tky"]
+[ext_resource type="AudioStream" uid="uid://do01bwefxyb4c" path="res://sounds/effects/item_get.wav" id="12_xrcvc"]
+
+[sub_resource type="Resource" id="Resource_7jwsb"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("4_ndygv")
+VolumeDb = 5.0
+Cooldown = 0.2
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_np486"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("11_vgaxf")
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_xrcvc"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("9_rt03n")
+Cooldown = 0.2
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_70tky"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("10_vgaxf")
+Cooldown = 0.2
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_h8btt"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("3_ndygv")
+VolumeDb = -5.0
+Cooldown = 0.2
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_rt03n"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("7_h42hm")
+VolumeDb = -5.0
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_m3oho"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("6_h42hm")
+VolumeDb = -10.0
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_vgaxf"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("8_lxsk3")
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_j1tqm"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("12_xrcvc")
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_lxsk3"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("5_7jwsb")
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_26nrr"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("12_70tky")
+Cooldown = 0.2
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_e8map"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("8_m3oho")
+VolumeDb = -5.0
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_h42hm"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("6_7jwsb")
+Cooldown = 0.1
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[node name="SoundManager" type="ResourcePreloader"]
+script = ExtResource("1_g5net")
+_library = Dictionary[String, ExtResource("2_22ksp")]({
+"BossDeath": SubResource("Resource_7jwsb"),
+"CurioSwitch": SubResource("Resource_np486"),
+"CurioUse": SubResource("Resource_xrcvc"),
+"CurioWrong": SubResource("Resource_70tky"),
+"EnemyDeath": SubResource("Resource_h8btt"),
+"FireBig": SubResource("Resource_rt03n"),
+"FireSmall": SubResource("Resource_m3oho"),
+"Graze": SubResource("Resource_vgaxf"),
+"ItemGet": SubResource("Resource_j1tqm"),
+"PlayerDeath": SubResource("Resource_lxsk3"),
+"PlayerReloadComplete": SubResource("Resource_26nrr"),
+"PlayerShoot": SubResource("Resource_e8map"),
+"PlayerSkillAvailable": SubResource("Resource_h42hm")
+})

@@ -14,9 +14,9 @@ public abstract partial class BasePhase : Node {
   [Signal]
   public delegate void PhaseCompletedEventHandler();
 
-  [ExportGroup("Sound Effects")]
+  [ExportGroup("Time")]
   [Export]
-  public AudioStream AttackSound { get; set; }
+  public float TimeScaleSensitivity { get; set; } = 1f;
 
   private bool _isFinished;
   private float _health;
@@ -41,7 +41,7 @@ public abstract partial class BasePhase : Node {
         _health = 0;
         var rm = RewindManager.Instance;
         if (!rm.IsPreviewing && !rm.IsRewinding) {
-          EndPhase();
+          PhaseEnd();
         }
       } else {
         _health = float.Min(MaxHealth, value);
@@ -49,12 +49,12 @@ public abstract partial class BasePhase : Node {
     }
   }
   protected Boss ParentBoss { get; private set; }
-  protected Node2D PlayerNode => _player.DecoyTarget ?? _player;
+  protected Node3D PlayerNode => _player.DecoyTarget ?? _player;
 
   /// <summary>
   /// 当 Boss 控制器启动此阶段时调用．
   /// </summary>
-  public virtual void StartPhase(Boss parent) {
+  public virtual void PhaseStart(Boss parent) {
     ParentBoss = parent;
     _player = GetTree().Root.GetNode<Player>("GameRoot/Player");
     Health = MaxHealth;
@@ -63,9 +63,15 @@ public abstract partial class BasePhase : Node {
   }
 
   /// <summary>
+  /// 当前阶段每一帧调用．
+  // 不要重载 _Process，重载这个函数更适合．
+  /// </summary>
+  public abstract void UpdatePhase(float scaledDelta, float effectiveTimeScale);
+
+  /// <summary>
   /// 当此阶段的逻辑结束时（例如血量耗尽）调用．
   /// </summary>
-  public virtual void EndPhase() {
+  public virtual void PhaseEnd() {
     if (_isFinished) return;
     _isFinished = true;
     SetProcess(false);
@@ -92,9 +98,5 @@ public abstract partial class BasePhase : Node {
   /// </summary>
   public virtual void RestoreInternalState(RewindState state) {
     if (state is not BasePhaseState bps) return;
-  }
-
-  protected void PlayAttackSound() {
-    SoundManager.Instance.PlaySoundEffect(AttackSound, cooldown: 0.2f, volumeDb: -5f);
   }
 }

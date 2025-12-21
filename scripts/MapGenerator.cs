@@ -9,7 +9,7 @@ public partial class MapGenerator : Node {
   [Export]
   public int MapHeight { get; set; } = 31;
   [Export]
-  public int TileSize { get; set; } = 32;
+  public float TileSize { get; set; } = 0.32f;
   [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
   public float ObstacleProbability { get; set; } = 0.02f;
 
@@ -22,6 +22,8 @@ public partial class MapGenerator : Node {
   public PackedScene FloorTileScene1 { get; set; }
   [Export]
   public PackedScene FloorTileScene2 { get; set; }
+  [Export]
+  public float FloorY { get; set; } = -0.2f;
 
   private int[,] _grid;
   private List<Vector2I> _walkableTiles = new();
@@ -31,7 +33,7 @@ public partial class MapGenerator : Node {
   /// <summary>
   /// 生成地图并返回玩家的安全出生点（世界坐标）．
   /// </summary>
-  public Vector2 GenerateMap() {
+  public Vector3 GenerateMap() {
     // 循环直到生成一个有效的地图
     while (true) {
       _grid = new int[MapWidth, MapHeight];
@@ -55,8 +57,8 @@ public partial class MapGenerator : Node {
   }
 
   private void GenerateInitialGrid() {
-    for (int x = 0; x < MapWidth; x++) {
-      for (int y = 0; y < MapHeight; y++) {
+    for (int x = 0; x < MapWidth; ++x) {
+      for (int y = 0; y < MapHeight; ++y) {
         // 边界必须是障碍
         if (x == 0 || x == MapWidth - 1 || y == 0 || y == MapHeight - 1) {
           _grid[x, y] = 1;
@@ -69,8 +71,8 @@ public partial class MapGenerator : Node {
 
   private bool EnsureConnectivity() {
     Vector2I? startNode = null;
-    for (int x = 0; x < MapWidth; x++) {
-      for (int y = 0; y < MapHeight; y++) {
+    for (int x = 0; x < MapWidth; ++x) {
+      for (int y = 0; y < MapHeight; ++y) {
         if (_grid[x, y] == 0) {
           startNode = new Vector2I(x, y);
           break;
@@ -89,7 +91,7 @@ public partial class MapGenerator : Node {
 
     while (queue.Count > 0) {
       var current = queue.Dequeue();
-      accessibleTileCount++;
+      ++accessibleTileCount;
 
       Vector2I[] neighbors = {
         current + Vector2I.Up, current + Vector2I.Down,
@@ -106,10 +108,10 @@ public partial class MapGenerator : Node {
     }
 
     int totalWalkable = 0;
-    for (int x = 0; x < MapWidth; x++) {
-      for (int y = 0; y < MapHeight; y++) {
+    for (int x = 0; x < MapWidth; ++x) {
+      for (int y = 0; y < MapHeight; ++y) {
         if (_grid[x, y] == 0) {
-          totalWalkable++;
+          ++totalWalkable;
           if (!visited[x, y]) {
             _grid[x, y] = 1; // 将不可达的 '0' 变成障碍 '1'
           }
@@ -122,31 +124,24 @@ public partial class MapGenerator : Node {
   }
 
   private void InstantiateTiles() {
-    for (int x = 0; x < MapWidth; x++) {
-      for (int y = 0; y < MapHeight; y++) {
+    for (int x = 0; x < MapWidth; ++x) {
+      for (int y = 0; y < MapHeight; ++y) {
         // 生成地面
         PackedScene tileSceneToUse = ((x + y) % 2 == 0) ? FloorTileScene1 : FloorTileScene2;
+        Vector3 worldPos = MapToWorld(new Vector2I(x, y));
         if (_grid[x, y] == 0) {
           var floorTile = tileSceneToUse.Instantiate<Node3D>();
-          Vector2 worldPos2D = MapToWorld(new Vector2I(x, y));
           AddChild(floorTile);
-          // 地面放在 Y=0 的高度
-          floorTile.GlobalPosition = new Vector3(
-            worldPos2D.X * GameConstants.WorldScaleFactor,
-            0,
-            worldPos2D.Y * GameConstants.WorldScaleFactor
-          );
+          floorTile.GlobalPosition = worldPos with { Y = FloorY };
           _walkableTiles.Add(new Vector2I(x, y));
         } else {
           // -生成障碍物或添加到可行走列表
-          var obstacle = ObstacleScene.Instantiate<Obstacle>();
-          var node3d = obstacle.GetNode<Node3D>("Node3D");
+          var obstacle = ObstacleScene.Instantiate<Node3D>();
           if (x == 0 || x == MapWidth - 1 || y == 0 || y == MapHeight - 1) {
-            node3d.Visible = false;
+            obstacle.Visible = false;
           }
-          obstacle.TileSize = TileSize;
-          obstacle.Position = MapToWorld(new Vector2I(x, y));
           AddChild(obstacle);
+          obstacle.GlobalPosition = worldPos with { Y = FloorY + 0.5f * TileSize };
         }
       }
     }
@@ -178,18 +173,19 @@ public partial class MapGenerator : Node {
     return new Vector2I(MapWidth / 2, MapHeight / 2); // Fallback
   }
 
-  public Vector2 MapToWorld(Vector2I mapCoords) {
-    return (mapCoords - new Vector2I(MapWidth / 2, MapHeight / 2)) * TileSize;
+  public Vector3 MapToWorld(Vector2I mapCoords) {
+    var vi = (mapCoords - new Vector2I(MapWidth / 2, MapHeight / 2));
+    return new Vector3(vi.X * TileSize, 0, vi.Y * TileSize);
   }
 
   /// <summary>
   /// 将世界坐标转换为地图网格坐标．
   /// </summary>
-  public Vector2I WorldToMap(Vector2 worldCoords) {
+  public Vector2I WorldToMap(Vector3 worldCoords) {
     // 这是 MapToWorld 的逆运算
     return new Vector2I(
       Mathf.RoundToInt(worldCoords.X / TileSize + (float) MapWidth / 2),
-      Mathf.RoundToInt(worldCoords.Y / TileSize + (float) MapHeight / 2)
+      Mathf.RoundToInt(worldCoords.Z / TileSize + (float) MapHeight / 2)
     );
   }
 

@@ -9,251 +9,147 @@ public class PhaseLiquidCrystalState : BasePhaseState {
   public PhaseLiquidCrystal.PhaseState CurrentState;
   public float Timer;
   public float OrbitAngle;
-  public Vector2 LastPlayerPosition;
+  public Vector3 LastPlayerPosition;
 }
 
 public partial class PhaseLiquidCrystal : BasePhase {
-  public enum PhaseState {
-    Waiting,
-    Active,
-  }
+  public enum PhaseState { Waiting, Active }
 
   [ExportGroup("Scene References")]
-  [Export]
-  public PackedScene LiquidCrystalBulletScene { get; set; }
-  [Export]
-  public PackedScene OrbitingBulletScene { get; set; }
-  [Export]
-  public PackedScene TrailBulletScene { get; set; }
+  [Export] public PackedScene LiquidCrystalBulletScene { get; set; }
+  [Export] public PackedScene OrbitingBulletScene { get; set; }
+  [Export] public PackedScene TrailBulletScene { get; set; }
 
-  [ExportGroup("Pattern Configuration")]
-  [Export]
-  public float WaitDuration { get; set; } = 2f;
-  [Export]
-  public float BulletSpacing { get; set; } = 65f;
-  [Export]
-  public float BossChaseSpeed { get; set; } = 100f;
-  [Export(PropertyHint.Range, "0.0, 2.0, 0.01")]
-  public float BossInfluenceOnCrystals { get; set; } = 0.5f;
-
-  [ExportGroup("Orbiting Bullet")]
-  [Export]
-  public float OrbitRadius { get; set; } = 100f;
-  [Export]
-  public float OrbitSpeed { get; set; } = 2.0f; // rad/s
-
-  [ExportGroup("Player Trail")]
-  [Export]
-  public float TrailMinDistance { get; set; } = 8f;
-  [Export]
-  public float TrailClearanceRadius { get; set; } = 25f;
-
-  [ExportGroup("Time")]
-  [Export]
-  public float TimeScaleSensitivity { get; set; } = 1f;
+  [ExportGroup("Configuration")]
+  [Export] public float WaitDuration { get; set; } = 2f;
+  [Export] public float BulletSpacing { get; set; } = 0.65f;
+  [Export] public float BossChaseSpeed { get; set; } = 1.0f;
+  [Export] public float OrbitRadius { get; set; } = 1.0f;
+  [Export] public float OrbitSpeed { get; set; } = 2.0f;
+  [Export] public float TrailMinDistance { get; set; } = 0.08f;
+  [Export] public float TrailClearanceRadius { get; set; } = 0.25f;
 
   private PhaseState _currentState;
   private float _timer;
   private MapGenerator _mapGenerator;
   private readonly List<PhaseLiquidCrystalBullet> _activeCrystals = new();
   private readonly List<BaseBullet> _trailBullets = new();
-  private Rect2 _crystalBounds;
-  private BaseBullet _orbitingBullet;
+  private SimpleBullet _orbitingBullet;
   private float _orbitAngle;
-  private Vector2 _lastPlayerPosition;
+  private Vector3 _lastPlayerPosition;
 
-  public override void StartPhase(Boss parent) {
-    base.StartPhase(parent);
+  public override void PhaseStart(Boss parent) {
+    base.PhaseStart(parent);
     _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
-    if (_mapGenerator == null) {
-      GD.PrintErr("PhaseLiquidCrystal: MapGenerator not found. Phase cannot start.");
-      EndPhase();
-      return;
-    }
 
-    // 根据难度调整参数
-    float rank = GameManager.Instance.EnemyRank;
-    TimeScaleSensitivity = 5f / (rank + 5);
-    BulletSpacing = Mathf.Max(50f, (BulletSpacing - 15f) * 15f / (rank + 10) + 15f);
+    var rank = GameManager.Instance.EnemyRank;
+    BulletSpacing = Mathf.Max(0.5f, BulletSpacing * 15f / (rank + 10));
     BossChaseSpeed *= (rank + 10f) / 15f;
 
-    PlayAttackSound();
-
-    // 生成所有子弹并设置其属性
     SpawnCrystals();
     SpawnOrbitingBullet();
 
-    // 初始化状态机
     _currentState = PhaseState.Waiting;
     _timer = WaitDuration;
-
     _lastPlayerPosition = PlayerNode.GlobalPosition;
   }
 
-  public override void _Process(double delta) {
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) {
-      if (_currentState == PhaseState.Waiting) {
-        _orbitingBullet.GlobalPosition = ParentBoss.GlobalPosition;
-      } else {
-        UpdateOrbitingBulletPosition();
-      }
-      return;
-    }
-    float effectiveTimeScale = Mathf.Lerp(1.0f, TimeManager.Instance.TimeScale, TimeScaleSensitivity);
-    var scaledDelta = (float) delta * effectiveTimeScale;
-
+  public override void UpdatePhase(float scaledDelta, float effectiveTimeScale) {
     _timer -= scaledDelta;
 
     switch (_currentState) {
       case PhaseState.Waiting:
-        ParentBoss.Velocity = Vector2.Zero;
-        _orbitingBullet.GlobalPosition = ParentBoss.GlobalPosition;
-        if (_timer <= 0) {
-          _currentState = PhaseState.Active;
-        }
+        ParentBoss.Velocity = Vector3.Zero;
+        if (_timer <= 0) _currentState = PhaseState.Active;
         break;
 
       case PhaseState.Active:
-        if (IsInstanceValid(PlayerNode)) {
-          var direction = ParentBoss.GlobalPosition.DirectionTo(PlayerNode.GlobalPosition);
-          ParentBoss.Velocity = direction * BossChaseSpeed;
-        }
+        Vector3 dir = (PlayerNode.GlobalPosition - ParentBoss.GlobalPosition).Normalized();
+        ParentBoss.Velocity = dir * BossChaseSpeed;
         _orbitAngle += OrbitSpeed * scaledDelta;
-        UpdateOrbitingBulletPosition();
         break;
     }
 
-    // 将 Boss 的速度传递给所有液晶分子
-    foreach (var crystal in _activeCrystals) {
-      if (IsInstanceValid(crystal)) {
-        crystal.BossVelocity = ParentBoss.Velocity;
-      }
+    // 物理移动
+    ParentBoss.MoveAndSlide();
+
+    // 更新轨道弹位置
+    if (IsInstanceValid(_orbitingBullet)) {
+      Vector3 offset = _currentState == PhaseState.Waiting ? Vector3.Zero :
+                       new Vector3(Mathf.Cos(_orbitAngle), 0, Mathf.Sin(_orbitAngle)) * OrbitRadius;
+      _orbitingBullet.GlobalPosition = ParentBoss.GlobalPosition + offset;
     }
 
-    // 处理玩家轨迹和子弹清理
-    HandlePlayerTrail(scaledDelta);
+    // 同步 Boss 速度给液晶分子
+    foreach (var crystal in _activeCrystals) {
+      if (IsInstanceValid(crystal)) crystal.BossVelocity = ParentBoss.Velocity;
+    }
+
+    HandlePlayerTrail();
     HandleTrailClearing();
   }
 
-  public override void _PhysicsProcess(double delta) {
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-    ParentBoss.MoveAndSlide();
-  }
-
   private void SpawnCrystals() {
-    if (LiquidCrystalBulletScene == null) return;
+    float hw = (_mapGenerator.MapWidth / 2f) * _mapGenerator.TileSize;
+    float hh = (_mapGenerator.MapHeight / 2f) * _mapGenerator.TileSize;
 
-    float halfWidth = _mapGenerator.MapWidth * _mapGenerator.TileSize / 2f;
-    float halfHeight = _mapGenerator.MapHeight * _mapGenerator.TileSize / 2f;
+    Rect2 bounds = new Rect2(new Vector2(-hw, -hh), new Vector2(hw * 2, hh * 2));
+    Vector3 playerPos = PlayerNode.GlobalPosition;
 
-    float minX = float.MaxValue, minY = float.MaxValue;
-    float maxX = float.MinValue, maxY = float.MinValue;
-
-    var playerPosition = GameRootProvider.CurrentGameRoot.GetNode<Player>("Player").GlobalPosition;
-
-    // 遍历所有生成点
-    for (float y = -halfHeight; y <= halfHeight; y += BulletSpacing) {
-      for (float x = -halfWidth; x <= halfWidth; x += BulletSpacing) {
-        var pos = new Vector2(x, y);
-        if ((playerPosition - pos).Length() < BulletSpacing / 2) {
-          continue;
-        }
+    for (float z = -hh; z <= hh; z += BulletSpacing) {
+      for (float x = -hw; x <= hw; x += BulletSpacing) {
+        Vector3 spawnPos = new Vector3(x, 0, z);
+        if (spawnPos.DistanceTo(playerPos) < BulletSpacing * 0.5f) continue;
 
         var crystal = LiquidCrystalBulletScene.Instantiate<PhaseLiquidCrystalBullet>();
-        crystal.TimeScaleSensitivity = TimeScaleSensitivity;
-        crystal.GlobalPosition = new Vector2(x, y);
-        crystal.BossInfluence = BossInfluenceOnCrystals;
+        crystal.Position = spawnPos;
+        crystal.SetBounds(bounds);
         GameRootProvider.CurrentGameRoot.AddChild(crystal);
         _activeCrystals.Add(crystal);
-
-        // 根据初始位置更新边界
-        minX = Mathf.Min(minX, x);
-        minY = Mathf.Min(minY, y);
-        maxX = Mathf.Max(maxX, x);
-        maxY = Mathf.Max(maxY, y);
-      }
-    }
-
-    // 如果成功生成了子弹，则计算最终的边界矩形
-    if (_activeCrystals.Count > 0) {
-      float margin = BulletSpacing / 2.0f;
-      _crystalBounds = new Rect2(
-        minX - margin,
-        minY - margin,
-        (maxX - minX) + BulletSpacing,
-        (maxY - minY) + BulletSpacing
-      );
-      // 将边界信息传递给所有液晶子弹
-      foreach (var crystal in _activeCrystals) {
-        crystal.SetBounds(_crystalBounds);
       }
     }
   }
 
   private void SpawnOrbitingBullet() {
-    if (OrbitingBulletScene == null) return;
-    _orbitingBullet = OrbitingBulletScene.Instantiate<BaseBullet>();
+    _orbitingBullet = OrbitingBulletScene.Instantiate<SimpleBullet>();
+    _orbitingBullet.UpdateFunc = (t) => { return new SimpleBullet.UpdateState { position = _orbitingBullet.GlobalPosition }; };
     GameRootProvider.CurrentGameRoot.AddChild(_orbitingBullet);
-    _orbitingBullet.GlobalPosition = ParentBoss.GlobalPosition;
   }
 
-  private void UpdateOrbitingBulletPosition() {
-    if (!IsInstanceValid(_orbitingBullet)) return;
-    var offset = Vector2.Right.Rotated(_orbitAngle) * OrbitRadius;
-    _orbitingBullet.GlobalPosition = ParentBoss.GlobalPosition + offset;
-  }
-
-  private void HandlePlayerTrail(float scaledDelta) {
-    if (!IsInstanceValid(PlayerNode)) return;
-    var currentPlayerPos = PlayerNode.GlobalPosition;
-
-    if (currentPlayerPos.DistanceTo(_lastPlayerPosition) > TrailMinDistance) {
-      SpawnTrailBullet(_lastPlayerPosition);
-      _lastPlayerPosition = currentPlayerPos;
+  private void HandlePlayerTrail() {
+    Vector3 currentPos = PlayerNode.GlobalPosition;
+    if (currentPos.DistanceTo(_lastPlayerPosition) > TrailMinDistance) {
+      var trail = TrailBulletScene.Instantiate<BaseBullet>();
+      trail.Position = _lastPlayerPosition;
+      GameRootProvider.CurrentGameRoot.AddChild(trail);
+      _trailBullets.Add(trail);
+      _lastPlayerPosition = currentPos;
     }
-  }
-
-  private void SpawnTrailBullet(Vector2 position) {
-    if (TrailBulletScene == null) return;
-    var bullet = TrailBulletScene.Instantiate<BaseBullet>();
-    bullet.GlobalPosition = position;
-    GameRootProvider.CurrentGameRoot.AddChild(bullet);
-    _trailBullets.Add(bullet);
   }
 
   private void HandleTrailClearing() {
     if (!IsInstanceValid(_orbitingBullet)) return;
-    var orbiterPos = _orbitingBullet.GlobalPosition;
+    Vector3 cleanerPos = _orbitingBullet.GlobalPosition;
 
-    // 从后向前遍历以安全地移除元素
     for (int i = _trailBullets.Count - 1; i >= 0; i--) {
-      var trailBullet = _trailBullets[i];
-      if (!IsInstanceValid(trailBullet)) {
-        _trailBullets.RemoveAt(i);
-        continue;
-      }
-      if (trailBullet.GlobalPosition.DistanceTo(orbiterPos) < TrailClearanceRadius) {
-        trailBullet.Destroy();
+      var b = _trailBullets[i];
+      if (!IsInstanceValid(b) || b.IsDestroyed) { _trailBullets.RemoveAt(i); continue; }
+      if (b.GlobalPosition.DistanceTo(cleanerPos) < TrailClearanceRadius) {
+        b.Destroy();
         _trailBullets.RemoveAt(i);
       }
     }
   }
 
-  public override RewindState CaptureInternalState() {
-    return new PhaseLiquidCrystalState {
-      CurrentState = this._currentState,
-      Timer = this._timer,
-      OrbitAngle = this._orbitAngle,
-      LastPlayerPosition = this._lastPlayerPosition,
-    };
-  }
+  public override RewindState CaptureInternalState() => new PhaseLiquidCrystalState {
+    CurrentState = _currentState,
+    Timer = _timer,
+    OrbitAngle = _orbitAngle,
+    LastPlayerPosition = _lastPlayerPosition
+  };
 
   public override void RestoreInternalState(RewindState state) {
-    base.RestoreInternalState(state);
-    if (state is not PhaseLiquidCrystalState plc) return;
-    this._currentState = plc.CurrentState;
-    this._timer = plc.Timer;
-    this._orbitAngle = plc.OrbitAngle;
-    this._lastPlayerPosition = plc.LastPlayerPosition;
+    if (state is not PhaseLiquidCrystalState s) return;
+    _currentState = s.CurrentState; _timer = s.Timer; _orbitAngle = s.OrbitAngle; _lastPlayerPosition = s.LastPlayerPosition;
   }
 }

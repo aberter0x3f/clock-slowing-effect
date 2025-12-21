@@ -4,155 +4,77 @@ using Rewind;
 
 namespace Enemy;
 
-public class DnaState : BaseEnemyState {
-  public Dna.AttackState CurrentAttackState;
-  public float AttackTimer;
-  public int BulletsFiredInSequence;
-  public Vector2 AttackDirection;
-  public float ShootTimer;
+public class DnaState : SimpleEnemyState {
+  public int BulletsFired;
+  public Vector3 AttackDirection;
 }
 
-public partial class Dna : BaseEnemy {
-  // 攻击状态机
-  public enum AttackState {
-    Idle,
-    Attacking
-  }
-  private AttackState _attackState = AttackState.Idle;
-  private float _attackTimer;
-  private int _bulletsFiredInSequence;
-  private Vector2 _attackDirection;
+public partial class Dna : SimpleEnemy {
+  [Export] public PackedScene Bullet1Scene { get; set; }
+  [Export] public PackedScene Bullet2Scene { get; set; }
+  [Export] public float ShootInterval { get; set; } = 5f;
+  [Export] public int BulletCount { get; set; } = 20;
+  [Export] public float BulletCreationInterval { get; set; } = 0.08f;
 
-  [Export]
-  public PackedScene Bullet1Scene { get; set; }
+  private int _bulletsFired = 0;
+  private Vector3 _attackDirection;
 
-  [Export]
-  public PackedScene Bullet2Scene { get; set; }
-
-  [Export]
-  public float ShootInterval { get; set; } = 5f;
-
-  [Export]
-  public int BulletCount { get; set; } = 20;
-
-  [Export]
-  public float BulletCreationInterval { get; set; } = 0.08f;
-
-  private float _shootTimer;
-  private RandomWalkComponent _randomWalkComponent;
-
-  public override void _Ready() {
-    base._Ready();
-    _randomWalkComponent = GetNode<RandomWalkComponent>("RandomWalkComponent");
-    _shootTimer = 1.0f;
-  }
-
-  public override void _Process(double delta) {
-    base._Process(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
-
-    if (_attackState == AttackState.Idle) {
-      _shootTimer -= scaledDelta;
-      if (_shootTimer <= 0) {
-        StartAttackSequence();
-        _shootTimer = ShootInterval;
-      }
-    } else {
-      // 如果正在攻击，则处理攻击状态机
-      HandleAttackState(scaledDelta);
-    }
-    UpdateVisualizer();
-  }
-
-  public override void _PhysicsProcess(double delta) {
-    base._PhysicsProcess(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-
-    // 攻击时敌人不移动
-    if (_attackState == AttackState.Idle) {
-      Velocity = _randomWalkComponent.TargetVelocity * TimeManager.Instance.TimeScale;
-      MoveAndSlide();
-    } else {
-      Velocity = Vector2.Zero;
-    }
-  }
-
-  /// <summary>
-  /// 初始化并启动攻击状态机，取代了原先的 async 方法．
-  /// </summary>
-  private void StartAttackSequence() {
-    _attackState = AttackState.Attacking;
+  public override (float nextDelay, bool canWalk) Shoot() {
     var target = PlayerNode;
-    if (target == null || !IsInstanceValid(target)) {
-      _attackState = AttackState.Idle;
-      return;
+    if (target == null || !IsInstanceValid(target)) return (0.1f, true);
+
+    if (_bulletsFired == 0) {
+      _attackDirection = (target.GlobalPosition - GlobalPosition).Normalized();
+      GD.Print(_attackDirection);
     }
-    _attackDirection = (target.GlobalPosition - GlobalPosition).Normalized();
-    _bulletsFiredInSequence = 0;
-    _attackTimer = 0; // 立即发射第一对子弹
-    PlayAttackSound();
+
+    SoundManager.Instance.Play(SoundEffect.FireSmall);
+    SpawnWavyPair();
+    ++_bulletsFired;
+
+    if (_bulletsFired >= BulletCount) {
+      _bulletsFired = 0;
+      return (ShootInterval, true); // 序列结束，进入大冷却
+    }
+
+    return (BulletCreationInterval, false); // 序列中，禁止移动并快速触发下一次 Shoot
   }
 
-  /// <summary>
-  /// 在 _Process 中每帧调用，处理攻击逻辑．
-  /// </summary>
-  private void HandleAttackState(float scaledDelta) {
-    if (_attackState != AttackState.Attacking) return;
+  private void SpawnWavyPair() {
+    Vector3 pos = GlobalPosition;
 
-    _attackTimer -= scaledDelta;
-
-    if (_attackTimer <= 0) {
-      // 检查是否已完成攻击序列
-      if (_bulletsFiredInSequence >= BulletCount) {
-        _attackState = AttackState.Idle; // 攻击结束，返回 Idle 状态
-        return;
-      }
-
-      var enemyPosition = GlobalPosition;
-
-      var bullet1 = Bullet1Scene.Instantiate<WavyBullet>();
-      bullet1.GlobalPosition = enemyPosition;
-      bullet1.GlobalRotation = _attackDirection.Angle();
-      bullet1.InvertSine = false;
-      GameRootProvider.CurrentGameRoot.AddChild(bullet1);
-
-      var bullet2 = Bullet2Scene.Instantiate<WavyBullet>();
-      bullet2.GlobalPosition = enemyPosition;
-      bullet2.GlobalRotation = _attackDirection.Angle();
-      bullet2.InvertSine = true;
-      GameRootProvider.CurrentGameRoot.AddChild(bullet2);
-
-      ++_bulletsFiredInSequence;
-
-      // 重置计时器，等待下一次发射
-      _attackTimer = BulletCreationInterval;
+    void SetupBullet(PackedScene scene, bool invert) {
+      if (scene == null) return;
+      var bullet = scene.Instantiate<WavyBullet>();
+      bullet.InitialPosition = pos;
+      bullet.Basis = Basis.LookingAt(_attackDirection);
+      bullet.InvertSine = invert;
+      GameRootProvider.CurrentGameRoot.AddChild(bullet);
     }
+
+    SetupBullet(Bullet1Scene, false);
+    SetupBullet(Bullet2Scene, true);
   }
 
   public override RewindState CaptureState() {
-    var baseState = (BaseEnemyState) base.CaptureState();
+    var baseState = (SimpleEnemyState) base.CaptureState();
     return new DnaState {
       GlobalPosition = baseState.GlobalPosition,
       Velocity = baseState.Velocity,
       Health = baseState.Health,
       HitTimerLeft = baseState.HitTimerLeft,
       IsInHitState = baseState.IsInHitState,
-      CurrentAttackState = this._attackState,
-      AttackTimer = this._attackTimer,
-      BulletsFiredInSequence = this._bulletsFiredInSequence,
-      AttackDirection = this._attackDirection,
-      ShootTimer = this._shootTimer
+      ShootTimer = baseState.ShootTimer,
+      CanWalk = baseState.CanWalk,
+      BulletsFired = _bulletsFired,
+      AttackDirection = _attackDirection
     };
   }
 
   public override void RestoreState(RewindState state) {
     base.RestoreState(state);
     if (state is not DnaState ds) return;
-    this._attackState = ds.CurrentAttackState;
-    this._attackTimer = ds.AttackTimer;
-    this._bulletsFiredInSequence = ds.BulletsFiredInSequence;
-    this._attackDirection = ds.AttackDirection;
-    this._shootTimer = ds.ShootTimer;
+    _bulletsFired = ds.BulletsFired;
+    _attackDirection = ds.AttackDirection;
   }
 }

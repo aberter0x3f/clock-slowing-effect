@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3 uid="uid://clq42dr4qhnpb"]
+[gd_scene load_steps=26 format=3 uid="uid://clq42dr4qhnpb"]
 
 [ext_resource type="Script" uid="uid://b6t3j7axqr3pk" path="res://scripts/Player.cs" id="1_onrkg"]
 [ext_resource type="PackedScene" uid="uid://clk8144n4xb8u" path="res://player_bullet.tscn" id="2_hqtel"]
@@ -6,28 +6,24 @@
 [ext_resource type="PackedScene" uid="uid://cf51bidbo3k5j" path="res://time_shard_small.tscn" id="3_sweqy"]
 [ext_resource type="PackedScene" uid="uid://qxto5y31fg8d" path="res://invert_ring_effect.tscn" id="4_2hs0m"]
 [ext_resource type="Texture2D" uid="uid://dqjwje0ye4apm" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 9C Free.png" id="4_hqtel"]
-[ext_resource type="AudioStream" uid="uid://dt4ib6ejks0dx" path="res://sounds/effects/graze.wav" id="6_ivps1"]
-[ext_resource type="AudioStream" uid="uid://bnfy1dhlnv8br" path="res://sounds/effects/player_death.wav" id="7_nvl01"]
 [ext_resource type="Texture2D" uid="uid://drravq36efsfa" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 5B Free.png" id="8_dw050"]
-[ext_resource type="AudioStream" uid="uid://cwltmlyx4lrne" path="res://sounds/effects/bling.wav" id="8_ivps1"]
-[ext_resource type="AudioStream" uid="uid://dho4cb2kse2po" path="res://sounds/effects/change_item.wav" id="9_bwjto"]
-[ext_resource type="AudioStream" uid="uid://dcnqnd0chphl4" path="res://sounds/effects/violin.wav" id="9_ivps1"]
-[ext_resource type="AudioStream" uid="uid://i7822ekvsgsr" path="res://sounds/effects/reload_complete.wav" id="11_606se"]
 [ext_resource type="Texture2D" uid="uid://bu6xmohgwjkxn" path="res://images/player/idle0.png" id="13_pylmc"]
 [ext_resource type="Texture2D" uid="uid://birsimqmap13n" path="res://images/player/idle1.png" id="14_pbfsw"]
 [ext_resource type="Texture2D" uid="uid://dr5lidvwxnxtg" path="res://images/player/idle2.png" id="15_5tmop"]
 [ext_resource type="Texture2D" uid="uid://bu31gjok7y1uo" path="res://images/player/idle3.png" id="16_7ahtn"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_sweqy"]
-radius = 100.0
+[sub_resource type="SphereShape3D" id="SphereShape3D_nvl01"]
+radius = 1.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_hqtel"]
-radius = 50.0
+[sub_resource type="SphereShape3D" id="SphereShape3D_ivps1"]
+radius = 0.4
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_hqtel"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_nvl01"]
+height = 0.4
+radius = 0.14
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_onrkg"]
-radius = 3.0
+[sub_resource type="SphereShape3D" id="SphereShape3D_urp6f"]
+radius = 0.03
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_bwjto"]
 animations = [{
@@ -113,50 +109,46 @@ animations = [{
 "speed": 8.0
 }]
 
-[node name="Player" type="CharacterBody2D"]
+[node name="Player" type="CharacterBody3D"]
 collision_layer = 2
 collision_mask = 3
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
 script = ExtResource("1_onrkg")
 SpriteBasePositionX = -0.045
 BulletScene = ExtResource("2_hqtel")
 DecoyTargetScene = ExtResource("3_1jxqw")
 GrazeTimeShard = ExtResource("3_sweqy")
 DeathRingEffectScene = ExtResource("4_2hs0m")
-GrazeSound = ExtResource("6_ivps1")
-DeathSound = ExtResource("7_nvl01")
-SkillAvailableSound = ExtResource("8_ivps1")
-CurioSwitchSound = ExtResource("9_bwjto")
-ShootSound = ExtResource("9_ivps1")
-ReloadCompleteSound = ExtResource("11_606se")
 
-[node name="InteractionArea" type="Area2D" parent="."]
+[node name="InteractionArea" type="Area3D" parent="."]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea"]
-shape = SubResource("CircleShape2D_sweqy")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
+shape = SubResource("SphereShape3D_nvl01")
 
-[node name="GrazeArea" type="Area2D" parent="."]
+[node name="GrazeArea" type="Area3D" parent="."]
 collision_layer = 0
 collision_mask = 16
 monitorable = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="GrazeArea"]
-shape = SubResource("CircleShape2D_hqtel")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GrazeArea"]
+shape = SubResource("SphereShape3D_ivps1")
 debug_color = Color(0.9999998, 0.005680199, 0.08196478, 0.41960785)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_hqtel")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+shape = SubResource("CylinderShape3D_nvl01")
 
-[node name="HitArea" type="Area2D" parent="."]
+[node name="HitArea" type="Area3D" parent="."]
 collision_layer = 4
 collision_mask = 24
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HitArea"]
-shape = SubResource("CircleShape2D_onrkg")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HitArea"]
+shape = SubResource("SphereShape3D_urp6f")
 debug_color = Color(0.3529412, 0.61960787, 0, 0.49803922)
 
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Visualizer"]
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="."]
 transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, -0.045, 0.06, 0)
 sorting_offset = 60.0
 offset = Vector2(0, 11)
@@ -164,17 +156,18 @@ texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_bwjto")
 animation = &"idle"
 
-[node name="HitPointSprite" type="AnimatedSprite3D" parent="Visualizer"]
+[node name="HitPointSprite" type="AnimatedSprite3D" parent="."]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 sorting_offset = 100.0
 billboard = 1
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_7ahtn")
 
-[node name="Camera3D" type="Camera3D" parent="Visualizer"]
-transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 0, 2.5, 3)
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 2.5, 3)
+current = true
 
-[node name="SpotLight3D" type="SpotLight3D" parent="Visualizer"]
+[node name="SpotLight3D" type="SpotLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 4, 0)
 light_energy = 5.0
 light_volumetric_fog_energy = 5.0

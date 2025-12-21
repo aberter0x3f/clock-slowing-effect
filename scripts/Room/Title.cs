@@ -10,7 +10,7 @@ public partial class Title : Node {
   private Player _player;
   private MapGenerator _mapGenerator;
   private RewindManager _rewindManager;
-  private Vector2 _playerSpawnPosition;
+  private Vector3 _playerSpawnPosition;
   private DifficultyMenu _difficultyMenu;
   private CurioSelectionMenu _curioSelectionMenu;
   private BossPracticeSelectionMenu _bossPracticeMenu;

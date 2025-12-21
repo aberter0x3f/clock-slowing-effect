@@ -1,22 +1,16 @@
-[gd_scene load_steps=4 format=3 uid="uid://cej6b3gx7814j"]
+[gd_scene load_steps=3 format=3 uid="uid://cej6b3gx7814j"]
 
-[ext_resource type="Script" uid="uid://t3buo6qrbrj3" path="res://scripts/Enemy/Obstacle.cs" id="1_sl1jc"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_qcbvg"]
-size = Vector2(32, 32)
+[sub_resource type="BoxShape3D" id="BoxShape3D_qcbvg"]
+size = Vector3(0.32, 0.32, 0.32)
 
 [sub_resource type="BoxMesh" id="BoxMesh_qcbvg"]
 size = Vector3(0.32, 0.32, 0.32)
 
-[node name="Obstacle" type="Node2D"]
-script = ExtResource("1_sl1jc")
+[node name="StaticBody3D" type="StaticBody3D"]
 
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_qcbvg")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
-shape = SubResource("RectangleShape2D_qcbvg")
-
-[node name="Node3D" type="Node3D" parent="."]
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Node3D"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("BoxMesh_qcbvg")
+skeleton = NodePath("")

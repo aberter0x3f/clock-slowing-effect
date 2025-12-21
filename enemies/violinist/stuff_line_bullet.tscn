@@ -1,31 +1,22 @@
 [gd_scene load_steps=4 format=3 uid="uid://dm5xk7cw2rst7"]
 
-[ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_iob30"]
+[ext_resource type="Script" uid="uid://cj6a2qe3lj8kq" path="res://scripts/Bullet/BaseBullet.cs" id="1_f1l2l"]
 [ext_resource type="Texture2D" uid="uid://cq88bh1gv3qbf" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Free Part 3B.png" id="2_f1l2l"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_da45y"]
-size = Vector2(14, 3)
+[sub_resource type="BoxShape3D" id="BoxShape3D_f1l2l"]
+size = Vector3(0.04, 0.05, 0.14)
 
-[node name="EnemyBullet" type="Area2D" groups=["bullets"]]
-z_index = 3
+[node name="EnemyBullet" type="Area3D" groups=["bullets"]]
 collision_layer = 16
 collision_mask = 4
-script = ExtResource("1_iob30")
-InitialSpeed = 0.0
+script = ExtResource("1_f1l2l")
 MaxLifetime = 3.0
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-visible = false
-texture = ExtResource("2_f1l2l")
-region_enabled = true
-region_rect = Rect2(144, 216, 24, 24)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_f1l2l")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_da45y")
-
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="Sprite" type="Sprite3D" parent="Visualizer"]
+[node name="Sprite" type="Sprite3D" parent="."]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
 sorting_offset = 80.0
 axis = 1
 texture_filter = 0

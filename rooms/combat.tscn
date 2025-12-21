@@ -6,23 +6,23 @@
 [ext_resource type="Script" uid="uid://d1if7b56ademj" path="res://scripts/MapGenerator.cs" id="3_bxsma"]
 [ext_resource type="PackedScene" uid="uid://c366ntgyj6v6m" path="res://portal.tscn" id="3_wsm0g"]
 [ext_resource type="PackedScene" uid="uid://bfl1nrtfgvq5m" path="res://ui/upgrade_selection_menu.tscn" id="4_iplkw"]
-[ext_resource type="Script" uid="uid://ddv4ypiw0mqcp" path="res://scripts/Enemy/EnemySpawner.cs" id="4_lkrbl"]
 [ext_resource type="PackedScene" uid="uid://cej6b3gx7814j" path="res://obstacle.tscn" id="4_soos4"]
-[ext_resource type="Resource" uid="uid://bavwyb1080vsp" path="res://enemies/simple_enemy_1.tres" id="5_8tlgu"]
 [ext_resource type="PackedScene" uid="uid://c6vnywdveemsw" path="res://world_environment.tscn" id="5_awqhq"]
 [ext_resource type="PackedScene" uid="uid://uq1fwqavedld" path="res://floor_tile_1.tscn" id="5_lt8bm"]
 [ext_resource type="PackedScene" uid="uid://8tp11lig65w" path="res://ui/heads_up_display.tscn" id="6_15veh"]
 [ext_resource type="PackedScene" uid="uid://dynj33onwm4qh" path="res://rewind_label.tscn" id="6_80jcd"]
 [ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="6_q7c2t"]
-[ext_resource type="Resource" uid="uid://bc4c7si6m041s" path="res://enemies/simple_enemy_2.tres" id="6_soos4"]
-[ext_resource type="Resource" uid="uid://ho3dfxin8aet" path="res://enemies/simple_enemy_3.tres" id="7_0pxas"]
 [ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="7_1uov0"]
-[ext_resource type="Resource" uid="uid://dmlw8484d2lso" path="res://enemies/simple_enemy_4.tres" id="8_nknqk"]
-[ext_resource type="Resource" uid="uid://p2ewkufe1nn" path="res://enemies/simple_enemy_5.tres" id="9_lt8bm"]
-[ext_resource type="Resource" uid="uid://bnmryy1spjtl2" path="res://enemies/dna.tres" id="10_q7c2t"]
-[ext_resource type="Resource" uid="uid://c32pgymbawkmy" path="res://enemies/drummer.tres" id="11_1uov0"]
-[ext_resource type="Resource" uid="uid://buj1ymolwiapl" path="res://enemies/violinist.tres" id="12_i2rhi"]
-[ext_resource type="Resource" uid="uid://ckqpio203plex" path="res://enemies/firework.tres" id="14_0pxas"]
+[ext_resource type="Script" uid="uid://ddv4ypiw0mqcp" path="res://scripts/Enemy/EnemySpawner.cs" id="13_04rph"]
+[ext_resource type="Resource" uid="uid://bavwyb1080vsp" path="res://enemies/simple_enemy_1.tres" id="14_ol473"]
+[ext_resource type="Resource" uid="uid://bc4c7si6m041s" path="res://enemies/simple_enemy_2.tres" id="15_o3kpc"]
+[ext_resource type="Resource" uid="uid://ho3dfxin8aet" path="res://enemies/simple_enemy_3.tres" id="16_xv3ha"]
+[ext_resource type="Resource" uid="uid://dmlw8484d2lso" path="res://enemies/simple_enemy_4.tres" id="17_cbqrt"]
+[ext_resource type="Resource" uid="uid://bnmryy1spjtl2" path="res://enemies/dna.tres" id="18_l2gav"]
+[ext_resource type="Resource" uid="uid://p2ewkufe1nn" path="res://enemies/jumper.tres" id="19_bkvbc"]
+[ext_resource type="Resource" uid="uid://c32pgymbawkmy" path="res://enemies/drummer.tres" id="20_a7bmt"]
+[ext_resource type="Resource" uid="uid://ckqpio203plex" path="res://enemies/firework.tres" id="21_6e5rx"]
+[ext_resource type="Resource" uid="uid://buj1ymolwiapl" path="res://enemies/violinist.tres" id="22_8i75h"]
 [ext_resource type="AudioStream" uid="uid://bbisydfgmjhj0" path="res://sounds/boss.ogg" id="24_04rph"]
 
 [node name="GameRoot" type="Node3D"]
@@ -57,8 +57,8 @@ script = ExtResource("7_1uov0")
 metadata/_custom_type_script = "uid://vn61cc2q0j34"
 
 [node name="EnemySpawner" type="Node" parent="."]
-script = ExtResource("4_lkrbl")
-EnemyDatabase = Array[Object]([ExtResource("5_8tlgu"), ExtResource("6_soos4"), ExtResource("7_0pxas"), ExtResource("8_nknqk"), ExtResource("9_lt8bm"), ExtResource("10_q7c2t"), ExtResource("11_1uov0"), ExtResource("12_i2rhi"), ExtResource("14_0pxas")])
+script = ExtResource("13_04rph")
+EnemyDatabase = Array[Object]([ExtResource("14_ol473"), ExtResource("15_o3kpc"), ExtResource("16_xv3ha"), ExtResource("17_cbqrt"), ExtResource("18_l2gav"), ExtResource("19_bkvbc"), ExtResource("20_a7bmt"), ExtResource("21_6e5rx"), ExtResource("22_8i75h")])
 metadata/_custom_type_script = "uid://ddv4ypiw0mqcp"
 
 [node name="Player" parent="." instance=ExtResource("1_xj5yv")]

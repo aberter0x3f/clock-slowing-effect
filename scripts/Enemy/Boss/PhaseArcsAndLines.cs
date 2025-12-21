@@ -14,51 +14,24 @@ public class PhaseArcsAndLinesState : BasePhaseState {
 }
 
 public partial class PhaseArcsAndLines : BasePhase {
-  /// <summary>
-  /// Boss 在此阶段的攻击状态机．
-  /// </summary>
-  public enum AttackState {
-    /// <summary>
-    /// 正在移动到攻击起始位置．
-    /// </summary>
-    MovingToPosition,
-    /// <summary>
-    /// 在一轮齐射 (Volley) 的间隙．
-    /// </summary>
-    BetweenVolleys,
-    /// <summary>
-    /// 在两个攻击阶段 (Phase) 之间的间隙．
-    /// </summary>
-    BetweenPhases
-  }
+  public enum AttackState { MovingToPosition, BetweenVolleys, BetweenPhases }
 
   [ExportGroup("Movement")]
-  [Export]
-  public Vector2 TargetPosition { get; set; } = new(0, -300);
-  [Export(PropertyHint.Range, "10, 2000, 10")]
-  public float MoveSpeed { get; set; } = 500f; // Boss 的移动速度
+  [Export] public Vector3 TargetPosition { get; set; } = new(0, 0, -3.0f);
+  [Export] public float MoveSpeed { get; set; } = 5.0f;
 
   [ExportGroup("Attack Pattern")]
-  [Export(PropertyHint.Range, "1, 100, 1")]
-  public int BulletCount { get; set; } = 20;
-  [Export(PropertyHint.Range, "1, 20, 1")]
-  public int VolleyCount { get; set; } = 8;
-  [Export(PropertyHint.Range, "0.05, 1.0, 0.05")]
-  public float VolleyInterval { get; set; } = 0.1f;
-  [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
-  public float PhaseInterval { get; set; } = 0.1f;
+  [Export] public int BulletCount { get; set; } = 20;
+  [Export] public int VolleyCount { get; set; } = 8;
+  [Export] public float VolleyInterval { get; set; } = 0.1f;
+  [Export] public float PhaseInterval { get; set; } = 0.1f;
 
   [ExportGroup("Bullet Path")]
-  [Export(PropertyHint.Range, "10, 500, 1")]
-  public float PrimaryRadius { get; set; } = 300f;
-  [Export(PropertyHint.Range, "10, 500, 1")]
-  public float SecondaryRadius { get; set; } = 250f;
-  [Export(PropertyHint.Range, "0.1, 5.0, 0.05")]
-  public float QuarterArcDuration { get; set; } = 0.8f;
-  [Export(PropertyHint.Range, "0.1, 5.0, 0.05")]
-  public float SecondaryArcDuration { get; set; } = 1.2f;
-  [Export(PropertyHint.Range, "100, 1000, 10")]
-  public float FinalLinearSpeed { get; set; } = 500f;
+  [Export] public float PrimaryRadius { get; set; } = 3.0f;
+  [Export] public float SecondaryRadius { get; set; } = 2.5f;
+  [Export] public float QuarterArcDuration { get; set; } = 0.8f;
+  [Export] public float SecondaryArcDuration { get; set; } = 1.2f;
+  [Export] public float FinalLinearSpeed { get; set; } = 5.0f;
 
   [ExportGroup("Scene Reference")]
   [Export]
@@ -67,198 +40,177 @@ public partial class PhaseArcsAndLines : BasePhase {
   public PackedScene BulletScene2 { get; set; }
 
   [ExportGroup("Defense Mechanism")]
-  [Export]
-  public PackedScene DefenseBulletScene { get; set; }
-  [Export(PropertyHint.Range, "50, 500, 10")]
-  public float DefenseTriggerDistance { get; set; } = 400f;
-  [Export(PropertyHint.Range, "0, 10.0, 0.1")]
-  public float DefenseCooldown { get; set; } = 0.1f;
-  [Export(PropertyHint.Range, "1, 50, 1")]
-  public int DefenseBulletCount { get; set; } = 50;
+  [Export] public PackedScene DefenseBulletScene { get; set; }
+  [Export] public float DefenseTriggerDistance { get; set; } = 4.0f;
+  [Export] public float DefenseCooldown { get; set; } = 0.1f;
+  [Export] public int DefenseBulletCount { get; set; } = 100;
 
-  // 状态机变量
   private AttackState _currentState;
   private float _timer;
   private int _volleyCounter;
   private bool _isCurrentPhaseInverted;
   private float _theta0;
   private float _defenseTimer;
-  private readonly RandomNumberGenerator _rng = new();
 
-  public override void StartPhase(Boss parent) {
-    base.StartPhase(parent);
-
-    // 初始化状态机，首先进入移动状态
+  public override void PhaseStart(Boss parent) {
+    base.PhaseStart(parent);
     _currentState = AttackState.MovingToPosition;
     _defenseTimer = DefenseCooldown;
 
-    BulletCount = Mathf.RoundToInt(BulletCount * GameManager.Instance.EnemyRank / 5);
-    SecondaryArcDuration /= GameManager.Instance.EnemyRank / 5;
-    FinalLinearSpeed *= GameManager.Instance.EnemyRank / 5;
+    float rankScale = (float) GameManager.Instance.EnemyRank / 5.0f;
+    BulletCount = Mathf.RoundToInt(BulletCount * rankScale);
+    SecondaryArcDuration /= rankScale;
+    FinalLinearSpeed *= rankScale;
   }
 
-  public override void _Process(double delta) {
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
-
-
+  public override void UpdatePhase(float scaledDelta, float effectiveTimeScale) {
     switch (_currentState) {
       case AttackState.MovingToPosition:
-        // 将 Boss 移向目标位置
         ParentBoss.GlobalPosition = ParentBoss.GlobalPosition.MoveToward(TargetPosition, MoveSpeed * scaledDelta);
-
-        // 检查 Boss 是否已到达目标位置
-        if (ParentBoss.GlobalPosition.IsEqualApprox(TargetPosition)) {
-          // 到达后开始攻击模式
-          StartAttackPattern();
-        }
+        if (ParentBoss.GlobalPosition.IsEqualApprox(TargetPosition)) StartAttackPattern();
         break;
 
       case AttackState.BetweenVolleys:
         _timer -= scaledDelta;
-        if (_timer > 0) {
-          return;
-        }
-
-        // 独立处理防近身机制
         HandleDefenseMechanism(scaledDelta);
-
-        if (_volleyCounter < VolleyCount) {
-          // 当前阶段还有更多齐射
-          FireVolley();
-          ++_volleyCounter;
-          _timer = VolleyInterval;
-        } else {
-          // 当前阶段齐射完毕，进入阶段间隔
-          _currentState = AttackState.BetweenPhases;
-          _timer = PhaseInterval;
+        if (_timer <= 0) {
+          if (_volleyCounter < VolleyCount) {
+            FireVolley();
+            ++_volleyCounter;
+            _timer = VolleyInterval;
+            SoundManager.Instance.Play(SoundEffect.FireSmall);
+          } else {
+            _currentState = AttackState.BetweenPhases;
+            _timer = PhaseInterval;
+          }
         }
         break;
 
       case AttackState.BetweenPhases:
         _timer -= scaledDelta;
-        if (_timer > 0) {
-          return;
+        if (_timer <= 0) {
+          _isCurrentPhaseInverted = !_isCurrentPhaseInverted;
+          _volleyCounter = 0;
+          _theta0 = GD.Randf() * Mathf.Tau;
+          FireVolley();
+          ++_volleyCounter;
+          _currentState = AttackState.BetweenVolleys;
+          _timer = VolleyInterval;
+          SoundManager.Instance.Play(SoundEffect.FireBig);
+        }
+        break;
+    }
+  }
+
+  private void FireVolley() {
+    PackedScene sceneToUse = _isCurrentPhaseInverted ? BulletScene2 : BulletScene1;
+
+    float R1 = PrimaryRadius;
+    float R2 = SecondaryRadius;
+    float TQ = QuarterArcDuration;
+    float TS = SecondaryArcDuration;
+    float LS = FinalLinearSpeed;
+    bool inverted = _isCurrentPhaseInverted;
+    Vector3 basePos = TargetPosition;
+
+    for (int i = 0; i < BulletCount; ++i) {
+      float angle = (Mathf.Tau / BulletCount * i) + _theta0;
+      var bullet = sceneToUse.Instantiate<SimpleBullet>();
+
+      Vector3 vRad = new Vector3(Mathf.Cos(angle), 0, -Mathf.Sin(angle));
+      Vector3 vUp = Vector3.Up;
+      Vector3 vTan = new Vector3(-Mathf.Sin(angle), 0, -Mathf.Cos(angle)) * (inverted ? -1 : 1);
+
+      bullet.UpdateFunc = (t) => {
+        SimpleBullet.UpdateState s = new();
+        Vector2 p = Vector2.Zero; // 平面内的局部坐标 (径向距离, 高度或切向距离)
+        bool useVertical = true;
+
+        if (t <= TQ) {
+          float prog = t / TQ;
+          p = new Vector2(R1 * Mathf.Sin(prog * Mathf.Pi / 2), R1 - R1 * Mathf.Cos(prog * Mathf.Pi / 2));
+        } else if (t <= 3 * TQ) {
+          float prog = (t - TQ) / (2 * TQ);
+          float ang = prog * Mathf.Pi;
+          p = new Vector2(R1 / 2, R1) + new Vector2(R1 / 2 * Mathf.Cos(ang), R1 / 2 * Mathf.Sin(ang));
+        } else if (t <= 4 * TQ) {
+          float prog = (t - 3 * TQ) / TQ;
+          float ang = Mathf.Pi + prog * Mathf.Pi / 2;
+          p = new Vector2(R1, R1) + new Vector2(R1 * Mathf.Cos(ang), R1 * Mathf.Sin(ang));
+        } else if (t <= 4 * TQ + TS) {
+          useVertical = false;
+          float prog = (t - 4 * TQ) / TS;
+          float ang = -Mathf.Pi / 2 + prog * Mathf.Pi / 2;
+          p = new Vector2(R1, R2) + new Vector2(R2 * Mathf.Cos(ang), R2 * Mathf.Sin(ang));
+        } else {
+          useVertical = false;
+          float dt = t - (4 * TQ + TS);
+          p = new Vector2(R1 + R2, R2 + LS * dt);
         }
 
-        // 阶段间隔结束，开始下一阶段
-        _isCurrentPhaseInverted = !_isCurrentPhaseInverted;
-        _volleyCounter = 0;
-        _theta0 = _rng.Randf() * Mathf.Tau;
+        s.position = basePos + vRad * p.X + (useVertical ? vUp * p.Y : vTan * p.Y);
 
-        FireVolley();
-        ++_volleyCounter;
+        return s;
+      };
 
-        _currentState = AttackState.BetweenVolleys;
-        _timer = VolleyInterval;
-
-        PlayAttackSound();
-        break;
+      GameRootProvider.CurrentGameRoot.AddChild(bullet);
     }
   }
 
   private void HandleDefenseMechanism(float scaledDelta) {
     _defenseTimer -= scaledDelta;
-    if (_defenseTimer > 0) {
-      return;
-    }
+    if (_defenseTimer > 0) return;
 
-    if (PlayerNode != null && IsInstanceValid(PlayerNode)) {
-      float distanceToPlayer = ParentBoss.GlobalPosition.DistanceTo(PlayerNode.GlobalPosition);
-      if (distanceToPlayer < DefenseTriggerDistance) {
-        FireDefensePattern();
-        _defenseTimer = DefenseCooldown;
-      }
+    if (IsInstanceValid(PlayerNode) && ParentBoss.GlobalPosition.DistanceTo(PlayerNode.GlobalPosition) < DefenseTriggerDistance) {
+      FireDefensePattern();
+      _defenseTimer = DefenseCooldown;
     }
   }
 
   private void FireDefensePattern() {
-    if (DefenseBulletScene == null) {
-      GD.PrintErr("PhaseArcsAndLines: DefenseBulletScene is not set!");
-      return;
-    }
+    if (DefenseBulletScene == null) return;
+    SoundManager.Instance.Play(SoundEffect.FireBig);
+    float step = Mathf.Tau / DefenseBulletCount;
+    Vector3 bossPos = ParentBoss.GlobalPosition;
 
-    PlayAttackSound();
-    float angleStep = Mathf.Tau / DefenseBulletCount;
     for (int i = 0; i < DefenseBulletCount; ++i) {
       var bullet = DefenseBulletScene.Instantiate<SimpleBullet>();
-      float angle = i * angleStep;
-      var direction = Vector2.Right.Rotated(angle);
-
-      bullet.GlobalPosition = ParentBoss.GlobalPosition;
-      bullet.Rotation = direction.Angle();
+      Vector3 dir = new Vector3(Mathf.Cos(i * step), 0, Mathf.Sin(i * step));
+      bullet.UpdateFunc = (t) => {
+        SimpleBullet.UpdateState s = new();
+        s.position = bossPos + dir * (t * 6.0f);
+        return s;
+      };
       GameRootProvider.CurrentGameRoot.AddChild(bullet);
     }
   }
 
-  /// <summary>
-  /// 初始化攻击模式的状态并开始发射子弹．
-  /// </summary>
   private void StartAttackPattern() {
-    // 初始化攻击相关的状态
     _isCurrentPhaseInverted = false;
     _volleyCounter = 0;
-    _theta0 = _rng.Randf() * Mathf.Tau;
-
-    // 立即发射第一波
+    _theta0 = GD.Randf() * Mathf.Tau;
     FireVolley();
     ++_volleyCounter;
-
     _currentState = AttackState.BetweenVolleys;
     _timer = VolleyInterval;
-
-    PlayAttackSound();
-  }
-
-  private void FireVolley() {
-    PackedScene sceneToUse = _isCurrentPhaseInverted ? BulletScene2 : BulletScene1;
-    if (sceneToUse == null) {
-      GD.PrintErr($"PhaseArcsAndLines: Bullet scene for current phase (inverted={_isCurrentPhaseInverted}) is not set!");
-      // 如果一个场景为空，尝试使用另一个作为备用
-      sceneToUse = _isCurrentPhaseInverted ? BulletScene1 : BulletScene2;
-      if (sceneToUse == null) {
-        return; // 两个都为空，无法继续
-      }
-    }
-
-    for (int i = 0; i < BulletCount; ++i) {
-      float baseAngle = (Mathf.Tau / BulletCount * i) + _theta0;
-      var bullet = sceneToUse.Instantiate<PhaseArcsAndLinesBullet>();
-
-      // 初始化子弹的路径参数
-      bullet.BasePosition = new Vector3(TargetPosition.X, TargetPosition.Y, 0);
-      bullet.RawPosition = bullet.BasePosition;
-      bullet.BaseAngle = baseAngle;
-      bullet.PrimaryRadius = PrimaryRadius;
-      bullet.SecondaryRadius = SecondaryRadius;
-      bullet.QuarterArcDuration = QuarterArcDuration;
-      bullet.SecondaryArcDuration = SecondaryArcDuration;
-      bullet.FinalLinearSpeed = FinalLinearSpeed;
-      bullet.InvertHorizontalPlaneY = _isCurrentPhaseInverted;
-
-      GameRootProvider.CurrentGameRoot.AddChild(bullet);
-    }
+    SoundManager.Instance.Play(SoundEffect.FireBig);
   }
 
   public override RewindState CaptureInternalState() {
     return new PhaseArcsAndLinesState {
-      CurrentState = this._currentState,
-      Timer = this._timer,
-      VolleyCounter = this._volleyCounter,
-      IsCurrentPhaseInverted = this._isCurrentPhaseInverted,
-      Theta0 = this._theta0,
-      DefenseTimer = this._defenseTimer
+      CurrentState = _currentState,
+      Timer = _timer,
+      VolleyCounter = _volleyCounter,
+      IsCurrentPhaseInverted = _isCurrentPhaseInverted,
+      Theta0 = _theta0,
+      DefenseTimer = _defenseTimer
     };
   }
 
   public override void RestoreInternalState(RewindState state) {
     base.RestoreInternalState(state);
     if (state is not PhaseArcsAndLinesState pals) return;
-    this._currentState = pals.CurrentState;
-    this._timer = pals.Timer;
-    this._volleyCounter = pals.VolleyCounter;
-    this._isCurrentPhaseInverted = pals.IsCurrentPhaseInverted;
-    this._theta0 = pals.Theta0;
-    this._defenseTimer = pals.DefenseTimer;
+    _currentState = pals.CurrentState; _timer = pals.Timer; _volleyCounter = pals.VolleyCounter;
+    _isCurrentPhaseInverted = pals.IsCurrentPhaseInverted; _theta0 = pals.Theta0; _defenseTimer = pals.DefenseTimer;
   }
 }

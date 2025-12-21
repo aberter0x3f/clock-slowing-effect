@@ -1,11 +1,30 @@
 using System.Collections.Generic;
 using Godot;
 
+
+public enum SoundEffect {
+  EnemyDeath,
+  BossDeath,
+  PlayerDeath,
+  FireSmall,
+  FireBig,
+  Graze,
+  CurioUse,
+  CurioWrong,
+  CurioSwitch,
+  ItemGet,
+  PlayerSkillAvailable,
+  PlayerShoot,
+  PlayerReloadComplete,
+}
+
 public partial class SoundManager : Node {
   public static SoundManager Instance { get; private set; }
 
   [Export(PropertyHint.Range, "1, 256, 1")]
-  private int _playerPoolSize = 64; // 音频播放器的数量，决定了最多可以有多少个音效同时播放
+  private int _playerPoolSize = 64;
+
+  [Export] private Godot.Collections.Dictionary<string, SoundResource> _library = new();
 
   private List<AudioStreamPlayer> _playerPool = new();
   private Dictionary<AudioStream, ulong> _lastPlayTimestamps = new();
@@ -13,13 +32,23 @@ public partial class SoundManager : Node {
   public override void _Ready() {
     Instance = this;
 
-    for (int i = 0; i < _playerPoolSize; i++) {
+    for (int i = 0; i < _playerPoolSize; ++i) {
       var player = new AudioStreamPlayer();
       player.ProcessMode = ProcessModeEnum.Always;
       AddChild(player);
       _playerPool.Add(player);
     }
   }
+
+  public void Play(string effectName) {
+    if (_library.TryGetValue(effectName, out var effect)) {
+      Play(effect.Stream, effect.Cooldown, effect.VolumeDb, effect.Pitch);
+    } else {
+      GD.PrintErr($"SoundManager: SE config {effectName} not found");
+    }
+  }
+
+  public void Play(SoundEffect se) => Play(se.ToString());
 
   /// <summary>
   /// 播放一个音效．
@@ -28,7 +57,7 @@ public partial class SoundManager : Node {
   /// <param name="volumeDb">音量 (分贝)．</param>
   /// <param name="pitch">音高．</param>
   /// <param name="cooldown">此音效的最小播放间隔（秒）．小于此间隔的连续播放请求将被忽略．</param>
-  public void PlaySoundEffect(AudioStream sound, float cooldown = 0.05f, float volumeDb = 0f, float pitch = 1f) {
+  public void Play(AudioStream sound, float cooldown = 0.05f, float volumeDb = 0f, float pitch = 1f) {
     if (sound == null) {
       return;
     }

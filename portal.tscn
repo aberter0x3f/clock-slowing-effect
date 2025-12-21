@@ -4,7 +4,7 @@
 [ext_resource type="AudioStream" uid="uid://cit0jwj2e43yk" path="res://sounds/effects/enter_portal.wav" id="2_6r214"]
 [ext_resource type="Texture2D" uid="uid://bdt5bj3ggpn7m" path="res://images/portal/blue.png" id="2_grrij"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_6r214"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_grrij"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2pgh4"]
 atlas = ExtResource("2_grrij")
@@ -70,23 +70,21 @@ animations = [{
 "speed": 20.0
 }]
 
-[node name="Portal" type="Area2D"]
+[node name="Portal" type="Area3D"]
 script = ExtResource("1_ef3v5")
 EnterSound = ExtResource("2_6r214")
 metadata/_custom_type_script = "uid://4ovd556w4nt7"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_6r214")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CylinderShape3D_grrij")
 
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Visualizer"]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0.08, 0, 0)
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="."]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0.08, 0.66, 0)
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_dd4p5")
 frame_progress = 0.6334803
 
-[node name="Label3D" type="Label3D" parent="Visualizer"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.36, 0)
 sorting_offset = 1.0
 text = "Portal"

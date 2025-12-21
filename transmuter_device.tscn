@@ -3,29 +3,27 @@
 [ext_resource type="Script" uid="uid://bddlo1pjyp15j" path="res://scripts/TransmuterDevice.cs" id="1_1vsul"]
 [ext_resource type="Texture2D" uid="uid://dp70uy0vwgxvt" path="res://images/Icons_Essential/Restart.png" id="2_1vsul"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_6tddx"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1vsul"]
 
-[node name="TransmuterDevice" type="Area2D"]
+[node name="TransmuterDevice" type="Area3D"]
 script = ExtResource("1_1vsul")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_6tddx")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CylinderShape3D_1vsul")
 
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="Sprite3D" type="Sprite3D" parent="Visualizer"]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.2, 0.2, 0)
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.2, 0.4, 0)
 alpha_cut = 1
 texture_filter = 0
 texture = ExtResource("2_1vsul")
 
-[node name="Sprite3D2" type="Sprite3D" parent="Visualizer"]
-transform = Transform3D(-5, 4.371139e-07, 0, -4.371139e-07, -5, 0, 0, 0, 5, -0.2, -0.2, 0)
+[node name="Sprite3D2" type="Sprite3D" parent="."]
+transform = Transform3D(-5, 4.371139e-07, 0, -4.371139e-07, -5, 0, 0, 0, 5, -0.2, 0, 0)
 modulate = Color(1, 0.33999997, 0.33999997, 1)
 alpha_cut = 1
 texture_filter = 0
 texture = ExtResource("2_1vsul")
 
-[node name="Label3D" type="Label3D" parent="Visualizer"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 text = "Transmuter"

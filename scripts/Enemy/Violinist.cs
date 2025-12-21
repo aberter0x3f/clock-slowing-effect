@@ -1,206 +1,153 @@
+using Bullet;
 using Godot;
 using Rewind;
 
 namespace Enemy;
 
-public class ViolinistState : BaseEnemyState {
+public class ViolinistState : SimpleEnemyState {
   public Violinist.AttackState CurrentAttackState;
-  public float AttackTimer;
   public float StaffCreationDist;
   public int NotesFiredCount;
-  public Vector2 AttackDirection;
+  public Vector3 AttackDirection;
+  public Vector3 AttackPerpendicularDir;
+  public Vector3 AttackStartPosition;
   public float AttackLineLength;
-  public Vector2 AttackPerpendicularDir;
-  public Vector2 AttackStartPosition;
-  public float AttackCooldown;
 }
 
-public partial class Violinist : BaseEnemy {
-  private const float MAIN_ATTACK_INTERVAL = 3.0f;
-  private const float NOTE_ANGLE_SIGMA_DEGREES = 40.0f;
+public partial class Violinist : SimpleEnemy {
+  public enum AttackState { CreatingStaff, FiringNotes }
 
-  // 攻击状态机
-  public enum AttackState {
-    Idle,
-    CreatingStaff,
-    FiringNotes
-  }
-  private AttackState _attackState = AttackState.Idle;
-  private float _attackTimer;
-  // 状态变量，用于在帧之间保存攻击信息
+  private AttackState _attackState = AttackState.CreatingStaff;
   private float _staffCreationDist;
   private int _notesFiredCount;
-  private Vector2 _attackDirection;
+  private Vector3 _attackDirection;
+  private Vector3 _attackPerpendicularDir;
+  private Vector3 _attackStartPosition;
   private float _attackLineLength;
-  private Vector2 _attackPerpendicularDir;
-  private Vector2 _attackStartPosition;
 
   [ExportGroup("Attack Configuration")]
-  [Export]
-  public PackedScene StaffLineBulletScene { get; set; }
-  [Export]
-  public PackedScene NoteBulletScene { get; set; }
-  [Export(PropertyHint.Range, "0.01, 2.0, 0.01")]
-  public float StaffLineCreationInterval { get; set; } = 0.05f;
-  [Export(PropertyHint.Range, "0.01, 2.0, 0.01")]
-  public float NoteCreationInterval { get; set; } = 0.02f;
-  [Export(PropertyHint.Range, "10, 100, 1")]
-  public float StaffLineSpacing { get; set; } = 15.0f;
-  [Export(PropertyHint.Range, "10, 200, 1")]
-  public float StaffBulletSpacing { get; set; } = 20.0f;
-  [Export(PropertyHint.Range, "1, 100, 1")]
-  public int NoteBulletCount { get; set; } = 50;
-  public float NoteBulletAcceleration { get; set; } = 100.0f;
+  [Export] public PackedScene StaffLineBulletScene { get; set; }
+  [Export] public PackedScene NoteBulletScene { get; set; }
 
-  private float _attackCooldown = MAIN_ATTACK_INTERVAL;
-  private RandomWalkComponent _randomWalkComponent;
+  [Export] public float StaffLineCreationInterval { get; set; } = 0.05f;
+  [Export] public float NoteCreationInterval { get; set; } = 0.02f;
+  [Export] public float StaffLineSpacing { get; set; } = 0.15f;
+  [Export] public float StaffBulletSpacing { get; set; } = 0.20f;
+  [Export] public int NoteBulletCount { get; set; } = 50;
+  [Export] public float NoteBulletAcceleration { get; set; } = 1.0f;
+  [Export] public float NoteBulletMaxSpeed { get; set; } = 3.0f;
+
   private readonly RandomNumberGenerator _rnd = new();
 
-  public override void _Ready() {
-    base._Ready();
-    _randomWalkComponent = GetNode<RandomWalkComponent>("RandomWalkComponent");
-    _attackCooldown = (float) _rnd.RandfRange(1.0f, 2 * MAIN_ATTACK_INTERVAL);
-  }
-
-  public override void _Process(double delta) {
-    base._Process(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
-
-    if (_attackState == AttackState.Idle) {
-      Velocity = _randomWalkComponent.TargetVelocity * TimeManager.Instance.TimeScale;
-      _attackCooldown -= scaledDelta;
-      if (_attackCooldown <= 0) {
-        _attackCooldown = MAIN_ATTACK_INTERVAL;
-        StartAttackSequence();
-      }
-    } else {
-      Velocity = Vector2.Zero;
-      HandleAttackState(scaledDelta);
-    }
-  }
-
-  public override void _PhysicsProcess(double delta) {
-    base._PhysicsProcess(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-
-    MoveAndSlide();
-  }
-
-  private void StartAttackSequence() {
+  public override (float nextDelay, bool canWalk) Shoot() {
     var target = PlayerNode;
-    if (target == null || !IsInstanceValid(target)) {
-      GD.PrintErr("Violinist: Player target not found, cannot attack.");
-      return;
+    if (target == null || !IsInstanceValid(target)) return (0.5f, true);
+
+    if (_staffCreationDist == 0 && _notesFiredCount == 0) {
+      _attackStartPosition = GlobalPosition;
+      _attackDirection = (target.GlobalPosition - _attackStartPosition).Normalized() with { Y = 0 };
+      _attackPerpendicularDir = _attackDirection.Rotated(Vector3.Up, Mathf.Pi / 2.0f);
+
+      float distToTarget = _attackStartPosition.DistanceTo(target.GlobalPosition);
+      _attackLineLength = Mathf.Max(5.0f, distToTarget * 1.2f);
+
+      _attackState = AttackState.CreatingStaff;
+      SoundManager.Instance.Play(SoundEffect.FireBig);
     }
 
-    _attackState = AttackState.CreatingStaff;
+    if (_attackState == AttackState.CreatingStaff) {
+      if (_staffCreationDist < _attackLineLength) {
+        SpawnStaffSegment();
+        SoundManager.Instance.Play(SoundEffect.FireSmall);
+        _staffCreationDist += StaffBulletSpacing;
+        return (StaffLineCreationInterval, false);
+      } else {
+        _attackState = AttackState.FiringNotes;
+        SoundManager.Instance.Play(SoundEffect.FireBig);
+      }
+    }
 
-    // --- 初始化攻击参数 ---
-    _attackStartPosition = GlobalPosition;
-    Vector2 targetPos = target.GlobalPosition;
-    _attackDirection = (targetPos - _attackStartPosition).Normalized();
-    float distanceToTarget = _attackStartPosition.DistanceTo(targetPos);
-    _attackLineLength = Mathf.Max(500.0f, 1.2f * distanceToTarget);
-    _attackPerpendicularDir = _attackDirection.Rotated(Mathf.Pi / 2.0f);
+    if (_attackState == AttackState.FiringNotes) {
+      if (_notesFiredCount < NoteBulletCount) {
+        SpawnNote();
+        SoundManager.Instance.Play(SoundEffect.FireSmall);
+        ++_notesFiredCount;
+        return (NoteCreationInterval, false);
+      }
+    }
+
     _staffCreationDist = 0;
-    _attackTimer = 0; // 立即开始
-    PlayAttackSound();
+    _notesFiredCount = 0;
+    return (FireWarmUpTime, true);
   }
 
-  private void HandleAttackState(float scaledDelta) {
-    _attackTimer -= scaledDelta;
-    if (_attackTimer > 0) return;
+  private void SpawnStaffSegment() {
+    if (StaffLineBulletScene == null) return;
 
-    switch (_attackState) {
-      case AttackState.CreatingStaff:
-        if (_staffCreationDist > _attackLineLength) {
-          // --- 阶段 1 结束，进入阶段 2 ---
-          _attackState = AttackState.FiringNotes;
-          _notesFiredCount = 0;
-          _attackTimer = 0; // 立即开始
-          PlayAttackSound();
-          return;
-        }
-        // --- 执行创建五线谱的逻辑 ---
-        for (int lineIndex = -2; lineIndex <= 2; lineIndex++) {
-          Vector2 lineOffset = _attackPerpendicularDir * lineIndex * StaffLineSpacing;
-          var staffLineBullet = StaffLineBulletScene.Instantiate<Node2D>();
-          staffLineBullet.GlobalPosition = _attackStartPosition + _attackDirection * _staffCreationDist + lineOffset;
-          staffLineBullet.GlobalRotation = _attackDirection.Angle();
-          GameRootProvider.CurrentGameRoot.AddChild(staffLineBullet);
-        }
-        _staffCreationDist += StaffBulletSpacing;
-        _attackTimer = StaffLineCreationInterval;
-        break;
+    // 绘制 5 条平行的静止线段
+    for (int i = -2; i <= 2; ++i) {
+      var segment = StaffLineBulletScene.Instantiate<BaseBullet>();
+      Vector3 offset = _attackPerpendicularDir * i * StaffLineSpacing;
+      Vector3 spawnPos = _attackStartPosition + (_attackDirection * _staffCreationDist) + offset;
 
-      case AttackState.FiringNotes:
-        long noteCount = 1L * NoteBulletCount * (long) _attackLineLength / 500;
-        if (_notesFiredCount >= noteCount) {
-          // --- 阶段 2 结束，重置状态 ---
-          _attackState = AttackState.Idle;
-          return;
-        }
-        // --- 执行发射音符的逻辑 ---
-        if (NoteBulletScene != null) {
-          float sigmaRadians = Mathf.DegToRad(NOTE_ANGLE_SIGMA_DEGREES);
-          int randomLineIndex = _rnd.RandiRange(-2, 2);
-          Vector2 randomLineOffset = _attackPerpendicularDir * randomLineIndex * StaffLineSpacing;
-          float randomDistOnLine = (float) _rnd.RandfRange(0, _attackLineLength);
-          Vector2 spawnPos = _attackStartPosition + _attackDirection * randomDistOnLine + randomLineOffset;
-          bool flipDirection = _rnd.Randf() > 0.5f;
-          Vector2 launchPerpendicularDir = _attackDirection.Rotated(Mathf.Pi / 2.0f * (flipDirection ? 1.0f : -1.0f));
-          float angleOffset = (float) _rnd.Randfn(0, sigmaRadians);
-          Vector2 finalDirection = launchPerpendicularDir.Rotated(angleOffset);
-          var noteBullet = NoteBulletScene.Instantiate<Bullet.SimpleBullet>();
-          noteBullet.GlobalPosition = spawnPos;
-          noteBullet.Rotation = finalDirection.Angle();
-          noteBullet.InitialSpeed = 1.0f;
-          noteBullet.Acceleration = finalDirection.Normalized() * NoteBulletAcceleration;
-          noteBullet.MaxSpeed = 300f;
-          GameRootProvider.CurrentGameRoot.AddChild(noteBullet);
-          _notesFiredCount++;
-          _attackTimer = NoteCreationInterval;
-        } else {
-          GD.PrintErr("Violinist: NoteBulletScene is not set in the editor.");
-          // 避免死循环
-          _attackState = AttackState.Idle;
-        }
-        break;
+      segment.Position = spawnPos;
+      segment.Rotation = Basis.LookingAt(_attackDirection).GetEuler();
+      GameRootProvider.CurrentGameRoot.AddChild(segment);
     }
+  }
+
+  private void SpawnNote() {
+    if (NoteBulletScene == null) return;
+
+    // 随机选择一条线和一个位置
+    int lineIndex = _rnd.RandiRange(-2, 2);
+    float distOnLine = _rnd.Randf() * _attackLineLength;
+    Vector3 spawnPos = _attackStartPosition + (_attackDirection * distOnLine) + (_attackPerpendicularDir * lineIndex * StaffLineSpacing);
+
+    // 音符飞行方向：垂直于五线谱（左右随机）
+    bool flip = _rnd.Randf() > 0.5f;
+    Vector3 flyDir = _attackPerpendicularDir.Rotated(Vector3.Up, (float) GD.RandRange(-Mathf.Pi * 0.1, Mathf.Pi * 0.1)) * (flip ? 1 : -1);
+
+    var note = NoteBulletScene.Instantiate<SimpleBullet>();
+    var tMax = NoteBulletMaxSpeed / NoteBulletAcceleration;
+    var xMax = 0.5f * NoteBulletAcceleration * tMax * tMax;
+    note.UpdateFunc = (t) => {
+      SimpleBullet.UpdateState s = new();
+      s.position = spawnPos + flyDir * (t < tMax ? 0.5f * NoteBulletAcceleration * t * t : xMax + (t - tMax) * NoteBulletMaxSpeed);
+      return s;
+    };
+    GameRootProvider.CurrentGameRoot.AddChild(note);
   }
 
   public override RewindState CaptureState() {
-    var baseState = (BaseEnemyState) base.CaptureState();
+    var bs = (SimpleEnemyState) base.CaptureState();
     return new ViolinistState {
-      GlobalPosition = baseState.GlobalPosition,
-      Velocity = baseState.Velocity,
-      Health = baseState.Health,
-      HitTimerLeft = baseState.HitTimerLeft,
-      IsInHitState = baseState.IsInHitState,
-      CurrentAttackState = this._attackState,
-      AttackTimer = this._attackTimer,
-      StaffCreationDist = this._staffCreationDist,
-      NotesFiredCount = this._notesFiredCount,
-      AttackDirection = this._attackDirection,
-      AttackLineLength = this._attackLineLength,
-      AttackPerpendicularDir = this._attackPerpendicularDir,
-      AttackStartPosition = this._attackStartPosition,
-      AttackCooldown = this._attackCooldown,
+      GlobalPosition = bs.GlobalPosition,
+      Velocity = bs.Velocity,
+      Health = bs.Health,
+      HitTimerLeft = bs.HitTimerLeft,
+      IsInHitState = bs.IsInHitState,
+      ShootTimer = bs.ShootTimer,
+      CanWalk = bs.CanWalk,
+      CurrentAttackState = _attackState,
+      StaffCreationDist = _staffCreationDist,
+      NotesFiredCount = _notesFiredCount,
+      AttackDirection = _attackDirection,
+      AttackPerpendicularDir = _attackPerpendicularDir,
+      AttackStartPosition = _attackStartPosition,
+      AttackLineLength = _attackLineLength
     };
   }
 
   public override void RestoreState(RewindState state) {
     base.RestoreState(state);
     if (state is not ViolinistState vs) return;
-    this._attackState = vs.CurrentAttackState;
-    this._attackTimer = vs.AttackTimer;
-    this._staffCreationDist = vs.StaffCreationDist;
-    this._notesFiredCount = vs.NotesFiredCount;
-    this._attackDirection = vs.AttackDirection;
-    this._attackLineLength = vs.AttackLineLength;
-    this._attackPerpendicularDir = vs.AttackPerpendicularDir;
-    this._attackStartPosition = vs.AttackStartPosition;
-    this._attackCooldown = vs.AttackCooldown;
+    _attackState = vs.CurrentAttackState;
+    _staffCreationDist = vs.StaffCreationDist;
+    _notesFiredCount = vs.NotesFiredCount;
+    _attackDirection = vs.AttackDirection;
+    _attackPerpendicularDir = vs.AttackPerpendicularDir;
+    _attackStartPosition = vs.AttackStartPosition;
+    _attackLineLength = vs.AttackLineLength;
   }
 }

@@ -1,3 +1,4 @@
+using Bullet;
 using Godot;
 using Rewind;
 
@@ -9,171 +10,115 @@ public class DrummerState : BaseEnemyState {
   public int AttackLoopCounter;
   public int FireSubLoopCounter;
   public float AttackTimer;
-  public Vector2 JumpStartPosition;
-  public Vector2 JumpTargetPosition;
+  public Vector3 JumpStartPosition;
+  public Vector3 JumpTargetPosition;
   public float JumpDuration;
   public float JumpTime;
-  public float CurrentJumpHeight;
   public float AttackCooldown;
-  public Vector2 RetreatDirection;
+  public Vector3 RetreatDirection;
   public float RetreatTimer;
 }
 
 public partial class Drummer : BaseEnemy {
-  public enum State {
-    Idle,
-    Attacking,
-    Retreating
-  }
-
-  // 攻击子状态机
-  public enum AttackSubState {
-    None,
-    Jumping,
-    Firing, // 这个状态现在会处理带间隔的连续发射
-    Pausing // 攻击循环之间的大停顿
-  }
-  private AttackSubState _attackSubState = AttackSubState.None;
-  private int _attackLoopCounter; // 主攻击循环计数 (0, 1, 2)
-  private int _fireSubLoopCounter; // Firing 状态下的子循环计数 (0, 1, 2)
-  private float _attackTimer; // 用于所有攻击相关的计时
-
-  // --- 跳跃状态变量 ---
-  private Vector2 _jumpStartPosition;
-  private Vector2 _jumpTargetPosition;
-  private float _jumpDuration;
-  private float _jumpTime;
+  public enum State { Idle, Attacking, Retreating }
+  public enum AttackSubState { None, Jumping, Firing, Pausing }
 
   private State _currentState = State.Idle;
-  private float _attackCooldown;
-  private Vector2 _retreatDirection;
-  private float _retreatTimer;
-  private float _currentJumpHeight = 0f;
+  private AttackSubState _attackSubState = AttackSubState.None;
+  private int _attackLoopCounter;
+  private int _fireSubLoopCounter;
+  private float _attackTimer;
 
-  private CollisionShape2D _bodyCollisionShape;
+  private Vector3 _jumpStartPosition;
+  private Vector3 _jumpTargetPosition;
+  private float _jumpDuration;
+  private float _jumpTime;
+  private Vector3 _retreatDirection;
+  private float _retreatTimer;
+  private float _attackCooldown;
+
+  private RandomWalkComponent _randomWalkComponent;
 
   [ExportGroup("Attack Configuration")]
-  [Export]
-  public PackedScene SmallBulletScene { get; set; }
-  [Export]
-  public PackedScene LargeBulletScene { get; set; }
-  [Export]
-  public float AttackInterval { get; set; } = 3.0f;
-  [Export(PropertyHint.Range, "1, 50, 1")]
-  public int SmallBulletCount { get; set; } = 24;
-  [Export(PropertyHint.Range, "1, 50, 1")]
-  public int LargeBulletCount { get; set; } = 24;
+  [Export] public PackedScene SmallBulletScene { get; set; }
+  [Export] public PackedScene LargeBulletScene { get; set; }
+  [Export] public float AttackInterval { get; set; } = 3.0f;
+  [Export] public int SmallBulletCount { get; set; } = 24;
+  [Export] public int LargeBulletCount { get; set; } = 24;
 
   [ExportGroup("Movement Configuration")]
-  [Export(PropertyHint.Range, "100, 2000, 10")]
-  public float LungeSpeed { get; set; } = 400.0f;
-  [Export(PropertyHint.Range, "100, 2000, 10")]
-  public float LungeDistance { get; set; } = 200.0f;
-  [Export(PropertyHint.Range, "50, 500, 10")]
-  public float JumpHeight { get; set; } = 150.0f;
-  [Export(PropertyHint.Range, "50, 300, 10")]
-  public float PlayerAvoidanceDistance { get; set; } = 150.0f;
-  [Export(PropertyHint.Range, "100, 2000, 10")]
-  public float RetreatSpeed { get; set; } = 300.0f;
-  [Export(PropertyHint.Range, "0.5, 5.0, 0.1")]
-  public float RetreatDuration { get; set; } = 1.0f;
+  [Export] public float LungeSpeed { get; set; } = 4.0f;     // 400 * 0.01
+  [Export] public float LungeDistance { get; set; } = 2.0f;  // 200 * 0.01
+  [Export] public float JumpHeight { get; set; } = 1.5f;     // 150 * 0.01
+  [Export] public float PlayerAvoidanceDistance { get; set; } = 1.5f;
+  [Export] public float RetreatSpeed { get; set; } = 3.0f;
+  [Export] public float RetreatDuration { get; set; } = 1.0f;
 
   public override void _Ready() {
+    _randomWalkComponent = GetNode<RandomWalkComponent>("RandomWalkComponent");
+    _attackCooldown = (float) GD.RandRange(1.0, AttackInterval);
     base._Ready();
-    _attackCooldown = (float) GD.RandRange(1.0f, 2 * AttackInterval);
-    _bodyCollisionShape = GetNode<CollisionShape2D>("CollisionShape2D");
   }
 
-  public override void _Process(double delta) {
-    base._Process(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-    var scaledDelta = (float) delta * TimeManager.Instance.TimeScale;
-
+  public override void UpdateEnemy(float scaledDelta, float effectiveTimeScale) {
     switch (_currentState) {
       case State.Idle:
-        HandleIdleState(scaledDelta);
+        Velocity = _randomWalkComponent.TargetVelocity * effectiveTimeScale;
+        _attackCooldown -= scaledDelta;
+        if (_attackCooldown <= 0) StartAttackSequence();
         break;
+
       case State.Attacking:
         HandleAttackingState(scaledDelta);
         break;
+
       case State.Retreating:
-        HandleRetreatingState(scaledDelta);
+        Velocity = _retreatDirection * RetreatSpeed * effectiveTimeScale;
+        _retreatTimer -= scaledDelta;
+        if (_retreatTimer <= 0) {
+          _currentState = State.Idle;
+          _attackCooldown = AttackInterval;
+        }
         break;
-    }
-
-    UpdateVisualizer();
-  }
-
-  public override void _PhysicsProcess(double delta) {
-    base._PhysicsProcess(delta);
-    if (IsDestroyed || RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding) return;
-
-    MoveAndSlide();
-  }
-
-  protected override void UpdateVisualizer() {
-    var position3D = new Vector3(
-      GlobalPosition.X * GameConstants.WorldScaleFactor,
-      GameConstants.GamePlaneY,
-      GlobalPosition.Y * GameConstants.WorldScaleFactor
-    );
-    position3D.Y += _currentJumpHeight * GameConstants.WorldScaleFactor;
-    _visualizer.GlobalPosition = position3D;
-  }
-
-  private void HandleIdleState(float scaledDelta) {
-    Velocity = Vector2.Zero;
-    _attackCooldown -= scaledDelta;
-    if (_attackCooldown <= 0) {
-      StartAttackSequence();
-    }
-  }
-
-  private void HandleRetreatingState(float scaledDelta) {
-    Velocity = _retreatDirection * RetreatSpeed * TimeManager.Instance.TimeScale;
-    _retreatTimer -= scaledDelta;
-    if (_retreatTimer <= 0) {
-      _currentState = State.Idle;
-      _attackCooldown = AttackInterval;
     }
   }
 
   private void StartAttackSequence() {
-    if (_currentState != State.Idle) return;
     _currentState = State.Attacking;
     _attackLoopCounter = 0;
     PrepareNextJump();
   }
 
+  public override void _PhysicsProcess(double delta) {
+    base._PhysicsProcess(delta);
+    MoveAndSlide();
+  }
+
   private void HandleAttackingState(float scaledDelta) {
-    Velocity = Vector2.Zero;
+    Velocity = Vector3.Zero;
     _attackTimer -= scaledDelta;
 
     switch (_attackSubState) {
       case AttackSubState.Jumping:
-        ProcessJump(scaledDelta);
+        _jumpTime += scaledDelta;
+        float progress = Mathf.Min(1.0f, _jumpTime / _jumpDuration);
+        Vector3 groundPos = _jumpStartPosition.Lerp(_jumpTargetPosition, progress);
+        GlobalPosition = groundPos with { Y = Mathf.Sin(progress * Mathf.Pi) * JumpHeight };
+
+        if (progress >= 1.0f) {
+          GlobalPosition = _jumpTargetPosition with { Y = 0 };
+          InitializeFiringState();
+        }
         break;
 
       case AttackSubState.Firing:
         if (_attackTimer <= 0) {
-          // --- 检查是小弹幕还是大弹幕 ---
-          if (_attackLoopCounter < 2) {
-            // --- 小弹幕循环 ---
-            FireBulletCircle(SmallBulletScene, SmallBulletCount);
-            ++_fireSubLoopCounter;
+          bool isFinal = _attackLoopCounter >= 2;
+          FireBulletCircle(isFinal ? LargeBulletScene : SmallBulletScene, isFinal ? LargeBulletCount : SmallBulletCount);
+          ++_fireSubLoopCounter;
 
-            if (_fireSubLoopCounter < 3) {
-              // 还没射完 3 波，设置 0.1 秒的间隔
-              _attackTimer = 0.1f;
-            } else {
-              // 3 波射完了，进入大停顿
-              _attackSubState = AttackSubState.Pausing;
-              _attackTimer = 0.4f;
-            }
-          } else {
-            // --- 大弹幕（最后一次） ---
-            FireBulletCircle(LargeBulletScene, LargeBulletCount);
-            // 射完了，进入大停顿
+          if (!isFinal && _fireSubLoopCounter < 3) _attackTimer = 0.1f;
+          else {
             _attackSubState = AttackSubState.Pausing;
             _attackTimer = 0.4f;
           }
@@ -183,14 +128,11 @@ public partial class Drummer : BaseEnemy {
       case AttackSubState.Pausing:
         if (_attackTimer <= 0) {
           ++_attackLoopCounter;
-          if (_attackLoopCounter < 3) {
-            PrepareNextJump(); // 准备下一次跳跃
-          } else {
-            // 3 次攻击循环全部结束，转换到撤退状态
-            _retreatDirection = (GlobalPosition - PlayerNode.GlobalPosition).Normalized();
+          if (_attackLoopCounter < 3) PrepareNextJump();
+          else {
+            _retreatDirection = (GlobalPosition - PlayerNode.GlobalPosition).Normalized() with { Y = 0 };
             _retreatTimer = RetreatDuration;
             _currentState = State.Retreating;
-            _attackSubState = AttackSubState.None;
           }
         }
         break;
@@ -198,126 +140,76 @@ public partial class Drummer : BaseEnemy {
   }
 
   private void PrepareNextJump() {
-    var target = PlayerNode;
-    Vector2 attackDirection = (target.GlobalPosition - GlobalPosition).Normalized();
-    Vector2 startPos = GlobalPosition;
-    float distanceToPlayer = startPos.DistanceTo(target.GlobalPosition);
-    float actualLungeDistance = Mathf.Min(LungeDistance, distanceToPlayer - PlayerAvoidanceDistance);
+    Vector3 toPlayer = (PlayerNode.GlobalPosition - GlobalPosition);
+    toPlayer.Y = 0;
+    float dist = toPlayer.Length();
+    float actualLunge = Mathf.Min(LungeDistance, dist - PlayerAvoidanceDistance);
 
-    if (actualLungeDistance > 0) {
-      Vector2 targetPos = startPos + attackDirection * actualLungeDistance;
-      bool canJump = _mapGenerator == null || _mapGenerator.IsWalkable(_mapGenerator.WorldToMap(targetPos));
-
-      if (canJump) {
-        _jumpStartPosition = GlobalPosition;
-        _jumpTargetPosition = targetPos;
-        float distance = _jumpStartPosition.DistanceTo(_jumpTargetPosition);
-        _jumpDuration = float.Max(distance / LungeSpeed, 0.5f);
-        _jumpTime = 0f;
-        _attackSubState = AttackSubState.Jumping;
-        SetCollisionsEnabled(false);
-        return;
-      }
-    }
-
-    // 如果不能跳跃，直接进入开火阶段
-    InitializeFiringState();
-  }
-
-  private void ProcessJump(float scaledDelta) {
-    // 注意：跳跃动画不依赖 _attackTimer，它有自己的计时器 _jumpTime
-    _jumpTime += scaledDelta;
-    float progress = Mathf.Min(1.0f, _jumpTime / _jumpDuration);
-
-    GlobalPosition = _jumpStartPosition.Lerp(_jumpTargetPosition, progress);
-    _currentJumpHeight = Mathf.Sin(progress * Mathf.Pi) * JumpHeight;
-
-    if (progress >= 1.0f) {
-      GlobalPosition = _jumpTargetPosition;
-      _currentJumpHeight = 0f;
-      SetCollisionsEnabled(true);
-      // 跳跃结束，初始化并进入开火状态
+    if (actualLunge > 0.1f) {
+      _jumpStartPosition = GlobalPosition;
+      _jumpTargetPosition = GlobalPosition + toPlayer.Normalized() * actualLunge;
+      _jumpDuration = Mathf.Max(actualLunge / LungeSpeed, 0.5f);
+      _jumpTime = 0;
+      _attackSubState = AttackSubState.Jumping;
+    } else {
       InitializeFiringState();
     }
   }
 
-  /// <summary>
-  /// 重置开火状态的计数器和计时器，并切换到 Firing 状态．
-  /// </summary>
   private void InitializeFiringState() {
     _attackSubState = AttackSubState.Firing;
     _fireSubLoopCounter = 0;
-    _attackTimer = 0; // 立即发射第一波
-    PlayAttackSound();
+    _attackTimer = 0;
   }
 
-  private void SetCollisionsEnabled(bool enabled) {
-    if (_bodyCollisionShape != null) {
-      _bodyCollisionShape.Disabled = !enabled;
-    }
-  }
-
-  private void FireBulletCircle(PackedScene bulletScene, int count) {
-    if (bulletScene == null) {
-      GD.PrintErr($"Drummer: Bullet scene is not set!");
-      return;
-    }
-    if (count <= 0) return;
-
-    float angleStep = Mathf.Tau / count;
-
+  private void FireBulletCircle(PackedScene scene, int count) {
+    if (scene == null || count <= 0) return;
+    float step = Mathf.Tau / count;
+    Vector3 pos = GlobalPosition;
+    SoundManager.Instance.Play(SoundEffect.FireSmall);
     for (int i = 0; i < count; ++i) {
-      float angle = i * angleStep;
-      Vector2 direction = Vector2.Right.Rotated(angle);
-
-      var bullet = bulletScene.Instantiate<Bullet.SimpleBullet>();
-      bullet.GlobalPosition = GlobalPosition;
-      bullet.Rotation = direction.Angle();
-
+      var bullet = scene.Instantiate<SimpleBullet>();
+      Vector3 dir = Vector3.Right.Rotated(Vector3.Up, i * step);
+      bullet.UpdateFunc = (t) => {
+        SimpleBullet.UpdateState s = new();
+        s.position = pos + dir * (t * 2.0f);
+        return s;
+      };
       GameRootProvider.CurrentGameRoot.AddChild(bullet);
     }
   }
 
   public override RewindState CaptureState() {
-    var baseState = (BaseEnemyState) base.CaptureState();
+    var bs = (BaseEnemyState) base.CaptureState();
     return new DrummerState {
-      GlobalPosition = baseState.GlobalPosition,
-      Velocity = baseState.Velocity,
-      Health = baseState.Health,
-      HitTimerLeft = baseState.HitTimerLeft,
-      IsInHitState = baseState.IsInHitState,
-      CurrentState = this._currentState,
-      AttackSubState = this._attackSubState,
-      AttackLoopCounter = this._attackLoopCounter,
-      FireSubLoopCounter = this._fireSubLoopCounter,
-      AttackTimer = this._attackTimer,
-      JumpStartPosition = this._jumpStartPosition,
-      JumpTargetPosition = this._jumpTargetPosition,
-      JumpDuration = this._jumpDuration,
-      JumpTime = this._jumpTime,
-      CurrentJumpHeight = this._currentJumpHeight,
-      AttackCooldown = this._attackCooldown,
-      RetreatDirection = this._retreatDirection,
-      RetreatTimer = this._retreatTimer
+      GlobalPosition = bs.GlobalPosition,
+      Velocity = bs.Velocity,
+      Health = bs.Health,
+      HitTimerLeft = bs.HitTimerLeft,
+      IsInHitState = bs.IsInHitState,
+      CurrentState = _currentState,
+      AttackSubState = _attackSubState,
+      AttackLoopCounter = _attackLoopCounter,
+      FireSubLoopCounter = _fireSubLoopCounter,
+      AttackTimer = _attackTimer,
+      JumpStartPosition = _jumpStartPosition,
+      JumpTargetPosition = _jumpTargetPosition,
+      JumpDuration = _jumpDuration,
+      JumpTime = _jumpTime,
+      AttackCooldown = _attackCooldown,
+      RetreatDirection = _retreatDirection,
+      RetreatTimer = _retreatTimer
     };
   }
 
   public override void RestoreState(RewindState state) {
     base.RestoreState(state);
     if (state is not DrummerState ds) return;
-    this._currentState = ds.CurrentState;
-    this._attackSubState = ds.AttackSubState;
-    this._attackLoopCounter = ds.AttackLoopCounter;
-    this._fireSubLoopCounter = ds.FireSubLoopCounter;
-    this._attackTimer = ds.AttackTimer;
-    this._jumpStartPosition = ds.JumpStartPosition;
-    this._jumpTargetPosition = ds.JumpTargetPosition;
-    this._jumpDuration = ds.JumpDuration;
-    this._jumpTime = ds.JumpTime;
-    this._currentJumpHeight = ds.CurrentJumpHeight;
-    this._attackCooldown = ds.AttackCooldown;
-    this._retreatDirection = ds.RetreatDirection;
-    this._retreatTimer = ds.RetreatTimer;
-    SetCollisionsEnabled(_attackSubState != AttackSubState.Jumping);
+    _currentState = ds.CurrentState; _attackSubState = ds.AttackSubState;
+    _attackLoopCounter = ds.AttackLoopCounter; _fireSubLoopCounter = ds.FireSubLoopCounter;
+    _attackTimer = ds.AttackTimer; _jumpStartPosition = ds.JumpStartPosition;
+    _jumpTargetPosition = ds.JumpTargetPosition; _jumpDuration = ds.JumpDuration;
+    _jumpTime = ds.JumpTime; _attackCooldown = ds.AttackCooldown;
+    _retreatDirection = ds.RetreatDirection; _retreatTimer = ds.RetreatTimer;
   }
 }

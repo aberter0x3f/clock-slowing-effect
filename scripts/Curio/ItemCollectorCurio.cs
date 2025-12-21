@@ -13,11 +13,11 @@ public partial class ItemCollectorCurio : BaseCurio {
 
   public override void OnUsePressed(Player player) {
     if (CurrentCooldown > 0) {
-      SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
+      SoundManager.Instance.Play(SoundEffect.CurioWrong);
       return;
     }
 
-    SoundManager.Instance.PlaySoundEffect(SkillSound, cooldown: 0.1f);
+    SoundManager.Instance.Play(SoundEffect.CurioUse);
 
     var pickups = player.GetTree().GetNodesInGroup("pickups");
     foreach (var pickupNode in pickups) {

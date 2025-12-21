@@ -24,7 +24,7 @@ public partial class EnemySpawner : Node, IRewindable {
   [Export]
   public float MaxConcurrentDifficulty { get; set; } = 30.0f;
   [Export]
-  public float MinPlayerSpawnDistance { get; set; } = 300.0f;
+  public float MinPlayerSpawnDistance { get; set; } = 3f;
 
   private List<EnemyData> _spawnQueue = new();
   private float _currentConcurrentDifficulty = 0.0f;
@@ -140,20 +140,21 @@ public partial class EnemySpawner : Node, IRewindable {
   }
 
   private void SpawnEnemy(EnemyData enemyData) {
-    Vector2 spawnPosition;
+    Vector3 spawnPosition;
     int attempts = 0;
-    // 尝试 20 次找到一个远离玩家的生成点
-    while (attempts < 20) {
+    const int MAX_ATTEMPTS = 20;
+    // 尝试 MAX_ATTEMPTS 次找到一个远离玩家的生成点
+    while (attempts < MAX_ATTEMPTS) {
       int randomIndex = _rnd.RandiRange(0, _walkableTiles.Count - 1);
       Vector2I cell = _walkableTiles[randomIndex];
-      Vector2 worldPos = _mapGenerator.MapToWorld(cell);
+      Vector3 worldPos = _mapGenerator.MapToWorld(cell);
 
       if (worldPos.DistanceTo(_player.GlobalPosition) > MinPlayerSpawnDistance) {
         spawnPosition = worldPos;
         InstantiateEnemy(enemyData, spawnPosition);
         return;
       }
-      attempts++;
+      ++attempts;
     }
 
     // 如果找不到远离玩家的点，就随便找一个可走的点
@@ -163,9 +164,9 @@ public partial class EnemySpawner : Node, IRewindable {
     InstantiateEnemy(enemyData, spawnPosition);
   }
 
-  private void InstantiateEnemy(EnemyData enemyData, Vector2 position) {
+  private void InstantiateEnemy(EnemyData enemyData, Vector3 position) {
     var enemy = enemyData.Scene.Instantiate<BaseEnemy>();
-    enemy.GlobalPosition = position;
+    enemy.Position = position;
     enemy.Difficulty = enemyData.Difficulty;
     enemy.Died += OnEnemyDied; // 连接信号
     ++_spawnedEnemiesAliveCount;

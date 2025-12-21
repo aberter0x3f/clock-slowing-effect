@@ -1,18 +1,16 @@
-[gd_scene load_steps=12 format=4 uid="uid://c3ebr2hfny8mu"]
+[gd_scene load_steps=10 format=4 uid="uid://c3ebr2hfny8mu"]
 
 [ext_resource type="Script" uid="uid://bsmi7g2pwt1xg" path="res://scripts/Enemy/Boss/Boss.cs" id="1_a60ye"]
 [ext_resource type="Resource" uid="uid://jogkufq70a76" path="res://enemies/boss/phase_data.tres" id="2_lh55n"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_lh55n"]
 [ext_resource type="AudioStream" uid="uid://dypy6j3yd7nfw" path="res://sounds/effects/up.wav" id="11_mtimd"]
-[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="13_a01x7"]
-[ext_resource type="AudioStream" uid="uid://bko5jbxt577e0" path="res://sounds/effects/explosion_big.wav" id="14_a01x7"]
 [ext_resource type="Script" uid="uid://dr23d7xks0mth" path="res://scripts/Enemy/EnemyPolyhedron.cs" id="16_rkfnh"]
 [ext_resource type="FontFile" uid="uid://d34t13ols1dhi" path="res://fonts/DSEG14Modern-Regular.ttf" id="16_y303a"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_a01x7"]
-radius = 60.0
+[sub_resource type="SphereShape3D" id="SphereShape3D_ny027"]
+radius = 0.6
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_inxvj"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_ny027"]
 _surfaces = [{
 "aabb": AABB(-0.7, -0.7, -0.7, 1.4, 1.4, 1.4),
 "format": 34359738375,
@@ -25,40 +23,39 @@ _surfaces = [{
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y303a"]
 albedo_color = Color(0.3882353, 0.42745098, 0.5137255, 1)
 
-[node name="Boss" type="CharacterBody2D" groups=["enemies"]]
-z_index = 2
+[node name="Boss" type="CharacterBody3D" groups=["enemies"]]
 collision_layer = 8
 collision_mask = 21
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
 script = ExtResource("1_a60ye")
 PhaseData = ExtResource("2_lh55n")
 PowerUpSound = ExtResource("11_mtimd")
 TimeShardScene = ExtResource("4_lh55n")
-AttackSound = ExtResource("13_a01x7")
-DeathSound = ExtResource("14_a01x7")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_a01x7")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_ny027")
 
 [node name="HitTimer" type="Timer" parent="."]
 wait_time = 0.1
 one_shot = true
 
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="EnemyPolyhedron" type="MeshInstance3D" parent="Visualizer"]
-mesh = SubResource("ArrayMesh_inxvj")
+[node name="EnemyPolyhedron" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_ny027")
+skeleton = NodePath("")
 surface_material_override/0 = SubResource("StandardMaterial3D_y303a")
 script = ExtResource("16_rkfnh")
 Size = 0.7
 Color = Color(0.3882353, 0.42745098, 0.5137255, 1)
 
-[node name="HealthLabel" type="Label3D" parent="Visualizer"]
+[node name="HealthLabel" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 billboard = 1
 text = "Health"
 font = ExtResource("16_y303a")
 
-[node name="SpotLight3D" type="SpotLight3D" parent="Visualizer"]
+[node name="SpotLight3D" type="SpotLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 4, 0)
 light_energy = 5.0
 light_volumetric_fog_energy = 5.0

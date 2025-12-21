@@ -1,30 +1,21 @@
 [gd_scene load_steps=4 format=3 uid="uid://n0da2amuj4dd"]
 
-[ext_resource type="Script" uid="uid://cj6a2qe3lj8kq" path="res://scripts/Bullet/BaseBullet.cs" id="1_32tda"]
+[ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_32tda"]
 [ext_resource type="Texture2D" uid="uid://dfd5f6i0nm7t5" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7A Free.png" id="2_kassw"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_baatl"]
-radius = 20.0
+[sub_resource type="SphereShape3D" id="SphereShape3D_32tda"]
+radius = 0.2
 
-[node name="EnemyBullet" type="Area2D" groups=["bullets"]]
-z_index = 3
+[node name="EnemyBullet" type="Area3D" groups=["bullets"]]
 collision_layer = 16
 collision_mask = 4
 script = ExtResource("1_32tda")
+MaxLifetime = 1000.0
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-visible = false
-scale = Vector2(3, 3)
-texture = ExtResource("2_kassw")
-region_enabled = true
-region_rect = Rect2(363, 219, 18, 18)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_32tda")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_baatl")
-
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="Sprite" type="Sprite3D" parent="Visualizer"]
+[node name="Sprite" type="Sprite3D" parent="."]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 sorting_offset = 80.0
 billboard = 1

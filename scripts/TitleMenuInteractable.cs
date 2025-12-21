@@ -4,7 +4,7 @@ using Godot;
 /// 一个可交互的菜单选项，用于主菜单场景．
 /// </summary>
 [GlobalClass]
-public partial class TitleMenuInteractable : Area2D, IInteractable {
+public partial class TitleMenuInteractable : Area3D, IInteractable {
   public enum ActionType {
     StartGame,
     BossPractice,
@@ -21,17 +21,9 @@ public partial class TitleMenuInteractable : Area2D, IInteractable {
   public ActionType Action { get; set; } = ActionType.StartGame;
 
   private Label3D _label;
-  private Node3D _visualizer;
 
   public override void _Ready() {
-    _visualizer = GetNode<Node3D>("Visualizer");
-    _label = _visualizer.GetNode<Label3D>("Label3D");
-
-    _visualizer.GlobalPosition = new Vector3(
-      GlobalPosition.X * GameConstants.WorldScaleFactor,
-      GameConstants.GamePlaneY + 0.2f,
-      GlobalPosition.Y * GameConstants.WorldScaleFactor
-    );
+    _label = GetNode<Label3D>("Label3D");
   }
 
   public void SetHighlight(bool highlighted) {

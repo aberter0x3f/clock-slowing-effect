@@ -19,22 +19,22 @@ public partial class XAxisEnhancementCurio : BaseCurio {
 
   public override void OnUsePressed(Player player) {
     if (CurrentCooldown > 0) {
-      SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
+      SoundManager.Instance.Play(SoundEffect.CurioWrong);
       return;
     }
 
     if (_mapGenerator == null) {
-      SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
+      SoundManager.Instance.Play(SoundEffect.CurioWrong);
       GD.PrintErr("XAxisEnhancementCurio: MapGenerator not found.");
       return;
     }
 
     // -1 是因为边界一格永远是墙面
     float halfWidth = (_mapGenerator.MapWidth / 2f - 1) * _mapGenerator.TileSize;
-    float edgeThreshold = 10f; // 允许的边缘误差
+    float edgeThreshold = 0.1f; // 允许的边缘误差
 
-    Vector2 currentPos = player.GlobalPosition;
-    Vector2 newPos = currentPos;
+    Vector3 currentPos = player.GlobalPosition;
+    Vector3 newPos = currentPos;
     bool teleported = false;
 
     if (currentPos.X <= -halfWidth + edgeThreshold) {
@@ -46,12 +46,12 @@ public partial class XAxisEnhancementCurio : BaseCurio {
     }
 
     if (teleported) {
-      SoundManager.Instance.PlaySoundEffect(SkillSound, cooldown: 0.1f);
+      SoundManager.Instance.Play(SoundEffect.CurioUse);
       player.GlobalPosition = newPos;
       CurrentCooldown = Cooldown;
       if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;
     } else {
-      SoundManager.Instance.PlaySoundEffect(WrongSound, cooldown: 0.1f);
+      SoundManager.Instance.Play(SoundEffect.CurioWrong);
     }
   }
 }

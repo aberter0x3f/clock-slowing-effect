@@ -1,19 +1,17 @@
-[gd_scene load_steps=13 format=4 uid="uid://c4aex2pw3tmr8"]
+[gd_scene load_steps=11 format=4 uid="uid://c4aex2pw3tmr8"]
 
 [ext_resource type="Script" uid="uid://b21c5bqcvdlj4" path="res://scripts/Enemy/Dna.cs" id="1_ygq8s"]
 [ext_resource type="PackedScene" uid="uid://s4ft2gsdi4gb" path="res://enemies/dna/bullet1.tscn" id="2_i5el3"]
 [ext_resource type="PackedScene" uid="uid://ixilhvudbumt" path="res://enemies/dna/bullet2.tscn" id="3_unv4t"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_3q06v"]
 [ext_resource type="Script" uid="uid://b7y3ayqdya65s" path="res://scripts/Components/RandomWalkComponent.cs" id="4_unv4t"]
-[ext_resource type="AudioStream" uid="uid://b7butj3n4k4gj" path="res://sounds/effects/shot.wav" id="5_unv4t"]
-[ext_resource type="AudioStream" uid="uid://dhc88mnrkuak" path="res://sounds/effects/explosion_small.wav" id="6_7rkf1"]
 [ext_resource type="Script" uid="uid://dr23d7xks0mth" path="res://scripts/Enemy/EnemyPolyhedron.cs" id="9_6cwvu"]
 [ext_resource type="FontFile" uid="uid://d34t13ols1dhi" path="res://fonts/DSEG14Modern-Regular.ttf" id="9_j3x77"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_7rkf1"]
-radius = 20.0
+[sub_resource type="SphereShape3D" id="SphereShape3D_unv4t"]
+radius = 0.2
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_6cwvu"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_unv4t"]
 _surfaces = [{
 "aabb": AABB(-0.17320508, -0.17320508, -0.17320508, 0.34641016, 0.34641016, 0.34641016),
 "format": 34359738375,
@@ -26,20 +24,20 @@ _surfaces = [{
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6cwvu"]
 albedo_color = Color(0.81960785, 0.6039216, 0.4, 1)
 
-[node name="Dna" type="CharacterBody2D" groups=["enemies"]]
-z_index = 2
+[node name="Dna" type="CharacterBody3D" groups=["enemies"]]
 collision_layer = 8
 collision_mask = 21
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
 script = ExtResource("1_ygq8s")
 Bullet1Scene = ExtResource("2_i5el3")
 Bullet2Scene = ExtResource("3_unv4t")
 TimeShardScene = ExtResource("4_3q06v")
 TimeShardCount = 5
-AttackSound = ExtResource("5_unv4t")
-DeathSound = ExtResource("6_7rkf1")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_7rkf1")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_unv4t")
 
 [node name="HitTimer" type="Timer" parent="."]
 wait_time = 0.1
@@ -49,23 +47,22 @@ one_shot = true
 script = ExtResource("4_unv4t")
 metadata/_custom_type_script = "uid://b7y3ayqdya65s"
 
-[node name="Visualizer" type="Node3D" parent="."]
-
-[node name="EnemyPolyhedron" type="MeshInstance3D" parent="Visualizer"]
-mesh = SubResource("ArrayMesh_6cwvu")
+[node name="EnemyPolyhedron" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_unv4t")
+skeleton = NodePath("")
 surface_material_override/0 = SubResource("StandardMaterial3D_6cwvu")
 script = ExtResource("9_6cwvu")
 Shape = 0
 Size = 0.3
 Color = Color(0.81960785, 0.6039216, 0.4, 1)
 
-[node name="HealthLabel" type="Label3D" parent="Visualizer"]
+[node name="HealthLabel" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
 billboard = 1
 text = "Health"
 font = ExtResource("9_j3x77")
 
-[node name="SpotLight3D" type="SpotLight3D" parent="Visualizer"]
+[node name="SpotLight3D" type="SpotLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 4, 0)
 light_energy = 5.0
 light_volumetric_fog_energy = 5.0

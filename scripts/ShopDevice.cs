@@ -2,9 +2,8 @@ using System.Collections.Generic;
 using Godot;
 using UI;
 
-public partial class ShopDevice : Area2D, IInteractable {
+public partial class ShopDevice : Area3D, IInteractable {
   private Label3D _label;
-  private Node3D _visualizer;
   private ShopMenu _shopMenuInstance;
   private int _purchasesMade = 0;
   private List<(Upgrade, float)> _originalInventory;
@@ -14,14 +13,8 @@ public partial class ShopDevice : Area2D, IInteractable {
   public int MaxPurchases { get; set; } = 1;
 
   public override void _Ready() {
-    _visualizer = GetNode<Node3D>("Visualizer");
-    _label = _visualizer.GetNode<Label3D>("Label3D");
+    _label = GetNode<Label3D>("Label3D");
 
-    _visualizer.GlobalPosition = new Vector3(
-      GlobalPosition.X * GameConstants.WorldScaleFactor,
-      GameConstants.GamePlaneY + 0.2f,
-      GlobalPosition.Y * GameConstants.WorldScaleFactor
-    );
     // 保存一份原始库存，用于重置
     _originalInventory = new List<(Upgrade, float)>(Inventory);
   }
@@ -42,7 +35,7 @@ public partial class ShopDevice : Area2D, IInteractable {
   }
 
   private void OnPurchaseMade(Upgrade purchasedUpgrade, float cost) {
-    _purchasesMade++;
+    ++_purchasesMade;
     // 从可购买列表中移除已购买的物品
     Inventory.RemoveAll(item => item.Item1 == purchasedUpgrade);
   }

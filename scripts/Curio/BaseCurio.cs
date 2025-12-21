@@ -24,12 +24,6 @@ public abstract partial class BaseCurio : Resource {
   public abstract bool HasPassiveEffect { get; }
   public abstract float Cooldown { get; }
 
-  [ExportGroup("Sound Effects")]
-  [Export]
-  public AudioStream SkillSound { get; set; }
-  [Export]
-  public AudioStream WrongSound { get; set; }
-
   // 运行时状态
   public float CurrentCooldown { get; set; } = 0f;
 

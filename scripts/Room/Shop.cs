@@ -11,7 +11,7 @@ public partial class Shop : Node {
   private MapGenerator _mapGenerator;
   private RewindManager _rewindManager;
   private PauseMenu _pauseMenu;
-  private Vector2 _playerSpawnPosition;
+  private Vector3 _playerSpawnPosition;
   private Portal _spawnedPortal;
   private ShopDevice _shopDevice;
 
@@ -111,7 +111,7 @@ public partial class Shop : Node {
     _shopDevice = ShopDeviceScene.Instantiate<ShopDevice>();
     // 放置在地图中心附近
     Vector2I centerCell = new Vector2I(_mapGenerator.MapWidth / 2 - 4, _mapGenerator.MapHeight / 2);
-    _shopDevice.GlobalPosition = _mapGenerator.MapToWorld(centerCell);
+    _shopDevice.Position = _mapGenerator.MapToWorld(centerCell);
     _shopDevice.ShopMenuScene = ShopMenuScene;
     _shopDevice.Inventory = _shopInventory;
     _shopDevice.MaxPurchases = MaxPurchases;
@@ -125,7 +125,7 @@ public partial class Shop : Node {
     }
     Vector2I portalCell = new Vector2I(_mapGenerator.MapWidth / 2 + 4, _mapGenerator.MapHeight / 2);
     _spawnedPortal = PortalScene.Instantiate<Portal>();
-    _spawnedPortal.GlobalPosition = _mapGenerator.MapToWorld(portalCell);
+    _spawnedPortal.Position = _mapGenerator.MapToWorld(portalCell);
     _spawnedPortal.LevelCompleted += OnLevelCompleted;
     AddChild(_spawnedPortal);
   }
