@@ -27,11 +27,12 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
   public State CurrentState { get; private set; } = State.Inactive;
   public BulletColor CurrentColor { get; set; }
   public Vector3 TargetPosition { get; set; }
+  public bool DropWhenArrive { get; set; }
   public float MoveSpeed { get; set; }
   public int RingIndex { get; set; }
   public float RingRotationSpeed { get; set; }
   public float SupernovaDelay { get; set; }
-  public float FireAngleOffset { get; set; }
+  public float FireAngle { get; set; }
 
   private Vector3 _velocity;
   private float _supernovaTimer = 0f;
@@ -65,7 +66,11 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
         if (GlobalPosition.DistanceSquaredTo(TargetPosition) < 0.0001f) {
           GlobalPosition = TargetPosition;
           CurrentState = State.WaitingForRingCompletion;
-          EmitSignal(SignalName.ReachedTarget, RingIndex);
+          if (DropWhenArrive)
+            Destroy();
+          else {
+            EmitSignal(SignalName.ReachedTarget, RingIndex);
+          }
         }
         break;
 
@@ -83,6 +88,10 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
 
       case State.SupernovaHoming:
         GlobalPosition += _velocity * scaledDelta;
+        _supernovaTimer -= scaledDelta;
+        if (_supernovaTimer <= 0) {
+          Destroy();
+        }
         break;
 
       case State.BlackHoleAccretion:
@@ -110,6 +119,7 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
 
   private void SwitchToSupernovaHoming() {
     CurrentState = State.SupernovaHoming;
+    _supernovaTimer = 4f;
     var player = GameRootProvider.CurrentGameRoot.GetNode<Player>("Player");
     var target = player.DecoyTarget ?? player;
     if (IsInstanceValid(target)) {

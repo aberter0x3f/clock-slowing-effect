@@ -33,15 +33,17 @@ public partial class PhaseStellar : BasePhase {
   [ExportGroup("Orbiters")]
   [Export] public int OrbiterCount = 4;
   [Export] public float OrbiterRadius = 9.0f;
-  [Export] public float InitialOrbiterSpeed = 2.0f;
+  [Export] public float InitialOrbiterSpeed = 3.0f;
 
   [ExportGroup("Rings")]
   [Export] public float Radius0 = 1.0f;
-  [Export] public float DeltaR = 0.1f;
+  [Export] public float DeltaR = 0.05f;
   [Export] public float BulletSpacing = 0.15f;
-  [Export] public float SmallBulletSpeed = 3.0f;
-  [Export] public float RingRotationSpeed = 2.0f;
-  [Export] public Godot.Collections.Array<int> LayerCounts { get; set; } = new() { 2, 2, 5, 6, 8 };
+  [Export] public int BulletSkip = 3;
+  [Export] public float SmallBulletSpeedMean = 3.0f;
+  [Export] public float SmallBulletSpeedSigma = 0.3f;
+  [Export] public float RingRotationSpeed = 1.0f;
+  [Export] public Godot.Collections.Array<int> LayerCounts { get; set; } = new() { 2, 4, 8, 12, 20 };
 
   [ExportGroup("Scenes")]
   [Export] public PackedScene BigBulletScene;
@@ -58,7 +60,6 @@ public partial class PhaseStellar : BasePhase {
   private float _orbiterAngle;
   private float _orbiterSpeed;
   private float _defenseTimer;
-  private float _phaseStartAngle; // 记录每个「层」开始时的轨道角度
   // --- 层状态 ---
   private int _currentPhaseLayerIndex = 0;
   private int _layersInCurrentColorPhase = 0;
@@ -68,14 +69,12 @@ public partial class PhaseStellar : BasePhase {
   private int _colorTransformRingIndex = -1;
   private PhaseStellarSmallBullet.BulletColor _colorTransformTarget;
 
-
   private readonly List<SimpleBullet> _orbiters = new();
   private readonly List<List<PhaseStellarSmallBullet>> _rings = new();
   private readonly Dictionary<int, int> _ringArrivalCounters = new();
   private readonly HashSet<int> _rotatingRingIndices = new();
   private readonly Dictionary<SimpleBullet, List<PhaseStellarSmallBullet>> _orbiterQueues = new();
   private readonly Dictionary<SimpleBullet, int> _orbiterFireIndices = new();
-  private readonly RandomNumberGenerator _rng = new();
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
@@ -84,18 +83,24 @@ public partial class PhaseStellar : BasePhase {
 
     var rank = GameManager.Instance.EnemyRank;
     InitialOrbiterSpeed *= rank / 5f;
-    SmallBulletSpeed *= (rank + 20) / 25f;
+    SmallBulletSpeedMean *= (rank + 10) / 15f;
 
     SpawnOrbiters();
     TransitionTo(Phase.OrbiterWait);
   }
 
   public override void UpdatePhase(float scaledDelta, float effectiveTimeScale) {
-    if (_isTransformingColor) { ProcessColorTransformation(scaledDelta); return; }
+    if (_isTransformingColor) {
+      ProcessColorTransformation(scaledDelta);
+      return;
+    }
 
     _timer -= scaledDelta;
     _defenseTimer -= scaledDelta;
-    if (_defenseTimer <= 0 && PlayerNode.GlobalPosition.Length() <= 1.0f) { FireDefensePattern(); _defenseTimer = 0.2f; }
+    if (_defenseTimer <= 0 && PlayerNode.GlobalPosition.Length() <= 1.0f) {
+      FireDefensePattern();
+      _defenseTimer = 0.2f;
+    }
 
     _orbiterAngle += _orbiterSpeed * scaledDelta;
 
@@ -144,7 +149,12 @@ public partial class PhaseStellar : BasePhase {
           TransitionTo(Phase.BlackHole);
         }
         break;
-      case Phase.BlackHole: if (_timer <= 0) { FireJet(); _timer = 0.2f; } break;
+      case Phase.BlackHole:
+        if (_timer <= 0) {
+          FireJet();
+          _timer = 0.2f;
+        }
+        break;
     }
   }
 
@@ -197,53 +207,76 @@ public partial class PhaseStellar : BasePhase {
       orb.UpdateFunc = (t) => {
         float angle = _orbiterAngle + (Mathf.Tau / _orbiters.Count) * orbiterIndex;
         return new SimpleBullet.UpdateState {
-          position = ParentBoss.GlobalPosition + new Vector3(Mathf.Cos(angle), 0, -Mathf.Sin(angle)) * OrbiterRadius
+          position = ParentBoss.GlobalPosition + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * OrbiterRadius
         };
       };
-      _orbiters.Add(orb); _orbiterQueues[orb] = new List<PhaseStellarSmallBullet>(); _orbiterFireIndices[orb] = 0;
+      _orbiters.Add(orb);
+      _orbiterQueues[orb] = new List<PhaseStellarSmallBullet>();
+      _orbiterFireIndices[orb] = 0;
       GameRootProvider.CurrentGameRoot.AddChild(orb);
     }
   }
 
   private void PrepareNextLayer() {
-    _phaseStartAngle = _orbiterAngle;
-    foreach (var o in _orbiters) { _orbiterFireIndices[o] = 0; _orbiterQueues[o].Clear(); }
+    _orbiterAngle = 0;
+    foreach (var o in _orbiters) {
+      _orbiterFireIndices[o] = 0;
+      _orbiterQueues[o].Clear();
+    }
 
     var bulletColor = GetColorForPhase(_currentPhase);
 
     int rIdx = _rings.Count;
     float radius = Radius0 + rIdx * DeltaR;
-    int count = Mathf.RoundToInt(Mathf.Tau * radius / BulletSpacing);
-    float theta0 = _rng.Randf() * Mathf.Tau;
+    int count = Mathf.CeilToInt(Mathf.Tau * radius / BulletSpacing / BulletSkip) * BulletSkip;
+    float theta0 = GD.Randf() * Mathf.Tau;
     var ring = new List<PhaseStellarSmallBullet>();
 
+    PhaseStellarSmallBullet last = null;
     for (int j = 0; j < count; ++j) {
       float theta = theta0 + (Mathf.Tau / count) * j;
       var b = SmallBulletScene.Instantiate<PhaseStellarSmallBullet>();
 
       b.CurrentColor = bulletColor;
       b.Type = _currentPhase <= Phase.Yellow ? PhaseStellarSmallBullet.BulletType.BlackHole : PhaseStellarSmallBullet.BulletType.Supernova;
-      b.TargetPosition = ParentBoss.GlobalPosition + new Vector3(Mathf.Cos(theta), 0, -Mathf.Sin(theta)) * radius;
-      b.MoveSpeed = SmallBulletSpeed;
+      b.TargetPosition = ParentBoss.GlobalPosition + new Vector3(Mathf.Cos(theta), 0, Mathf.Sin(theta)) * radius;
+      b.DropWhenArrive = j % BulletSkip != 0;
       b.RingIndex = rIdx;
       b.RingRotationSpeed = RingRotationSpeed * (rIdx % 2 == 0 ? 1 : -1);
-      b.SupernovaDelay = _rng.Randf() * 5.0f;
-      b.FireAngleOffset = _rng.Randf() * Mathf.Tau;
+      b.SupernovaDelay = GD.Randf() * 5.0f;
+      var orbIdx = j / 4 % OrbiterCount;
+      var orbAng = (Mathf.Tau / _orbiters.Count) * orbIdx;
+      if (j % 4 == 0) {
+        b.MoveSpeed = Mathf.Max(SmallBulletSpeedMean * 0.5f, (float) GD.Randfn(SmallBulletSpeedMean, SmallBulletSpeedSigma));
+        b.FireAngle = Mathf.PosMod(((float) GD.Randfn(theta, 0.5f)), Mathf.Tau);
+        if (b.FireAngle < orbAng) b.FireAngle += Mathf.Tau;
+      } else {
+        b.MoveSpeed = last.MoveSpeed;
+        b.FireAngle = last.FireAngle + 0.02f;
+      }
       b.ReachedTarget += OnSmallBulletArrived;
-      ring.Add(b);
+      if (!b.DropWhenArrive) ring.Add(b);
+      _orbiterQueues[_orbiters[orbIdx]].Add(b);
       GameRootProvider.CurrentGameRoot.AddChild(b);
+      last = b;
     }
-    _rings.Add(ring); _ringArrivalCounters[rIdx] = 0;
-    var shuffled = new List<PhaseStellarSmallBullet>(ring); shuffled.Shuffle(_rng);
-    for (int k = 0; k < shuffled.Count; ++k) _orbiterQueues[_orbiters[k % OrbiterCount]].Add(shuffled[k]);
-    foreach (var q in _orbiterQueues.Values) q.Sort((a, b) => a.FireAngleOffset.CompareTo(b.FireAngleOffset));
+    _rings.Add(ring);
+    _ringArrivalCounters[rIdx] = 0;
+    foreach (var q in _orbiterQueues.Values) q.Sort((a, b) => a.FireAngle.CompareTo(b.FireAngle));
   }
 
   private void ProcessAngularFiring() {
-    float diff = _orbiterAngle - _phaseStartAngle;
-    foreach (var o in _orbiters) {
-      var q = _orbiterQueues[o]; int idx = _orbiterFireIndices[o];
-      while (idx < q.Count && diff >= q[idx].FireAngleOffset) { q[idx].Activate(o.GlobalPosition); ++idx; _orbiterFireIndices[o] = idx; }
+    for (int orbiterIndex = 0; orbiterIndex < _orbiters.Count; ++orbiterIndex) {
+      var o = _orbiters[orbiterIndex];
+      var q = _orbiterQueues[o];
+      int idx = _orbiterFireIndices[o];
+      var oa = _orbiterAngle + (Mathf.Tau / _orbiters.Count) * orbiterIndex;
+      while (idx < q.Count && oa >= q[idx].FireAngle) {
+        var fa = q[idx].FireAngle;
+        q[idx].Activate(new Vector3(Mathf.Cos(fa), 0, Mathf.Sin(fa)) * OrbiterRadius);
+        ++idx;
+        _orbiterFireIndices[o] = idx;
+      }
     }
   }
 
@@ -267,9 +300,14 @@ public partial class PhaseStellar : BasePhase {
     _colorTransformTimer -= scaledDelta;
     if (_colorTransformTimer <= 0) {
       if (_colorTransformRingIndex >= 0) {
-        foreach (var b in _rings[_colorTransformRingIndex]) b.SetColor(_colorTransformTarget);
-        _colorTransformRingIndex--; _colorTransformTimer = 0.04f;
-      } else { _isTransformingColor = false; TransitionTo(_currentPhase + 1); }
+        foreach (var b in _rings[_colorTransformRingIndex])
+          b.SetColor(_colorTransformTarget);
+        --_colorTransformRingIndex;
+        _colorTransformTimer = 0.04f;
+      } else {
+        _isTransformingColor = false;
+        TransitionTo(_currentPhase + 1);
+      }
     }
   }
 
@@ -277,7 +315,7 @@ public partial class PhaseStellar : BasePhase {
     if (JetBulletScene == null) return;
     var jet = JetBulletScene.Instantiate<SimpleBullet>();
     Vector3 startPos = ParentBoss.GlobalPosition;
-    Vector3 horizontalDir = new Vector3(_rng.Randfn(0, 0.05f), 0, _rng.Randfn(0, 0.05f));
+    Vector3 horizontalDir = new Vector3((float) GD.Randfn(0, 0.05f), 0, (float) GD.Randfn(0, 0.05f));
     float upAcceleration = 10.0f;
     float detonationHeight = 2.0f;
 
@@ -303,7 +341,7 @@ public partial class PhaseStellar : BasePhase {
     int fragmentCount = 12;
     for (int i = 0; i < fragmentCount; ++i) {
       var bullet = RelativisticBulletScene.Instantiate<SimpleBullet>();
-      Vector3 spawnPos = explodePos + new Vector3(_rng.Randfn(0, 0.3f), _rng.Randfn(0, 0.3f), _rng.Randfn(0, 0.3f));
+      Vector3 spawnPos = explodePos + new Vector3((float) GD.Randfn(0, 0.3f), (float) GD.Randfn(0, 0.3f), (float) GD.Randfn(0, 0.3f));
       float speed = 6.0f;
       bullet.UpdateFunc = (t) => {
         var s = new SimpleBullet.UpdateState();
@@ -359,13 +397,18 @@ public partial class PhaseStellar : BasePhase {
     var ringsIds = new Godot.Collections.Array<Godot.Collections.Array<ulong>>();
     foreach (var r in _rings) {
       var ids = new Godot.Collections.Array<ulong>();
-      foreach (var b in r) ids.Add(b.GetInstanceId());
+      foreach (var b in r) {
+        ids.Add(b.GetInstanceId());
+      }
       ringsIds.Add(ids);
     }
     var queuesIds = new Godot.Collections.Dictionary<ulong, Godot.Collections.Array<ulong>>();
     foreach (var kv in _orbiterQueues) {
       var ids = new Godot.Collections.Array<ulong>();
-      foreach (var b in kv.Value) ids.Add(b.GetInstanceId());
+      foreach (var b in kv.Value) {
+        if (IsInstanceValid(b))
+          ids.Add(b.GetInstanceId());
+      }
       queuesIds[kv.Key.GetInstanceId()] = ids;
     }
     var fireIndices = new Godot.Collections.Dictionary<ulong, int>();
@@ -377,7 +420,6 @@ public partial class PhaseStellar : BasePhase {
       OrbiterAngle = _orbiterAngle,
       OrbiterSpeed = _orbiterSpeed,
       DefenseTimer = _defenseTimer,
-      PhaseStartAngle = _phaseStartAngle,
       CurrentPhaseLayerIndex = _currentPhaseLayerIndex,
       LayersInCurrentColorPhase = _layersInCurrentColorPhase,
       Rings = ringsIds,
@@ -390,14 +432,20 @@ public partial class PhaseStellar : BasePhase {
 
   public override void RestoreInternalState(RewindState state) {
     if (state is not PhaseStellarState s) return;
-    _currentPhase = s.CurrentPhase; _timer = s.Timer; _orbiterAngle = s.OrbiterAngle; _orbiterSpeed = s.OrbiterSpeed;
-    _defenseTimer = s.DefenseTimer; _phaseStartAngle = s.PhaseStartAngle; _currentPhaseLayerIndex = s.CurrentPhaseLayerIndex;
+    _currentPhase = s.CurrentPhase;
+    _timer = s.Timer;
+    _orbiterAngle = s.OrbiterAngle;
+    _orbiterSpeed = s.OrbiterSpeed;
+    _defenseTimer = s.DefenseTimer;
+    _currentPhaseLayerIndex = s.CurrentPhaseLayerIndex;
     _layersInCurrentColorPhase = s.LayersInCurrentColorPhase;
 
     _rings.Clear();
     foreach (var idList in s.Rings) {
       var ring = new List<PhaseStellarSmallBullet>();
-      foreach (var id in idList) { if (InstanceFromId(id) is PhaseStellarSmallBullet b) ring.Add(b); }
+      foreach (var id in idList) {
+        if (InstanceFromId(id) is PhaseStellarSmallBullet b) ring.Add(b);
+      }
       _rings.Add(ring);
     }
     _ringArrivalCounters.Clear();
@@ -408,11 +456,15 @@ public partial class PhaseStellar : BasePhase {
     foreach (var kv in s.OrbiterQueues) {
       if (InstanceFromId(kv.Key) is SimpleBullet o) {
         var q = new List<PhaseStellarSmallBullet>();
-        foreach (var id in kv.Value) { if (InstanceFromId(id) is PhaseStellarSmallBullet b) q.Add(b); }
+        foreach (var id in kv.Value) {
+          if (InstanceFromId(id) is PhaseStellarSmallBullet b) q.Add(b);
+        }
         _orbiterQueues[o] = q;
       }
     }
     _orbiterFireIndices.Clear();
-    foreach (var kv in s.OrbiterFireIndices) { if (InstanceFromId(kv.Key) is SimpleBullet o) _orbiterFireIndices[o] = kv.Value; }
+    foreach (var kv in s.OrbiterFireIndices) {
+      if (InstanceFromId(kv.Key) is SimpleBullet o) _orbiterFireIndices[o] = kv.Value;
+    }
   }
 }

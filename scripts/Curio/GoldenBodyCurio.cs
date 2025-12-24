@@ -22,13 +22,13 @@ public partial class GoldenBodyCurio : BaseCurio {
 
     SoundManager.Instance.Play(SoundEffect.CurioUse);
 
-    player.IsInvincible = true;
+    player.IsGoldenBody = true;
     _activeTimer = MAX_DURATION;
     if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;
   }
 
   public override void OnUseHeld(Player player, float scaledDelta) {
-    if (!player.IsInvincible) return; // 效果可能已被取消
+    if (!player.IsGoldenBody) return; // 效果可能已被取消
 
     _activeTimer -= scaledDelta;
     if (_activeTimer <= 0) {
@@ -38,9 +38,9 @@ public partial class GoldenBodyCurio : BaseCurio {
   }
 
   public override void OnUseReleased(Player player) {
-    if (!player.IsInvincible) return; // 避免重复触发
+    if (!player.IsGoldenBody) return; // 避免重复触发
 
-    player.IsInvincible = false;
+    player.IsGoldenBody = false;
     _activeTimer = 0f;
     CurrentCooldown = Cooldown;
   }

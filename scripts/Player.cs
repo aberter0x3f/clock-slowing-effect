@@ -47,7 +47,7 @@ public partial class Player : CharacterBody3D, IRewindable {
 
   // 奇物系统状态
   private bool _curioUsePressed = false;
-  public bool IsInvincible { get; set; } = false;
+  public bool IsGoldenBody { get; set; } = false;
   public Node3D DecoyTarget { get; private set; }
   private float _decoyRemoveTimer = 0;
 
@@ -265,6 +265,11 @@ public partial class Player : CharacterBody3D, IRewindable {
 
     _sprite.FlipH = _flipSprite;
     _sprite.Position = _sprite.Position with { X = SpriteBasePositionX * (_flipSprite ? -1 : 1) };
+
+    if (IsGoldenBody)
+      _sprite.Modulate = Colors.Yellow;
+    else
+      _sprite.Modulate = Colors.White;
   }
 
   private void StartReload() {
@@ -305,8 +310,7 @@ public partial class Player : CharacterBody3D, IRewindable {
   }
 
   private void OnHitAreaBodyEntered(Node3D body) {
-    // 玩家在回溯预览、金身期间是无敌的
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding || IsInvincible) return;
+    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding || IsGoldenBody) return;
 
     if (body.IsInGroup("enemies")) {
       GD.Print("Player hit by enemy");
@@ -437,7 +441,7 @@ public partial class Player : CharacterBody3D, IRewindable {
   }
 
   private void HandleMovement(float scaledDelta) {
-    if (IsInvincible) {
+    if (IsGoldenBody) {
       Velocity = Vector3.Zero;
       MoveAndSlide();
       return;
@@ -473,7 +477,7 @@ public partial class Player : CharacterBody3D, IRewindable {
     ShootTimer = 0.0f;
     CurrentAmmo = Stats.MaxAmmoInt;
     IsPermanentlyDead = false;
-    IsInvincible = false;
+    IsGoldenBody = false;
     foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
       curio.CurrentCooldown = 0f;
     }
@@ -540,7 +544,7 @@ public partial class Player : CharacterBody3D, IRewindable {
       IsReloading = this.IsReloading,
       TimeToReloaded = this.TimeToReloaded,
       ShootTimer = this.ShootTimer,
-      IsInvincible = this.IsInvincible,
+      IsInvincible = this.IsGoldenBody,
       CurioCooldowns = curioCooldowns,
       DecoyActive = IsInstanceValid(DecoyTarget),
       DecoyPosition = IsInstanceValid(DecoyTarget) ? DecoyTarget.GlobalPosition : Vector3.Zero,
@@ -561,7 +565,7 @@ public partial class Player : CharacterBody3D, IRewindable {
     this.IsReloading = ps.IsReloading;
     this.TimeToReloaded = ps.TimeToReloaded;
     this.ShootTimer = ps.ShootTimer;
-    this.IsInvincible = ps.IsInvincible;
+    this.IsGoldenBody = ps.IsInvincible;
     foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
       if (ps.CurioCooldowns.TryGetValue(curio.Type, out var cd)) {
         curio.CurrentCooldown = cd;
