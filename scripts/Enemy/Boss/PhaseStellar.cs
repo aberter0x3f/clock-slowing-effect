@@ -40,9 +40,9 @@ public partial class PhaseStellar : BasePhase {
   [Export] public float DeltaR = 0.05f;
   [Export] public float BulletSpacing = 0.15f;
   [Export] public int BulletSkip = 3;
-  [Export] public float SmallBulletSpeedMean = 3.0f;
+  [Export] public float SmallBulletSpeedMean = 4.0f;
   [Export] public float SmallBulletSpeedSigma = 0.3f;
-  [Export] public float RingRotationSpeed = 1.0f;
+  [Export] public float RingRotationSpeed = 1.5f;
   [Export] public Godot.Collections.Array<int> LayerCounts { get; set; } = new() { 2, 4, 8, 12, 20 };
 
   [ExportGroup("Scenes")]
@@ -82,6 +82,7 @@ public partial class PhaseStellar : BasePhase {
     _orbiterSpeed = InitialOrbiterSpeed;
 
     var rank = GameManager.Instance.EnemyRank;
+    TimeScaleSensitivity = 5f / (rank + 5);
     InitialOrbiterSpeed *= rank / 5f;
     SmallBulletSpeedMean *= (rank + 10) / 15f;
 
@@ -204,6 +205,7 @@ public partial class PhaseStellar : BasePhase {
     for (int i = 0; i < OrbiterCount; ++i) {
       var orb = BigBulletScene.Instantiate<SimpleBullet>();
       int orbiterIndex = i;
+      orb.TimeScaleSensitivity = TimeScaleSensitivity;
       orb.UpdateFunc = (t) => {
         float angle = _orbiterAngle + (Mathf.Tau / _orbiters.Count) * orbiterIndex;
         return new SimpleBullet.UpdateState {
@@ -237,6 +239,7 @@ public partial class PhaseStellar : BasePhase {
       float theta = theta0 + (Mathf.Tau / count) * j;
       var b = SmallBulletScene.Instantiate<PhaseStellarSmallBullet>();
 
+      b.TimeScaleSensitivity = TimeScaleSensitivity;
       b.CurrentColor = bulletColor;
       b.Type = _currentPhase <= Phase.Yellow ? PhaseStellarSmallBullet.BulletType.BlackHole : PhaseStellarSmallBullet.BulletType.Supernova;
       b.TargetPosition = ParentBoss.GlobalPosition + new Vector3(Mathf.Cos(theta), 0, Mathf.Sin(theta)) * radius;
@@ -319,6 +322,7 @@ public partial class PhaseStellar : BasePhase {
     float upAcceleration = 10.0f;
     float detonationHeight = 2.0f;
 
+    jet.TimeScaleSensitivity = TimeScaleSensitivity;
     jet.UpdateFunc = (t) => {
       SimpleBullet.UpdateState s = new();
       float currentY = 0.5f * upAcceleration * t * t;
@@ -343,6 +347,7 @@ public partial class PhaseStellar : BasePhase {
       var bullet = RelativisticBulletScene.Instantiate<SimpleBullet>();
       Vector3 spawnPos = explodePos + new Vector3((float) GD.Randfn(0, 0.3f), (float) GD.Randfn(0, 0.3f), (float) GD.Randfn(0, 0.3f));
       float speed = 6.0f;
+      bullet.TimeScaleSensitivity = TimeScaleSensitivity;
       bullet.UpdateFunc = (t) => {
         var s = new SimpleBullet.UpdateState();
         s.position = spawnPos + direction * (speed * t);
@@ -362,6 +367,7 @@ public partial class PhaseStellar : BasePhase {
       var b = DefenseBulletScene.Instantiate<SimpleBullet>();
       float angle = Mathf.DegToRad(i * 10f);
       Vector3 dir = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+      b.TimeScaleSensitivity = TimeScaleSensitivity;
       b.UpdateFunc = (t) => new SimpleBullet.UpdateState { position = bossPos + dir * (speed * t) };
       GameRootProvider.CurrentGameRoot.AddChild(b);
     }

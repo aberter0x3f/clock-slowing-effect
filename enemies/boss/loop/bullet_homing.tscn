@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://da45jlnn5x48c" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7B Free.png" id="2_2x5e8"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_28vtv"]
-radius = 0.07
+radius = 0.2
 
 [node name="EnemyBullet" type="Area3D" groups=["bullets"]]
 collision_layer = 16
@@ -15,6 +15,7 @@ script = ExtResource("1_28vtv")
 shape = SubResource("SphereShape3D_28vtv")
 
 [node name="Sprite" type="Sprite3D" parent="."]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 sorting_offset = 82.0
 billboard = 1
 texture_filter = 0

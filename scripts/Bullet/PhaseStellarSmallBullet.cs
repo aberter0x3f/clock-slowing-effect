@@ -7,6 +7,7 @@ public class PhaseStellarSmallBulletState : BaseBulletState {
   public PhaseStellarSmallBullet.State CurrentState;
   public bool IsActive;
   public float SupernovaTimer;
+  public PhaseStellarSmallBullet.BulletColor CurrentColor;
 }
 
 public partial class PhaseStellarSmallBullet : BaseBullet {
@@ -166,6 +167,7 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
       CurrentState = this.CurrentState,
       IsActive = this.IsProcessing(),
       SupernovaTimer = this._supernovaTimer,
+      CurrentColor = this.CurrentColor,
     };
   }
 
@@ -176,5 +178,6 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
     _supernovaTimer = s.SupernovaTimer;
     SetProcess(s.IsActive);
     Visible = s.IsActive;
+    if (this.CurrentColor != s.CurrentColor) SetColor(s.CurrentColor);
   }
 }

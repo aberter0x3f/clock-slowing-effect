@@ -24,4 +24,8 @@ public partial class PlayerBaseStats : Resource {
   public float GrazeRadius { get; set; } = 0.4f;
   [Export]
   public float GrazeTimeBonus { get; set; } = 0.3f;
+  [Export]
+  public float HyperDuration { get; set; } = 5.0f;
+  [Export]
+  public int GrazeForFullHyper { get; set; } = 50;
 }

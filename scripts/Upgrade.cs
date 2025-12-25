@@ -12,7 +12,9 @@ public enum UpgradeType {
   MovementSpecialist,
   GrazeRadius,
   GrazeBonus,
-  Adrenaline
+  Adrenaline,
+  HyperDuration,
+  HyperEfficiency
 }
 
 [GlobalClass]

@@ -18,6 +18,7 @@ public partial class HeadsUpDisplay : CanvasLayer {
   private Label _maxHealthLabel;
   private Control _timeBondContainer;
   private Label _timeBondLabel;
+  private ProgressBar _hyperBar;
 
   // 右上角
   private Label _ammoLabel;
@@ -42,6 +43,7 @@ public partial class HeadsUpDisplay : CanvasLayer {
     _maxHealthLabel = GetNode<Label>("TopLeftContainer/HealthContainer/MaxHealthLabel");
     _timeBondContainer = GetNode<Control>("TopLeftContainer/HealthContainer/TimeBondContainer");
     _timeBondLabel = _timeBondContainer.GetNode<Label>("TimeBondLabel");
+    _hyperBar = GetNode<ProgressBar>("TopLeftContainer/HyperContainer/HyperBar");
     _ammoLabel = GetNode<Label>("TopRightContainer/AmmoContainer/AmmoLabel");
     _maxAmmoLabel = GetNode<Label>("TopRightContainer/AmmoContainer/MaxAmmoLabel");
     _ammoLabelS = GetNode<Label>("TopRightContainer/AmmoContainer/LabelS");
@@ -60,15 +62,12 @@ public partial class HeadsUpDisplay : CanvasLayer {
     _gameManager = GameManager.Instance;
     _rewindManager = RewindManager.Instance;
     _player = GetTree().Root.GetNode<Player>("GameRoot/Player");
-
-    if (_player == null) {
-      GD.PrintErr("HeadsUpDisplay: Player node not found at 'GameRoot/Player'.");
-    }
   }
 
   public override void _Process(double delta) {
     UpdateRewindTime();
     UpdateHealth();
+    UpdateHyper();
     UpdateAmmo();
     UpdateCurio();
   }
@@ -85,6 +84,13 @@ public partial class HeadsUpDisplay : CanvasLayer {
     } else {
       _timeBondContainer.Visible = false;
     }
+  }
+
+  /// <summary>
+  /// 更新 Hyper 条显示．
+  /// </summary>
+  private void UpdateHyper() {
+    _hyperBar.Value = _gameManager.HyperGauge * _hyperBar.MaxValue;
   }
 
   /// <summary>

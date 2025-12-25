@@ -41,6 +41,9 @@ public partial class GameManager : Node {
   // 时间债券属性
   public float TimeBond { get; set; }
 
+  // Hyper 机制属性
+  public float HyperGauge { get; set; }
+
   // 当前关卡表现
   public bool UsedSlowThisLevel { get; set; }
   public bool UsedSkillThisLevel { get; set; }
@@ -138,6 +141,7 @@ public partial class GameManager : Node {
     PlayerStats = new PlayerStats(PlayerBaseStats);
     PlayerStats.RecalculateStats(AcquiredUpgrades, CurrentPlayerHealth);
     TimeBond = 0f;
+    HyperGauge = 0f;
   }
 
   /// <summary>

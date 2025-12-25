@@ -140,6 +140,14 @@ theme_override_fonts/font = ExtResource("2_syk6b")
 text = ")"
 vertical_alignment = 2
 
+[node name="HyperContainer" type="HBoxContainer" parent="TopLeftContainer"]
+layout_mode = 2
+
+[node name="HyperBar" type="ProgressBar" parent="TopLeftContainer/HyperContainer"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+mouse_filter = 2
+
 [node name="TopRightContainer" type="VBoxContainer" parent="."]
 anchors_preset = 1
 anchor_left = 1.0

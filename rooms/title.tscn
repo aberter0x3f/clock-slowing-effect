@@ -28,8 +28,6 @@ BossPhaseDataResource = ExtResource("5_uwgf0")
 BossScenePath = "uid://d312i4tukca50"
 InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
 
-[node name="WorldEnvironment" parent="." instance=ExtResource("3_bn480")]
-
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
 shadow_enabled = true
@@ -68,3 +66,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -2)
 
 [node name="ExitGame" parent="." instance=ExtResource("6_dy7ct")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -2)
+
+[node name="WorldEnvironment" parent="." instance=ExtResource("3_bn480")]

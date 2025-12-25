@@ -19,7 +19,7 @@ public partial class ZAxisEnhancementCurio : BaseCurio {
 
     SoundManager.Instance.Play(SoundEffect.CurioUse);
 
-    player.Velocity += new Vector3(0, 3.2f, 0);
+    player.Velocity += new Vector3(0, 6.4f, 0);
     CurrentCooldown = Cooldown;
     if (GameManager.Instance != null) GameManager.Instance.UsedSkillThisLevel = true;
   }

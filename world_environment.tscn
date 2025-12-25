@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://c6vnywdveemsw"]
+[gd_scene load_steps=7 format=3 uid="uid://c6vnywdveemsw"]
 
 [ext_resource type="Script" uid="uid://36vkr16tucay" path="res://scripts/GameWorldEnvironment.cs" id="1_x16oa"]
 
@@ -11,7 +11,14 @@ colors = PackedColorArray(0, 0, 0.12156863, 1, 1, 1, 1, 1)
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_wjtrd"]
 gradient = SubResource("Gradient_x16oa")
 
+[sub_resource type="Gradient" id="Gradient_wjtrd"]
+colors = PackedColorArray(0.12156863, 0, 0.12156863, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_01g3i"]
+gradient = SubResource("Gradient_wjtrd")
+
 [node name="WorldEnvironment" type="WorldEnvironment"]
 environment = SubResource("Environment_wjtrd")
 script = ExtResource("1_x16oa")
 RewindingColorCorrection = SubResource("GradientTexture1D_wjtrd")
+HyperColorCorrection = SubResource("GradientTexture1D_01g3i")

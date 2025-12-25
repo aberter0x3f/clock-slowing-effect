@@ -32,8 +32,6 @@ PortalScene = ExtResource("3_wsm0g")
 UpgradeSelectionMenuScene = ExtResource("4_iplkw")
 InterLevelMenuScenePath = "uid://cv1uxq5wwtkgn"
 
-[node name="WorldEnvironment" parent="." instance=ExtResource("5_awqhq")]
-
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8660254, 0.4330127, 0.25000003, 0, -0.50000006, 0.8660254, 0.5, -0.75, -0.43301275, 0, 0, 0)
 shadow_enabled = true
@@ -67,3 +65,5 @@ metadata/_custom_type_script = "uid://ddv4ypiw0mqcp"
 stream = ExtResource("24_04rph")
 autoplay = true
 parameters/looping = true
+
+[node name="WorldEnvironment" parent="." instance=ExtResource("5_awqhq")]

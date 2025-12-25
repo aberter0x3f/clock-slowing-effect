@@ -15,7 +15,7 @@ public partial class SimpleBullet : BaseBullet {
   }
 
   [ExportGroup("Movement")]
-  public bool EnableBorderCheck { get; set; } = false;
+  [Export] public bool EnableBorderCheck { get; set; } = true;
 
   public Func<float, UpdateState> UpdateFunc;
 

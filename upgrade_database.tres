@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="UpgradeDatabase" load_steps=33 format=3 uid="uid://d4n4ub6itg400"]
+[gd_resource type="Resource" script_class="UpgradeDatabase" load_steps=39 format=3 uid="uid://d4n4ub6itg400"]
 
 [ext_resource type="Script" uid="uid://ckupbr8ve0t0k" path="res://scripts/UpgradeDatabase.cs" id="1_ofy8g"]
 [ext_resource type="Script" uid="uid://be0eq177yq1as" path="res://scripts/Upgrade.cs" id="1_w5vlj"]
@@ -289,7 +289,68 @@ Description = "Increases damage by [color=orange](x^2 * 100)%[/color], where x i
 Value1 = 1.0
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
+[sub_resource type="Resource" id="Resource_w5vlj"]
+script = ExtResource("1_w5vlj")
+Type = 10
+Name = "Hyper Duration 1"
+ShortName = "Hd₁"
+Description = "Increases the duration of Hyper mode by [color=orange]5%.[/color]
+"
+Value1 = 0.05
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_np4yy"]
+script = ExtResource("1_w5vlj")
+Type = 10
+Level = 2
+Name = "Hyper Duration 2"
+ShortName = "Hd₂"
+Description = "Increases the duration of Hyper mode by [color=orange]10%.[/color]
+"
+Value1 = 0.1
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_jqpfv"]
+script = ExtResource("1_w5vlj")
+Type = 10
+Level = 3
+Name = "Hyper Duration 3"
+ShortName = "Hd₃"
+Description = "Increases the duration of Hyper mode by [color=orange]20%.[/color]
+"
+Value1 = 0.2
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_sq516"]
+script = ExtResource("1_w5vlj")
+Type = 11
+Name = "Hyper Efficiency 1"
+ShortName = "He₁"
+Description = "Reduces the number of grazes required to fill the Hyper gauge by [color=orange]5%.[/color]"
+Value1 = 0.05
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_24xqn"]
+script = ExtResource("1_w5vlj")
+Type = 11
+Level = 2
+Name = "Hyper Efficiency 2"
+ShortName = "He₂"
+Description = "Reduces the number of grazes required to fill the Hyper gauge by [color=orange]10%.[/color]"
+Value1 = 0.1
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
+[sub_resource type="Resource" id="Resource_p2ben"]
+script = ExtResource("1_w5vlj")
+Type = 11
+Level = 3
+Name = "Hyper Efficiency 3"
+ShortName = "He₃"
+Description = "Reduces the number of grazes required to fill the Hyper gauge by [color=orange]20%.[/color]"
+Value1 = 0.2
+metadata/_custom_type_script = "uid://be0eq177yq1as"
+
 [resource]
 script = ExtResource("1_ofy8g")
-AllUpgrades = Array[Object]([SubResource("Resource_q7gbs"), SubResource("Resource_p25qj"), SubResource("Resource_8g2fn"), SubResource("Resource_w1ykm"), SubResource("Resource_v7xbr"), SubResource("Resource_6w2cv"), SubResource("Resource_m8f3a"), SubResource("Resource_2w1cx"), SubResource("Resource_j4y7h"), SubResource("Resource_k0d2c"), SubResource("Resource_3a3b1"), SubResource("Resource_s5q1f"), SubResource("Resource_x6y8g"), SubResource("Resource_c2h3j"), SubResource("Resource_n5k4l"), SubResource("Resource_a1b2c"), SubResource("Resource_d3e4f"), SubResource("Resource_g5h6i"), SubResource("Resource_j7k8l"), SubResource("Resource_m9n0o"), SubResource("Resource_p1q2r"), SubResource("Resource_s3t4u"), SubResource("Resource_v5w6x"), SubResource("Resource_y7z8a"), SubResource("Resource_b9c0d"), SubResource("Resource_e1f2g"), SubResource("Resource_h3i4j"), SubResource("Resource_k5l6m"), SubResource("Resource_n7o8p"), SubResource("Resource_q9r0s")])
+AllUpgrades = Array[Object]([SubResource("Resource_q7gbs"), SubResource("Resource_p25qj"), SubResource("Resource_8g2fn"), SubResource("Resource_w1ykm"), SubResource("Resource_v7xbr"), SubResource("Resource_6w2cv"), SubResource("Resource_m8f3a"), SubResource("Resource_2w1cx"), SubResource("Resource_j4y7h"), SubResource("Resource_k0d2c"), SubResource("Resource_3a3b1"), SubResource("Resource_s5q1f"), SubResource("Resource_x6y8g"), SubResource("Resource_c2h3j"), SubResource("Resource_n5k4l"), SubResource("Resource_a1b2c"), SubResource("Resource_d3e4f"), SubResource("Resource_g5h6i"), SubResource("Resource_j7k8l"), SubResource("Resource_m9n0o"), SubResource("Resource_p1q2r"), SubResource("Resource_s3t4u"), SubResource("Resource_v5w6x"), SubResource("Resource_y7z8a"), SubResource("Resource_b9c0d"), SubResource("Resource_e1f2g"), SubResource("Resource_h3i4j"), SubResource("Resource_k5l6m"), SubResource("Resource_n7o8p"), SubResource("Resource_q9r0s"), SubResource("Resource_w5vlj"), SubResource("Resource_np4yy"), SubResource("Resource_jqpfv"), SubResource("Resource_sq516"), SubResource("Resource_24xqn"), SubResource("Resource_p2ben")])
 metadata/_custom_type_script = "uid://ckupbr8ve0t0k"

@@ -37,10 +37,13 @@ public partial class PhaseLoop : BasePhase {
   [ExportGroup("Timing")]
   [Export] public float InitialWaitTime { get; set; } = 1.0f;
   [Export] public float HomingBulletInterval { get; set; } = 1f;
-  [Export] public float DefenseBulletInterval { get; set; } = 0.1f;
+  [Export] public float DefenseBulletInterval { get; set; } = 0.05f;
 
   [ExportGroup("Orbit")]
   [Export] public float OrbitSpeedA { get; set; } = 0.2f; // Radians per second
+
+  [ExportGroup("Homing")]
+  [Export] public float HomingSpeed { get; set; } = 1f;
 
   [ExportGroup("Height Oscillation")]
   [Export] public float HeightAmplitudeH { get; set; } = 0.5f;
@@ -67,12 +70,13 @@ public partial class PhaseLoop : BasePhase {
 
     _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
     var rank = GameManager.Instance.EnemyRank;
-    TimeScaleSensitivity = 5f / (rank + 5);
+    TimeScaleSensitivity = 10f / (rank + 10);
     float minMapDim = Mathf.Min(_mapGenerator.MapWidth, _mapGenerator.MapHeight) * _mapGenerator.TileSize;
     _radiusA = minMapDim * 0.4f;
     _radiusB = _radiusA * 1.2f;
 
-    OrbitSpeedA *= (rank + 5) / 10f;
+    OrbitSpeedA *= (rank + 10) / 15f;
+    HomingSpeed *= (rank + 10) / 15f;
     HomingBulletInterval /= (rank + 5) / 10f;
 
     _currentState = AttackState.Waiting;
@@ -190,7 +194,7 @@ public partial class PhaseLoop : BasePhase {
     var bullet = HomingBulletScene.Instantiate<SimpleBullet>();
     Vector3 startPos = ParentBoss.GlobalPosition;
     Vector3 direction = (PlayerNode.GlobalPosition - startPos).Normalized();
-    float speed = 1.0f;
+    float speed = HomingSpeed;
     bullet.UpdateFunc = (t) => {
       SimpleBullet.UpdateState s = new();
       s.position = startPos + direction * (speed * t);
@@ -205,9 +209,9 @@ public partial class PhaseLoop : BasePhase {
       if (!IsInstanceValid(orbiter) || orbiter.IsDestroyed) continue;
 
       var defenseBullet = DefenseBulletScene.Instantiate<SimpleBullet>();
-      Vector3 startPos = orbiter.GlobalPosition;
+      Vector3 startPos = orbiter.GlobalPosition with { Y = 0 };
       Vector3 direction = new Vector3(startPos.X, 0, startPos.Z).Normalized();
-      float speed = 10f;
+      float speed = 20f;
 
       defenseBullet.UpdateFunc = (t) => {
         SimpleBullet.UpdateState s = new();

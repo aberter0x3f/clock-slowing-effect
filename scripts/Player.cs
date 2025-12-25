@@ -18,6 +18,11 @@ public class PlayerState : RewindState {
   public bool DecoyActive;
   public Vector3 DecoyPosition;
   public float DecoyRemoveTimer;
+  // Hyper 机制状态
+  public float HyperGauge;
+  public bool IsHyperActive;
+  public float HyperTimer;
+  public float HyperInvincibilityTimer;
   // 以下字段仅用于「从当前阶段重来」，回溯系统会忽略它们
   public float Health;
   public float TimeBond;
@@ -43,6 +48,7 @@ public partial class Player : CharacterBody3D, IRewindable {
   private IInteractable _closestInteractable = null;
   private float _beginningHealth;
   private float _beginningTimeBond;
+  private float _beginningHyperGauge;
   private Camera3D _camera;
 
   // 奇物系统状态
@@ -50,6 +56,11 @@ public partial class Player : CharacterBody3D, IRewindable {
   public bool IsGoldenBody { get; set; } = false;
   public Node3D DecoyTarget { get; private set; }
   private float _decoyRemoveTimer = 0;
+
+  // Hyper 机制状态
+  public bool IsHyperActive { get; private set; } = false;
+  private float _hyperTimer = 0f;
+  private float _hyperInvincibilityTimer = 0f;
 
   public PlayerStats Stats => GameManager.Instance.PlayerStats;
 
@@ -79,7 +90,7 @@ public partial class Player : CharacterBody3D, IRewindable {
   public float AutoRewindOnHitDuration { get; set; } = 3.0f;  // 被击中时自动回溯的时长
 
   [Export]
-  public float Gravity { get; set; } = 6.4f;
+  public float Gravity { get; set; } = 12.8f;
 
   [ExportGroup("Camera")]
   [Export]
@@ -121,8 +132,11 @@ public partial class Player : CharacterBody3D, IRewindable {
       GD.Print($"Player: MapGenerator not found at 'GameRoot/MapGenerator'. TimeShards may not spawn correctly.");
     }
 
+    var gm = GameManager.Instance;
+
     _beginningHealth = Health;
-    _beginningTimeBond = GameManager.Instance.TimeBond;
+    _beginningTimeBond = gm.TimeBond;
+    _beginningHyperGauge = gm.HyperGauge;
 
     _sprite.Play();
     _hitPointSprite.Play();
@@ -157,7 +171,10 @@ public partial class Player : CharacterBody3D, IRewindable {
     UpdateInteractionTarget();
     HandleInteractionInput();
     HandleCurioInput(true);
+    HandleHyperInput();
     UpdateCurios(scaledDelta);
+    UpdateHyperState(scaledDelta);
+
 
     if (IsReloading) {
       TimeToReloaded -= (float) delta * TimeManager.Instance.TimeScale; // 换弹时间不受时间缩放影响
@@ -249,6 +266,47 @@ public partial class Player : CharacterBody3D, IRewindable {
     }
   }
 
+  private void HandleHyperInput() {
+    if (Input.IsActionJustPressed("hyper")) {
+      var gm = GameManager.Instance;
+      if (IsHyperActive) {
+        // Hyper 期间再次按下：跳跃
+        if (GlobalPosition.Y <= 0) {
+          Velocity += new Vector3(0, 3.2f, 0);
+        }
+      } else {
+        // 尝试激活 Hyper
+        if (gm.HyperGauge >= 1.0f) {
+          IsHyperActive = true;
+          _hyperTimer = Stats.HyperDuration;
+          _hyperInvincibilityTimer = 0.5f;
+          SoundManager.Instance.Play(SoundEffect.CurioUse);
+        } else {
+          SoundManager.Instance.Play(SoundEffect.CurioWrong);
+        }
+      }
+    }
+  }
+
+  private void UpdateHyperState(float scaledDelta) {
+    var gm = GameManager.Instance;
+
+    if (_hyperInvincibilityTimer > 0) {
+      _hyperInvincibilityTimer -= scaledDelta;
+    }
+
+    if (IsHyperActive) {
+      _hyperTimer -= scaledDelta;
+      if (_hyperTimer <= 0) {
+        IsHyperActive = false;
+        gm.HyperGauge = 0f;
+      } else {
+        // 根据剩余时间更新 Hyper 条
+        gm.HyperGauge = _hyperTimer / Stats.HyperDuration;
+      }
+    }
+  }
+
   private void UpdateCameraTransform(float delta) {
     if (_camera == null) return;
 
@@ -293,6 +351,16 @@ public partial class Player : CharacterBody3D, IRewindable {
       bullet.WasGrazed = true;
 
       SoundManager.Instance.Play(SoundEffect.Graze);
+      var gm = GameManager.Instance;
+
+      if (IsHyperActive) {
+        // Hyper 期间：续时
+        _hyperTimer = Mathf.Min(Stats.HyperDuration, _hyperTimer + Stats.HyperGrazeExtension);
+      } else {
+        // 非 Hyper 期间：填充 Hyper 条
+        gm.HyperGauge = Mathf.Min(1.0f, gm.HyperGauge + Stats.HyperGrazeFillAmount);
+      }
+
 
       var shard = GrazeTimeShard.Instantiate<TimeShard>();
       shard.TimeBonus = Stats.GrazeTimeBonus;
@@ -310,7 +378,7 @@ public partial class Player : CharacterBody3D, IRewindable {
   }
 
   private void OnHitAreaBodyEntered(Node3D body) {
-    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding || IsGoldenBody) return;
+    if (RewindManager.Instance.IsPreviewing || RewindManager.Instance.IsRewinding || IsGoldenBody || _hyperInvincibilityTimer > 0) return;
 
     if (body.IsInGroup("enemies")) {
       GD.Print("Player hit by enemy");
@@ -466,11 +534,13 @@ public partial class Player : CharacterBody3D, IRewindable {
   }
 
   public void ResetState() {
+    var gm = GameManager.Instance;
+
     GlobalPosition = SpawnPosition;
     Velocity = Vector3.Zero;
     Health = _beginningHealth;
-    GameManager.Instance.TimeBond = _beginningTimeBond;
-    Stats.RecalculateStats(GameManager.Instance.GetCurrentAndPendingUpgrades(), Health);
+    gm.TimeBond = _beginningTimeBond;
+    Stats.RecalculateStats(gm.GetCurrentAndPendingUpgrades(), Health);
     (_grazeAreaShape.Shape as SphereShape3D).Radius = Stats.GrazeRadius;
     IsReloading = false;
     TimeToReloaded = 0.0f;
@@ -478,7 +548,11 @@ public partial class Player : CharacterBody3D, IRewindable {
     CurrentAmmo = Stats.MaxAmmoInt;
     IsPermanentlyDead = false;
     IsGoldenBody = false;
-    foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
+    gm.HyperGauge = _beginningHyperGauge;
+    IsHyperActive = false;
+    _hyperTimer = 0f;
+    _hyperInvincibilityTimer = 0f;
+    foreach (var curio in gm.GetCurrentAndPendingCurios()) {
       curio.CurrentCooldown = 0f;
     }
     RemoveDecoyTarget();
@@ -549,6 +623,10 @@ public partial class Player : CharacterBody3D, IRewindable {
       DecoyActive = IsInstanceValid(DecoyTarget),
       DecoyPosition = IsInstanceValid(DecoyTarget) ? DecoyTarget.GlobalPosition : Vector3.Zero,
       DecoyRemoveTimer = _decoyRemoveTimer,
+      HyperGauge = GameManager.Instance.HyperGauge,
+      IsHyperActive = this.IsHyperActive,
+      HyperTimer = this._hyperTimer,
+      HyperInvincibilityTimer = this._hyperInvincibilityTimer,
       // Health 和 TimeBond 仅用于阶段重启，回溯系统不会使用它们
       Health = this.Health,
       TimeBond = GameManager.Instance.TimeBond
@@ -571,6 +649,12 @@ public partial class Player : CharacterBody3D, IRewindable {
         curio.CurrentCooldown = cd;
       }
     }
+
+    // --- Hyper 状态恢复 ---
+    GameManager.Instance.HyperGauge = ps.HyperGauge;
+    this.IsHyperActive = ps.IsHyperActive;
+    this._hyperTimer = ps.HyperTimer;
+    this._hyperInvincibilityTimer = ps.HyperInvincibilityTimer;
 
     // --- 诱饵状态恢复 ---
     _decoyRemoveTimer = ps.DecoyRemoveTimer;

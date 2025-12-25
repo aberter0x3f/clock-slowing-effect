@@ -36,6 +36,11 @@ public class PlayerStats {
   public float FireRate { get; private set; }
   public float ReloadSpeed { get; private set; }
 
+  // Hyper 机制属性
+  public float HyperDuration { get; private set; }
+  public float HyperGrazeFillAmount { get; private set; }
+  public float HyperGrazeExtension => 0.3f;
+
   // 用于动态计算的加成值
   private float _adrenalineBonus = 0f;
 
@@ -56,6 +61,8 @@ public class PlayerStats {
     MaxAmmo = BaseStats.MaxAmmo;
     GrazeRadius = BaseStats.GrazeRadius;
     GrazeTimeBonus = BaseStats.GrazeTimeBonus;
+    HyperDuration = BaseStats.HyperDuration;
+    HyperGrazeFillAmount = 1f / BaseStats.GrazeForFullHyper;
     BulletAccuracyNormal = 0;
     BulletAccuracySlow = 0;
     FireRate = 0;
@@ -82,6 +89,8 @@ public class PlayerStats {
     MaxAmmo += BaseStats.MaxAmmo * bonusTotals.GetValueOrDefault(UpgradeType.MaxAmmo, 0f);
     GrazeRadius += BaseStats.GrazeRadius * bonusTotals.GetValueOrDefault(UpgradeType.GrazeRadius, 0f);
     GrazeTimeBonus += BaseStats.GrazeTimeBonus * bonusTotals.GetValueOrDefault(UpgradeType.GrazeBonus, 0f);
+    HyperDuration += BaseStats.HyperDuration * bonusTotals.GetValueOrDefault(UpgradeType.HyperDuration, 0f);
+    HyperGrazeFillAmount += 1f / BaseStats.GrazeForFullHyper * bonusTotals.GetValueOrDefault(UpgradeType.HyperEfficiency, 0f);
 
     // 特殊计算 (除法)
     BulletAccuracyNormal += bonusTotals.GetValueOrDefault(UpgradeType.BulletAccuracy, 0f);
