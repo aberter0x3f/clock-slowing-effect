@@ -153,13 +153,12 @@ public partial class PhaseWave2 : BasePhase {
     float initialPhase = phaseOff * BulletPhaseScale;
     bullet.UpdateFunc = (t) => {
       SimpleBullet.UpdateState s = new();
-      float waveT = t + initialPhase;
       float period = BulletT1 + BulletT2;
-      float time = (invert ? -waveT : waveT) % period;
-      if (time < 0) time += period;
+      float time = Mathf.PosMod(phaseOff + (invert ? -t : t), period);
 
       float h = 0;
-      if (time <= BulletT1) h = BulletMaxHeight * Mathf.Cos(Mathf.Lerp(-Mathf.Pi / 2, Mathf.Pi / 2, time / BulletT1));
+      if (time <= BulletT1)
+        h = BulletMaxHeight * Mathf.Sin(time / BulletT1 * Mathf.Pi);
 
       s.position = startPos + forward * (BulletForwardSpeed * t) + Vector3.Up * h;
       return s;

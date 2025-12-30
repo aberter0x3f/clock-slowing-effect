@@ -98,26 +98,21 @@ public partial class PhaseWave : BasePhase {
     float bossX = ParentBoss.GlobalPosition.X;
     float spawnZ = ParentBoss.GlobalPosition.Z;
 
+    bool invert = _waveCounter % 2 != 0;
     for (float x = -halfWidth; x <= halfWidth; x += BulletSpacing) {
       var bullet = BulletScene.Instantiate<SimpleBullet>();
-      Vector3 initialPos = new Vector3(x, 0, spawnZ);
-      float phaseOffset = (x - bossX) * BulletPhaseScale;
-      bool invert = (_waveCounter % 2 != 0);
-
+      Vector3 startPos = new Vector3(x, 0, spawnZ);
+      float phaseOff = (x - bossX) * BulletPhaseScale;
       bullet.UpdateFunc = (t) => {
         SimpleBullet.UpdateState s = new();
-        float waveT = t + phaseOffset;
         float period = BulletT1 + BulletT2;
-        float timeInPeriod = (invert ? -waveT : waveT) % period;
-        if (timeInPeriod < 0) timeInPeriod += period;
+        float time = Mathf.PosMod(phaseOff + (invert ? -t : t), period);
 
         float h = 0;
-        if (timeInPeriod <= BulletT1) {
-          float prog = timeInPeriod / BulletT1;
-          h = BulletMaxHeight * Mathf.Cos(Mathf.Lerp(-Mathf.Pi / 2, Mathf.Pi / 2, prog));
-        }
+        if (time <= BulletT1)
+          h = BulletMaxHeight * Mathf.Sin(time / BulletT1 * Mathf.Pi);
 
-        s.position = initialPos + Vector3.Back * (BulletForwardSpeed * t) + Vector3.Up * h;
+        s.position = startPos + Vector3.Back * (BulletForwardSpeed * t) + Vector3.Up * h;
         return s;
       };
 

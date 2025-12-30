@@ -267,12 +267,16 @@ public partial class Player : CharacterBody3D, IRewindable {
   }
 
   private void HandleHyperInput() {
+    const float HYPER_JUMP_SPEED = 3.2f;
+
     if (Input.IsActionJustPressed("hyper")) {
       var gm = GameManager.Instance;
       if (IsHyperActive) {
         // Hyper 期间再次按下：跳跃
         if (GlobalPosition.Y <= 0) {
-          Velocity += new Vector3(0, 3.2f, 0);
+          Velocity += new Vector3(0, HYPER_JUMP_SPEED, 0);
+        } else {
+          SoundManager.Instance.Play(SoundEffect.CurioWrong);
         }
       } else {
         // 尝试激活 Hyper
@@ -281,6 +285,9 @@ public partial class Player : CharacterBody3D, IRewindable {
           _hyperTimer = Stats.HyperDuration;
           _hyperInvincibilityTimer = 0.5f;
           SoundManager.Instance.Play(SoundEffect.CurioUse);
+          if (GlobalPosition.Y <= 0) {
+            Velocity += new Vector3(0, HYPER_JUMP_SPEED, 0);
+          }
         } else {
           SoundManager.Instance.Play(SoundEffect.CurioWrong);
         }
