@@ -27,7 +27,8 @@ public partial class BaseBullet : RewindableArea3D {
 
   [ExportGroup("Indicator")]
   [Export]
-  public float IndicatorStartHeight { get; set; } = 400.0f; // 指示器开始放大的 Z 轴高度．
+  public float IndicatorStartHeight { get; set; } = 2.0f;
+  public float IndicatorEndHeight { get; set; } = 0.07f;
   [Export(PropertyHint.Range, "0.0, 1.0, 0.01")]
   public float IndicatorMinScale { get; set; } = 0.2f; // 指示器的最小缩放比例．
 
@@ -98,11 +99,11 @@ public partial class BaseBullet : RewindableArea3D {
 
     if (!_hasIndicator) return;
 
-    _landingIndicator.Visible = GlobalPosition.Y > 0;
+    _landingIndicator.Visible = GlobalPosition.Y > IndicatorEndHeight;
     if (!_landingIndicator.Visible) return;
 
     // 计算从 IndicatorStartHeight 到 0 的下落进度．
-    float progress = 1.0f - Mathf.Clamp(GlobalPosition.Y / IndicatorStartHeight, 0.0f, 1.0f);
+    float progress = 1.0f - Mathf.Clamp((GlobalPosition.Y - IndicatorEndHeight) / (IndicatorStartHeight - IndicatorEndHeight), 0.0f, 1.0f);
 
     // 根据进度在最小和最大 (1.0) 缩放之间进行插值
     float currentScale = Mathf.Lerp(IndicatorMinScale, 1.0f, progress);

@@ -507,7 +507,11 @@ public partial class Player : CharacterBody3D, IRewindable {
     bullet.UpdateFunc = (time) => {
       SimpleBullet.UpdateState state = new();
       state.position = startPos + direction * (time * 10f);
-      state.rotation = Basis.LookingAt(direction).GetEuler();
+      Vector3 upVector = Vector3.Up;
+      if (direction.Cross(upVector).IsZeroApprox()) {
+        upVector = Vector3.Forward;
+      }
+      state.rotation = Basis.LookingAt(direction, upVector).GetEuler();
       state.modulate = new Color(1, 1, 1, 0.5f);
       return state;
     };

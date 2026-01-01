@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://i2b26rdwnudx"]
+
+[ext_resource type="Script" uid="uid://cfp7j3jkj0qbq" path="res://scripts/Enemy/Boss/PhaseRebound.cs" id="1_wabw4"]
+[ext_resource type="PackedScene" uid="uid://bqhqnyc6xoj5c" path="res://enemies/boss/rebound/bullet.tscn" id="2_2hdrf"]
+
+[node name="Rebound" type="Node"]
+script = ExtResource("1_wabw4")
+BulletScene = ExtResource("2_2hdrf")

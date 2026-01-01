@@ -16,6 +16,12 @@ public partial class PhaseMazeBullet : BaseBullet {
 
   public float VelocityZ { get; set; }
   private float _currentY = 0f;
+  private Player _player;
+
+  public override void _Ready() {
+    _player = GetTree().Root.GetNode<Player>("GameRoot/Player");
+    base._Ready();
+  }
 
   public override void UpdateBullet(float scaledDelta) {
     GlobalPosition += Vector3.Back * VelocityZ * scaledDelta;
@@ -25,6 +31,10 @@ public partial class PhaseMazeBullet : BaseBullet {
     bool isSlow = Input.IsActionPressed("time_slow");
 
     switch (Type) {
+      case MazeBulletType.Normal:
+        var target = _player.DecoyTarget ?? _player;
+        _currentY = targetY = _player.GlobalPosition.Y;
+        break;
       case MazeBulletType.LowSpeedPhase: if (isSlow) targetY = PhaseHeight; break;
       case MazeBulletType.HighSpeedPhase: if (!isSlow) targetY = PhaseHeight; break;
       case MazeBulletType.Graze: if (WasGrazed) targetY = PhaseHeight; break;

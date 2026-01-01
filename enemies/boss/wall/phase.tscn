@@ -1,0 +1,16 @@
+[gd_scene load_steps=7 format=3 uid="uid://bfum77ttcsxbc"]
+
+[ext_resource type="Script" uid="uid://iao37enheuqh" path="res://scripts/Enemy/Boss/PhaseWall.cs" id="1_fssjc"]
+[ext_resource type="PackedScene" uid="uid://beqmn0mgjehjr" path="res://enemies/boss/wall/wall_bullet.tscn" id="2_28wkb"]
+[ext_resource type="PackedScene" uid="uid://bhth154qf367b" path="res://enemies/boss/wall/big_bullet.tscn" id="3_bx0ey"]
+[ext_resource type="PackedScene" uid="uid://bv2ntov2e6eym" path="res://enemies/boss/wall/small_bullet.tscn" id="4_gsaww"]
+[ext_resource type="PackedScene" uid="uid://dr3uw473rrswg" path="res://enemies/boss/wall/falling_bullet.tscn" id="5_fv3at"]
+[ext_resource type="PackedScene" uid="uid://ntaw6km8k2xo" path="res://enemies/boss/wall/spread_bullet.tscn" id="6_wgalm"]
+
+[node name="Wall" type="Node"]
+script = ExtResource("1_fssjc")
+WallBulletScene = ExtResource("2_28wkb")
+LargeThrowBulletScene = ExtResource("3_bx0ey")
+SmallThrowBulletScene = ExtResource("4_gsaww")
+FallingLineBulletScene = ExtResource("5_fv3at")
+FinalSpreadBulletScene = ExtResource("6_wgalm")

@@ -16,7 +16,6 @@ public class PhaseSnowState : BasePhaseState {
   public int WaveCounter;
 }
 
-[GlobalClass]
 public partial class PhaseSnow : BasePhase {
   public enum AttackState {
     MovingToPosition,
