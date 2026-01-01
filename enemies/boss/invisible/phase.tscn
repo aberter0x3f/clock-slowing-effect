@@ -1,0 +1,12 @@
+[gd_scene load_steps=5 format=3 uid="uid://fnnlp5htb34j"]
+
+[ext_resource type="Script" uid="uid://cdpbm42hsdf6h" path="res://scripts/Enemy/Boss/PhaseInvisible.cs" id="1_0erfg"]
+[ext_resource type="PackedScene" uid="uid://cvqrbpdkgcav1" path="res://enemies/boss/invisible/invisible_bullet.tscn" id="2_evhxs"]
+[ext_resource type="PackedScene" uid="uid://d36oddkpu7glf" path="res://enemies/boss/invisible/decoy_bullet.tscn" id="2_pxsjy"]
+[ext_resource type="PackedScene" uid="uid://dkwlweo3derd" path="res://enemies/boss/invisible/projectile_bullet.tscn" id="3_pxsjy"]
+
+[node name="PhaseInvisible" type="Node"]
+script = ExtResource("1_0erfg")
+DecoyBulletBaseScene = ExtResource("2_pxsjy")
+DecoyProjectileScene = ExtResource("3_pxsjy")
+InvisibleBulletScene = ExtResource("2_evhxs")

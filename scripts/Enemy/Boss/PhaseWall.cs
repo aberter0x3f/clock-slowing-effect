@@ -17,6 +17,8 @@ public class PhaseWallState : BasePhaseState {
 }
 
 public partial class PhaseWall : BasePhase {
+  public override float MaxHealth { get; protected set; } = 30f;
+
   public enum AttackState {
     MovingToStart,
     Fighting

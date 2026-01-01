@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BossPhaseData" load_steps=14 format=3 uid="uid://jogkufq70a76"]
+[gd_resource type="Resource" script_class="BossPhaseData" load_steps=15 format=3 uid="uid://jogkufq70a76"]
 
 [ext_resource type="Script" uid="uid://dotuickvp0q0e" path="res://scripts/Enemy/Boss/BossPhaseData.cs" id="1_ohpmv"]
 [ext_resource type="PackedScene" uid="uid://cm5dq08tifvge" path="res://enemies/boss/arcs_and_lines/phase.tscn" id="1_wk3t5"]
@@ -13,10 +13,11 @@
 [ext_resource type="PackedScene" uid="uid://bfum77ttcsxbc" path="res://enemies/boss/wall/phase.tscn" id="7_me2qs"]
 [ext_resource type="PackedScene" uid="uid://dbdl8ffiml85m" path="res://enemies/boss/maze/phase.tscn" id="8_wx1cq"]
 [ext_resource type="PackedScene" uid="uid://buxkq13puqqwx" path="res://enemies/boss/stellar/phase.tscn" id="9_cgq2b"]
+[ext_resource type="PackedScene" uid="uid://fnnlp5htb34j" path="res://enemies/boss/invisible/phase.tscn" id="10_mk7c1"]
 
 [resource]
 script = ExtResource("1_ohpmv")
 PhaseSet1 = Array[PackedScene]([ExtResource("1_wk3t5"), ExtResource("2_5lomb"), ExtResource("3_5lomb"), ExtResource("3_x5yyf"), ExtResource("5_x5yyf")])
-PhaseSet2 = Array[PackedScene]([ExtResource("4_me2qs"), ExtResource("7_me2qs"), ExtResource("5_mk7c1"), ExtResource("6_mbj6b")])
+PhaseSet2 = Array[PackedScene]([ExtResource("4_me2qs"), ExtResource("7_me2qs"), ExtResource("5_mk7c1"), ExtResource("10_mk7c1"), ExtResource("6_mbj6b")])
 PhaseSet3 = Array[PackedScene]([ExtResource("7_1yqd0"), ExtResource("8_wx1cq"), ExtResource("9_cgq2b")])
 metadata/_custom_type_script = "uid://dotuickvp0q0e"

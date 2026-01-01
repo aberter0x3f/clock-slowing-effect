@@ -1,0 +1,47 @@
+[gd_scene load_steps=6 format=4 uid="uid://d36oddkpu7glf"]
+
+[ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_fh3m0"]
+[ext_resource type="Script" uid="uid://dr23d7xks0mth" path="res://scripts/Enemy/EnemyPolyhedron.cs" id="2_j4tl1"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_i4dio"]
+radius = 0.6
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_fh3m0"]
+_surfaces = [{
+"aabb": AABB(-0.7, -0.7, -0.7, 1.4, 1.4, 1.4),
+"format": 34359738375,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("MzMzPwAAAAAAAAAAAAAAAAAAAAAzMzM/AAAAADMzMz8AAAAAMzMzPwAAAAAAAAAAAAAAADMzMz8AAAAAAAAAAAAAAAAzMzO/MzMzPwAAAAAAAAAAAAAAAAAAAAAzMzO/AAAAADMzM78AAAAAMzMzPwAAAAAAAAAAAAAAADMzM78AAAAAAAAAAAAAAAAzMzM/MzMzvwAAAAAAAAAAAAAAADMzMz8AAAAAAAAAAAAAAAAzMzM/MzMzvwAAAAAAAAAAAAAAAAAAAAAzMzO/AAAAADMzMz8AAAAAMzMzvwAAAAAAAAAAAAAAADMzM78AAAAAAAAAAAAAAAAzMzO/MzMzvwAAAAAAAAAAAAAAAAAAAAAzMzM/AAAAADMzM78AAAAA////f/9//7//f/9//38AgP9///8AAP+/////f/9//7//f///AAD/v///////fwCA////f/9//7///////38AgP9/AAAAAP+/////f/9//7//fwAAAAD/v/9//3//fwCAAAD/f/9//7//f///AAD/v/9//3//fwCAAAD/f/9//7///////38AgP9///8AAP+/AAD/f/9//7//fwAAAAD/v///////fwCAAAD/f/9//7//f/9//38AgP9/AAAAAP+/")
+}]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yqocl"]
+albedo_color = Color(0.38759997, 0.51, 0.4692, 1)
+
+[node name="EnemyBullet" type="Area3D" groups=["bullets"]]
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_fh3m0")
+EnableBorderCheck = false
+MaxLifetime = 1000.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_i4dio")
+
+[node name="Sprite" type="Sprite3D" parent="."]
+visible = false
+sorting_offset = 80.0
+billboard = 1
+texture_filter = 0
+region_rect = Rect2(195, 339, 19, 19)
+
+[node name="EnemyPolyhedron" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_fh3m0")
+skeleton = NodePath("")
+surface_material_override/0 = SubResource("StandardMaterial3D_yqocl")
+script = ExtResource("2_j4tl1")
+Size = 0.7
+Color = Color(0.38759997, 0.51, 0.4692, 1)
+
+[connection signal="body_entered" from="." to="." method="OnBodyEntered"]
