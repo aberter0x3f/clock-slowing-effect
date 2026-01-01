@@ -37,19 +37,19 @@ public partial class PhaseWave2 : BasePhase {
   public override float MaxHealth { get; protected set; } = 35f;
 
   [ExportGroup("Movement")]
-  [Export] public float MoveSpeed { get; set; } = 8.0f;
+  [Export] public float MoveSpeed { get; set; } = 6.0f;
 
   [ExportGroup("Attack Pattern")]
   [Export] public PackedScene BulletScene { get; set; }
   [Export] public float WaveInterval { get; set; } = 1.2f;
-  [Export] public float BulletSpacing { get; set; } = 0.15f;
+  [Export] public float BulletSpacing { get; set; } = 0.1f;
 
   [ExportGroup("Bullet Properties")]
-  [Export] public float BulletForwardSpeed { get; set; } = 3.5f;
-  [Export] public float BulletMaxHeight { get; set; } = 1.0f;
-  [Export] public float BulletT1 { get; set; } = 0.8f;
-  [Export] public float BulletT2 { get; set; } = 1.0f;
-  [Export] public float BulletPhaseScale { get; set; } = 0.5f;
+  [Export] public float BulletForwardSpeed { get; set; } = 3f;
+  [Export] public float BulletMaxHeight { get; set; } = 1f;
+  [Export] public float BulletT1 { get; set; } = 1.2f;
+  [Export] public float BulletT2 { get; set; } = 1f;
+  [Export] public float BulletPhaseScale { get; set; } = 0.6f;
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
@@ -60,8 +60,8 @@ public partial class PhaseWave2 : BasePhase {
 
     float rank = GameManager.Instance.EnemyRank;
     WaveInterval = Mathf.Min(2.5f, WaveInterval / (rank * 2 / (rank + 5)));
-    BulletT1 = Mathf.Max(0.4f, BulletT1 * 5f / rank);
-    BulletForwardSpeed *= rank / 5f;
+    BulletT1 = Mathf.Max(0.4f, BulletT1 * 10f / (rank + 5));
+    BulletForwardSpeed *= (rank + 3) / 8f;
 
     _currentState = AttackState.MovingToStartPosition;
   }
