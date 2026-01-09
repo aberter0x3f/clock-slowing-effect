@@ -88,7 +88,7 @@ public partial class PhaseWall : BasePhase {
     WallGapHalfWidth /= (rank + 3) / 8f;
     SmallBulletSpeedMin *= (rank + 5) / 10f;
     SmallBulletSpeedMax *= (rank + 5) / 10f;
-    TimeScaleSensitivity = 10f / (rank + 10);
+    TimeScaleSensitivity = 15f / (rank + 15);
 
     _currentState = AttackState.MovingToStart;
     _throwTimer = 1.0f;

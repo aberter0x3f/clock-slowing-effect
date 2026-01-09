@@ -43,10 +43,6 @@ public partial class Boss : BaseEnemy {
   [Export]
   public float RestDuration { get; set; } = 5f; // 阶段间的休息时间
 
-  [ExportGroup("Sound Effects")]
-  [Export]
-  public AudioStream PowerUpSound { get; set; }
-
   private int _currentPhaseIndex = 0;
   private BasePhase _activePhaseInstance;
   private float _restTimerLeft;
@@ -151,9 +147,9 @@ public partial class Boss : BaseEnemy {
       return;
     }
 
-    GD.Print($"Starting Boss Phase {_currentPhaseIndex}.");
+    GD.Print($"Starting boss phase {_currentPhaseIndex}.");
 
-    SoundManager.Instance.Play(PowerUpSound, cooldown: 0.2f, volumeDb: 5f);
+    SoundManager.Instance.Play(SoundEffect.PowerUp);
 
     // 启用碰撞，让玩家可以攻击
     SetCollisionEnabled(true);

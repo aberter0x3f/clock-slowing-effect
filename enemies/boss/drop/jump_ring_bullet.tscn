@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://pu1pvxjrgdr3"]
+
+[ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_olr7h"]
+[ext_resource type="Texture2D" uid="uid://dfd5f6i0nm7t5" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7A Free.png" id="2_lcbf5"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_mcu7a"]
+radius = 0.07
+
+[node name="EnemyBullet" type="Area3D" groups=["bullets"]]
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_olr7h")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_mcu7a")
+
+[node name="Sprite" type="Sprite3D" parent="."]
+sorting_offset = 80.0
+billboard = 1
+texture_filter = 0
+texture = ExtResource("2_lcbf5")
+region_enabled = true
+region_rect = Rect2(195, 219, 19, 19)
+
+[connection signal="body_entered" from="." to="." method="OnBodyEntered"]

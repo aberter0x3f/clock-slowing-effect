@@ -106,7 +106,7 @@ public partial class GameManager : Node {
 
     ResetPlayerStats();
 
-    GD.Print($"Starting Boss Practice: Plane {plane}, Phase {phaseIndex + 1}, Enemy Rank {EnemyRank}.");
+    GD.Print($"Starting boss practice: Plane {plane}, Phase {phaseIndex}, Enemy Rank {EnemyRank}.");
   }
 
   /// <summary>

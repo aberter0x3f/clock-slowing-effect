@@ -1,0 +1,17 @@
+[gd_scene load_steps=7 format=3 uid="uid://cmicxon5pqo6p"]
+
+[ext_resource type="Script" uid="uid://fufjfv1d1yil" path="res://scripts/Enemy/Boss/PhaseTree.cs" id="1_8taiv"]
+[ext_resource type="PackedScene" uid="uid://bx825kj6cqec1" path="res://enemies/boss/tree/seed_small.tscn" id="2_en6bg"]
+[ext_resource type="PackedScene" uid="uid://dkehy44e12ptb" path="res://enemies/boss/tree/seed_big.tscn" id="3_xraya"]
+[ext_resource type="PackedScene" uid="uid://d8ibiecrx8ec" path="res://enemies/boss/tree/explosion.tscn" id="4_tibbb"]
+[ext_resource type="PackedScene" uid="uid://c42jsgqw6reqf" path="res://enemies/boss/tree/green.tscn" id="5_65tip"]
+[ext_resource type="PackedScene" uid="uid://crgakn0yt3a4p" path="res://enemies/boss/tree/red.tscn" id="6_1fjko"]
+
+[node name="Tree" type="Node"]
+script = ExtResource("1_8taiv")
+SmallSeedBulletScene = ExtResource("2_en6bg")
+LargeSeedBulletScene = ExtResource("3_xraya")
+ExplosionBulletScene = ExtResource("4_tibbb")
+TreeBulletSceneGreen = ExtResource("5_65tip")
+TreeBulletSceneRed = ExtResource("6_1fjko")
+SniperBulletScene = ExtResource("6_1fjko")

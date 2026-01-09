@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://ngmhst45d630"]
+[gd_scene load_steps=31 format=3 uid="uid://ngmhst45d630"]
 
 [ext_resource type="Script" uid="uid://dqtowxk2vgcys" path="res://scripts/SoundManager.cs" id="1_g5net"]
 [ext_resource type="Script" uid="uid://cftmt8fk41r7q" path="res://scripts/SoundResource.cs" id="2_22ksp"]
@@ -15,6 +15,7 @@
 [ext_resource type="AudioStream" uid="uid://dho4cb2kse2po" path="res://sounds/effects/change_item.wav" id="11_vgaxf"]
 [ext_resource type="AudioStream" uid="uid://i7822ekvsgsr" path="res://sounds/effects/reload_complete.wav" id="12_70tky"]
 [ext_resource type="AudioStream" uid="uid://do01bwefxyb4c" path="res://sounds/effects/item_get.wav" id="12_xrcvc"]
+[ext_resource type="AudioStream" uid="uid://dypy6j3yd7nfw" path="res://sounds/effects/up.wav" id="16_e8map"]
 
 [sub_resource type="Resource" id="Resource_7jwsb"]
 script = ExtResource("2_22ksp")
@@ -92,6 +93,13 @@ Stream = ExtResource("6_7jwsb")
 Cooldown = 0.1
 metadata/_custom_type_script = "uid://cftmt8fk41r7q"
 
+[sub_resource type="Resource" id="Resource_1ekrc"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("16_e8map")
+VolumeDb = 5.0
+Cooldown = 0.2
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
 [node name="SoundManager" type="ResourcePreloader"]
 script = ExtResource("1_g5net")
 _library = Dictionary[String, ExtResource("2_22ksp")]({
@@ -107,5 +115,6 @@ _library = Dictionary[String, ExtResource("2_22ksp")]({
 "PlayerDeath": SubResource("Resource_lxsk3"),
 "PlayerReloadComplete": SubResource("Resource_26nrr"),
 "PlayerShoot": SubResource("Resource_e8map"),
-"PlayerSkillAvailable": SubResource("Resource_h42hm")
+"PlayerSkillAvailable": SubResource("Resource_h42hm"),
+"PowerUp": SubResource("Resource_1ekrc")
 })

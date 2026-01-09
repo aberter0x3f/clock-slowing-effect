@@ -1,0 +1,15 @@
+[gd_scene load_steps=6 format=3 uid="uid://gg20ejgx2d1m"]
+
+[ext_resource type="Script" uid="uid://buo0ugbea4kg2" path="res://scripts/Enemy/Boss/PhaseDrop.cs" id="1_crn6t"]
+[ext_resource type="PackedScene" uid="uid://dgquh52hpvysv" path="res://enemies/boss/drop/retitle_bullet.tscn" id="2_xdeh2"]
+[ext_resource type="PackedScene" uid="uid://d4fvhyd62c01v" path="res://enemies/boss/drop/morph_bullet.tscn" id="3_ba513"]
+[ext_resource type="PackedScene" uid="uid://pu1pvxjrgdr3" path="res://enemies/boss/drop/jump_ring_bullet.tscn" id="4_dvuoa"]
+[ext_resource type="PackedScene" uid="uid://b5vqijs6ahgp3" path="res://enemies/boss/drop/smash_bullet.tscn" id="4_k6mr0"]
+
+[node name="Drop" type="Node"]
+script = ExtResource("1_crn6t")
+ReticleBulletScene = ExtResource("2_xdeh2")
+BurstBulletScene = ExtResource("2_xdeh2")
+MorphBulletScene = ExtResource("3_ba513")
+JumpRingBulletScene = ExtResource("4_dvuoa")
+SmashBulletScene = ExtResource("4_k6mr0")

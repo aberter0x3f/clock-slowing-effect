@@ -52,9 +52,6 @@ public partial class PhaseStellar : BasePhase {
   [Export] public PackedScene DefenseBulletScene;
   [Export] public PackedScene RelativisticBulletScene;
 
-  [ExportGroup("Sound")]
-  [Export] public AudioStream PowerUpSound { get; set; }
-
   private Phase _currentPhase = Phase.OrbiterWait;
   private float _timer;
   private float _orbiterAngle;
@@ -160,8 +157,8 @@ public partial class PhaseStellar : BasePhase {
   }
 
   private void TransitionTo(Phase nextPhase) {
-    SoundManager.Instance.Play(PowerUpSound, volumeDb: 5f);
     GD.Print($"Stellar Phase transitioning from {_currentPhase} to {nextPhase}");
+    SoundManager.Instance.Play(SoundEffect.PowerUp);
 
     _currentPhase = nextPhase;
     UpdateTemperature();

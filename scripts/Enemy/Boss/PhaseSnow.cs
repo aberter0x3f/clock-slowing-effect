@@ -35,10 +35,8 @@ public partial class PhaseSnow : BasePhase {
   private int _waveCounter = 0;
 
   [ExportGroup("Scene References")]
-  [Export] public PackedScene SeedBulletScene { get; set; }
-  [Export] public PackedScene FeederSnowflakeBulletScene { get; set; }
-  [Export] public PackedScene FeederHomingBulletScene { get; set; }
-  [Export] public PackedScene JumperSnowflakeBulletScene { get; set; }
+  [Export] public PackedScene BulletScene1 { get; set; }
+  [Export] public PackedScene BulletScene2 { get; set; }
 
   [ExportGroup("Movement")]
   [Export] public float MoveSpeed { get; set; } = 5.0f;
@@ -72,6 +70,11 @@ public partial class PhaseSnow : BasePhase {
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
+
+    if (FeederSnowFlakeCount % 2 != 0 || JumperSnowflakeCount % 2 != 0) {
+      GD.PrintErr("PhaseSnow: FeederSnowFlakeCount and JumperSnowflakeCount must be even.");
+    }
+
     _targetPosition = new Vector3(0, 0, -3.0f);
     _currentState = AttackState.MovingToPosition;
     _waveCounter = 0;
@@ -148,7 +151,8 @@ public partial class PhaseSnow : BasePhase {
   }
 
   private void FireFeederSeedBullet() {
-    if (SeedBulletScene == null) return;
+    int index = _seedBulletCounter;
+    var seedBulletScene = index % 2 == 0 ? BulletScene1 : BulletScene2;
 
     SoundManager.Instance.Play(SoundEffect.FireSmall);
 
@@ -158,7 +162,7 @@ public partial class PhaseSnow : BasePhase {
     Vector3 direction = (_attackPlaneRight * Mathf.Cos(angle) + Vector3.Up * Mathf.Sin(angle));
     Vector3 startPos = ParentBoss.GlobalPosition;
 
-    var seed = SeedBulletScene.Instantiate<SimpleBullet>();
+    var seed = seedBulletScene.Instantiate<SimpleBullet>();
 
     float lifetime = FeederSeedLifetime;
     float speed = FeederSeedSpeed;
@@ -170,14 +174,14 @@ public partial class PhaseSnow : BasePhase {
 
       if (t >= lifetime) {
         s.destroy = true;
-        self.SpawnStaticSnowflake(s.position);
+        self.SpawnStaticSnowflake(seedBulletScene, s.position);
       }
       return s;
     };
     GameRootProvider.CurrentGameRoot.AddChild(seed);
   }
 
-  public void SpawnStaticSnowflake(Vector3 center) {
+  public void SpawnStaticSnowflake(PackedScene bulletScene, Vector3 center) {
     // 1. 计算出雪花所有组成部分的最终相对位置
     var partOffsets = new List<Vector3>();
     for (int i = 0; i < 6; ++i) {
@@ -201,7 +205,7 @@ public partial class PhaseSnow : BasePhase {
     // 2. 为每个部分生成一个子弹
     foreach (var offset in partOffsets) {
       // 创建视觉子弹 (雪花部分)
-      var bullet = FeederSnowflakeBulletScene.Instantiate<SimpleBullet>();
+      var bullet = bulletScene.Instantiate<SimpleBullet>();
       bullet.Position = center;
 
       float expandDuration = FeederSnowflakeExpandDuration;
@@ -213,7 +217,7 @@ public partial class PhaseSnow : BasePhase {
           s.position = center.Lerp(targetPos, t / expandDuration);
         } else {
           s.destroy = true;
-          FireHomingBullet(targetPos);
+          FireHomingBullet(bulletScene, targetPos);
         }
         return s;
       };
@@ -221,8 +225,8 @@ public partial class PhaseSnow : BasePhase {
     }
   }
 
-  private void FireHomingBullet(Vector3 targetPos) {
-    var homing = FeederHomingBulletScene.Instantiate<SimpleBullet>();
+  private void FireHomingBullet(PackedScene bulletScene, Vector3 targetPos) {
+    var homing = bulletScene.Instantiate<SimpleBullet>();
     var direction = (PlayerNode.GlobalPosition - targetPos).Normalized();
     var homingSpeed = FeederHomingSpeed;
     homing.UpdateFunc = t => new SimpleBullet.UpdateState {
@@ -239,7 +243,7 @@ public partial class PhaseSnow : BasePhase {
   }
 
   private void FireJumperSeedBullet(int index) {
-    if (SeedBulletScene == null) return;
+    var seedBulletScene = index % 2 == 0 ? BulletScene1 : BulletScene2;
 
     SoundManager.Instance.Play(SoundEffect.FireSmall);
 
@@ -248,7 +252,7 @@ public partial class PhaseSnow : BasePhase {
     Vector3 startPos = ParentBoss.GlobalPosition;
     Vector3 direction = Vector3.Right.Rotated(Vector3.Up, initialAngle);
 
-    var seed = SeedBulletScene.Instantiate<SimpleBullet>();
+    var seed = seedBulletScene.Instantiate<SimpleBullet>();
 
     float lifetime = JumperSeedLifetime;
     float speed = JumperSeedSpeed;
@@ -268,6 +272,8 @@ public partial class PhaseSnow : BasePhase {
   }
 
   private void SpawnJumperSnowflakeAt(int index, Vector3 expandStartCenter) {
+    var bulletScene = index % 2 == 0 ? BulletScene1 : BulletScene2;
+
     float initialAngle = Mathf.Tau / JumperSnowflakeCount * index;
     var snowflakeComponentPositions = new List<Vector3>();
 
@@ -296,7 +302,7 @@ public partial class PhaseSnow : BasePhase {
     bool isReversed = _waveCounter % 2 != 0;
 
     foreach (var relPos in snowflakeComponentPositions) {
-      var b = JumperSnowflakeBulletScene.Instantiate<SimpleBullet>();
+      var b = bulletScene.Instantiate<SimpleBullet>();
 
       float expandDuration = JumperSnowflakeExpandDuration;
       float formRotSpeed = JumperSnowflakeFormationRotationSpeed * (isReversed ? -1 : 1);

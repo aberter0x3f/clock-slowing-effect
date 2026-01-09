@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://bx825kj6cqec1"]
+
+[ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_c4dpo"]
+[ext_resource type="Texture2D" uid="uid://cm57ef0xqr05j" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7C Free.png" id="2_uosiy"]
+[ext_resource type="Texture2D" uid="uid://b6hhoregxb7ns" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Free Part 4A.png" id="3_jnn51"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_m4wpm"]
+radius = 0.2
+
+[node name="EnemyBullet" type="Area3D" groups=["bullets"]]
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_c4dpo")
+MaxLifetime = 20.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_m4wpm")
+
+[node name="Sprite" type="Sprite3D" parent="."]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+sorting_offset = 80.0
+billboard = 1
+texture_filter = 0
+texture = ExtResource("2_uosiy")
+region_enabled = true
+region_rect = Rect2(195, 99, 19, 19)
+
+[node name="LandingIndicator" type="Node3D" parent="."]
+
+[node name="Sprite" type="Sprite3D" parent="LandingIndicator"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+sorting_offset = 81.0
+axis = 1
+texture_filter = 0
+texture = ExtResource("3_jnn51")
+region_enabled = true
+region_rect = Rect2(386, 98, 20, 20)
+
+[connection signal="body_entered" from="." to="." method="OnBodyEntered"]

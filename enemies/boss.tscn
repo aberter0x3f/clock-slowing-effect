@@ -1,16 +1,15 @@
-[gd_scene load_steps=10 format=4 uid="uid://c3ebr2hfny8mu"]
+[gd_scene load_steps=9 format=4 uid="uid://c3ebr2hfny8mu"]
 
 [ext_resource type="Script" uid="uid://bsmi7g2pwt1xg" path="res://scripts/Enemy/Boss/Boss.cs" id="1_a60ye"]
 [ext_resource type="Resource" uid="uid://jogkufq70a76" path="res://enemies/boss/phase_data.tres" id="2_lh55n"]
 [ext_resource type="PackedScene" uid="uid://c2swi1jboj4j4" path="res://time_shard.tscn" id="4_lh55n"]
-[ext_resource type="AudioStream" uid="uid://dypy6j3yd7nfw" path="res://sounds/effects/up.wav" id="11_mtimd"]
 [ext_resource type="Script" uid="uid://dr23d7xks0mth" path="res://scripts/Enemy/EnemyPolyhedron.cs" id="16_rkfnh"]
 [ext_resource type="FontFile" uid="uid://d34t13ols1dhi" path="res://fonts/DSEG14Modern-Regular.ttf" id="16_y303a"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_ny027"]
 radius = 0.6
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_ny027"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_85rbr"]
 _surfaces = [{
 "aabb": AABB(-0.7, -0.7, -0.7, 1.4, 1.4, 1.4),
 "format": 34359738375,
@@ -31,7 +30,6 @@ axis_lock_angular_y = true
 axis_lock_angular_z = true
 script = ExtResource("1_a60ye")
 PhaseData = ExtResource("2_lh55n")
-PowerUpSound = ExtResource("11_mtimd")
 TimeShardScene = ExtResource("4_lh55n")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
@@ -42,7 +40,7 @@ wait_time = 0.1
 one_shot = true
 
 [node name="EnemyPolyhedron" type="MeshInstance3D" parent="."]
-mesh = SubResource("ArrayMesh_ny027")
+mesh = SubResource("ArrayMesh_85rbr")
 skeleton = NodePath("")
 surface_material_override/0 = SubResource("StandardMaterial3D_y303a")
 script = ExtResource("16_rkfnh")

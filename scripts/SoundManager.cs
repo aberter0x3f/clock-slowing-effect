@@ -16,6 +16,7 @@ public enum SoundEffect {
   PlayerSkillAvailable,
   PlayerShoot,
   PlayerReloadComplete,
+  PowerUp,
 }
 
 public partial class SoundManager : Node {

@@ -1,11 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://deqthewfh6owo"]
+[gd_scene load_steps=4 format=3 uid="uid://deqthewfh6owo"]
 
 [ext_resource type="Script" uid="uid://b5gkxpj1xcfjf" path="res://scripts/Enemy/Boss/PhaseSnow.cs" id="1_qn46t"]
-[ext_resource type="PackedScene" uid="uid://d0lcdmfynwnxp" path="res://enemies/boss/snow/bullet.tscn" id="2_rel8h"]
+[ext_resource type="PackedScene" uid="uid://d0lcdmfynwnxp" path="res://enemies/boss/snow/bullet1.tscn" id="2_rel8h"]
+[ext_resource type="PackedScene" uid="uid://dv5k57hsjxu5e" path="res://enemies/boss/snow/bullet2.tscn" id="3_cm3js"]
 
 [node name="Snow" type="Node"]
 script = ExtResource("1_qn46t")
-SeedBulletScene = ExtResource("2_rel8h")
-FeederSnowflakeBulletScene = ExtResource("2_rel8h")
-FeederHomingBulletScene = ExtResource("2_rel8h")
-JumperSnowflakeBulletScene = ExtResource("2_rel8h")
+BulletScene1 = ExtResource("2_rel8h")
+BulletScene2 = ExtResource("3_cm3js")
