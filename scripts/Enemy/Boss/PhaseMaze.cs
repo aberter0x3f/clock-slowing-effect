@@ -47,7 +47,7 @@ public partial class PhaseMaze : BasePhase {
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    _mapGenerator = GetTree().Root.GetNode<MapGenerator>("GameRoot/MapGenerator");
     _rng.Seed = ((ulong) GD.Randi() << 32) | (ulong) GD.Randi();
 
     float rank = GameManager.Instance.EnemyRank;

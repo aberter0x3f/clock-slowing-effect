@@ -78,7 +78,7 @@ public partial class PhaseWall : BasePhase {
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    _mapGenerator = GetTree().Root.GetNode<MapGenerator>("GameRoot/MapGenerator");
     _mapHalfWidth = (_mapGenerator.MapWidth / 2f - 1) * _mapGenerator.TileSize;
     _mapHalfHeight = (_mapGenerator.MapHeight / 2f - 1) * _mapGenerator.TileSize;
 

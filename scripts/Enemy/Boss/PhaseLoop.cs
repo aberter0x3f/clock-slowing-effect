@@ -68,7 +68,7 @@ public partial class PhaseLoop : BasePhase {
     base.PhaseStart(parent);
     parent.SetCollisionEnabled(false);
 
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    _mapGenerator = GetTree().Root.GetNode<MapGenerator>("GameRoot/MapGenerator");
     var rank = GameManager.Instance.EnemyRank;
     TimeScaleSensitivity = 10f / (rank + 10);
     float minMapDim = Mathf.Min(_mapGenerator.MapWidth, _mapGenerator.MapHeight) * _mapGenerator.TileSize;

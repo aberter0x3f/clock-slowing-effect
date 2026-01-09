@@ -74,10 +74,10 @@ public partial class PhaseTree : BasePhase {
 
     // 初始化 RNG 和地图引用
     _rng.Seed = ((ulong) GD.Randi() << 32) | (ulong) GD.Randi();
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    _mapGenerator = GetTree().Root.GetNode<MapGenerator>("GameRoot/MapGenerator");
 
-    float w = (_mapGenerator.MapWidth / 2f - 2) * _mapGenerator.TileSize;
-    float h = (_mapGenerator.MapHeight / 2f - 2) * _mapGenerator.TileSize;
+    float w = (_mapGenerator.MapWidth / 2f - 1) * _mapGenerator.TileSize;
+    float h = (_mapGenerator.MapHeight / 2f - 1) * _mapGenerator.TileSize;
     _spawnRadius = Mathf.Min(w, h) * SeedSpawnRadiusScale;
 
     var rank = GameManager.Instance.EnemyRank;

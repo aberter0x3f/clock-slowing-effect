@@ -67,7 +67,7 @@ public partial class PhaseThreeBody : BasePhase {
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    _mapGenerator = GetTree().Root.GetNode<MapGenerator>("GameRoot/MapGenerator");
 
     // -1 是因为地图最外圈一格是墙
     _mapHalfWidth = (_mapGenerator.MapWidth / 2f - 1) * _mapGenerator.TileSize;

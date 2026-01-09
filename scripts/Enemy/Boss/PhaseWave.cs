@@ -45,7 +45,7 @@ public partial class PhaseWave : BasePhase {
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    _mapGenerator = GetTree().Root.GetNode<MapGenerator>("GameRoot/MapGenerator");
 
     float rank = GameManager.Instance.EnemyRank;
     // 难度缩放
@@ -84,7 +84,7 @@ public partial class PhaseWave : BasePhase {
 
   private void PrepareNextWave() {
     _startX = ParentBoss.GlobalPosition.X;
-    float halfWidth = (_mapGenerator.MapWidth / 2f - 2) * _mapGenerator.TileSize;
+    float halfWidth = (_mapGenerator.MapWidth / 2f - 1) * _mapGenerator.TileSize;
     _targetX = (float) GD.RandRange(-halfWidth, halfWidth);
     _currentState = AttackState.MovingAndWaiting;
     _waveTimer = WaveInterval;

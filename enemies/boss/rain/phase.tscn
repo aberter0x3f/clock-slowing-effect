@@ -1,0 +1,10 @@
+[gd_scene load_steps=4 format=3 uid="uid://cp1j125b27kws"]
+
+[ext_resource type="Script" uid="uid://d06ncs7ue0y44" path="res://scripts/Enemy/Boss/PhaseRain.cs" id="1_wrqaq"]
+[ext_resource type="PackedScene" uid="uid://c3o1uh41jb12j" path="res://enemies/boss/rain/rain_bullet.tscn" id="2_gqpod"]
+[ext_resource type="PackedScene" uid="uid://dr8qdbtgt0au5" path="res://enemies/boss/rain/sniper_bullet.tscn" id="3_xm6tu"]
+
+[node name="PhaseRain" type="Node"]
+script = ExtResource("1_wrqaq")
+RainBulletScene = ExtResource("2_gqpod")
+SniperBulletScene = ExtResource("3_xm6tu")

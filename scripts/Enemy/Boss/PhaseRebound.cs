@@ -58,7 +58,7 @@ public partial class PhaseRebound : BasePhase {
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    _mapGenerator = GetTree().Root.GetNode<MapGenerator>("GameRoot/MapGenerator");
 
     var rank = GameManager.Instance.EnemyRank;
     BulletSpeed *= (rank + 5) / 10f;

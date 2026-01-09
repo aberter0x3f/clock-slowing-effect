@@ -40,7 +40,7 @@ public partial class PhaseLiquidCrystal : BasePhase {
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    _mapGenerator = GetTree().Root.GetNode<MapGenerator>("GameRoot/MapGenerator");
 
     var rank = GameManager.Instance.EnemyRank;
     BulletSpacing = Mathf.Max(0.5f, BulletSpacing * 15f / (rank + 10));

@@ -73,7 +73,6 @@ public abstract partial class BaseEnemy : RewindableCharacterBody3D {
     _enemyPolyhedron = GetNode<EnemyPolyhedron>("EnemyPolyhedron");
     _healthLabel = GetNode<Label3D>("HealthLabel");
 
-    // 获取并缓存地图生成器的引用，以提高性能和鲁棒性
     _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
     if (_mapGenerator == null) {
       GD.PrintErr($"BaseEnemy ({Name}): MapGenerator not found at 'GameRoot/MapGenerator'. TimeShards may not spawn correctly.");

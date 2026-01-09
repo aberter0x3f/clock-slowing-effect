@@ -99,7 +99,7 @@ public partial class PhaseDrop : BasePhase {
 
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
-    _mapGenerator = GetTree().Root.GetNodeOrNull<MapGenerator>("GameRoot/MapGenerator");
+    _mapGenerator = GetTree().Root.GetNode<MapGenerator>("GameRoot/MapGenerator");
     float w = _mapGenerator.MapWidth * _mapGenerator.TileSize;
     float h = _mapGenerator.MapHeight * _mapGenerator.TileSize;
     _mapBounds = new Rect2(-w / 2, -h / 2, w, h);
