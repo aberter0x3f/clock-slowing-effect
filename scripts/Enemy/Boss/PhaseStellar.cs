@@ -7,17 +7,24 @@ using Rewind;
 namespace Enemy.Boss;
 
 public class PhaseStellarState : BasePhaseState {
-  // --- 状态 ---
+  // 核心阶段状态
   public PhaseStellar.Phase CurrentPhase;
   public float Timer;
   public float OrbiterAngle;
   public float OrbiterSpeed;
   public float DefenseTimer;
-  public float PhaseStartAngle;
-  // --- 层状态 ---
+
+  // 环/层生成状态
   public int CurrentPhaseLayerIndex;
   public int LayersInCurrentColorPhase;
-  // --- 集合状态 (通过 InstanceId 保存) ---
+
+  // 特殊机制计时器
+  public float GreenTimer;
+  public float YellowTimer;
+  public float OrangeTimer;
+  public float OrangeTimeAccumulator;
+
+  // 集合状态 (ID 引用)
   public Godot.Collections.Array<Godot.Collections.Array<ulong>> Rings;
   public Godot.Collections.Dictionary<int, int> RingArrivalCounters;
   public Godot.Collections.Array<int> RotatingRingIndices;
@@ -36,35 +43,70 @@ public partial class PhaseStellar : BasePhase {
   [Export] public float InitialOrbiterSpeed = 3.0f;
 
   [ExportGroup("Rings")]
-  [Export] public float Radius0 = 0.4f;
+  [Export] public float Radius0 = 0.2f;
   [Export] public float DeltaR = 0.05f;
   [Export] public float BulletSpacing = 0.15f;
-  [Export] public float SmallBulletSpeedMean = 4.0f;
+  [Export] public float SmallBulletSpeedMean = 3.0f;
   [Export] public float SmallBulletSpeedSigma = 0.3f;
-  [Export] public float RingRotationSpeed = 1.5f;
-  [Export] public Godot.Collections.Array<int> LayerCounts { get; set; } = new() { 6, 8, 10, 12, 20 };
+  [Export] public float RingRotationSpeed = 2.5f;
+  [Export] public Godot.Collections.Array<int> LayerCounts { get; set; } = new() { 4, 8, 10, 12, 20 };
+
+  [ExportGroup("Special: Green")]
+  [Export] public float GreenChainInterval = 0.4f;
+  [Export] public int GreenChainLength = 10;
+  [Export] public float GreenChainBulletSpacing = 0.1f; // 间距
+  [Export] public float GreenChainSpeed = 3f;
+
+  [ExportGroup("Special: Yellow")]
+  [Export] public float YellowBulletInterval = 3.5f;
+  [Export] public int YellowBulletCount = 24;
+  [Export] public float YellowBulletSpeed = 5.0f;
+  [Export] public float YellowBulletAccel = 5.0f;
+
+  [ExportGroup("Special: Orange")]
+  [Export] public float OrangeBulletInterval = 0.02f;
+  [Export] public int OrangeBulletCount = 6;
+  [Export] public float OrangeBulletSpeed = 10.0f;
+  [Export] public float OrangeOscillationK = 0.8f;
+  [Export] public float OrangeOscillationAmp = 0.52f; // PI/6
+
+  [ExportGroup("Special: Red")]
+  [Export] public float RedPushSpeed = 1f;
 
   [ExportGroup("Scenes")]
   [Export] public PackedScene BigBulletScene;
   [Export] public PackedScene SmallBulletScene;
+  [Export] public PackedScene GreenSpecialBulletScene;
+  [Export] public PackedScene YellowSpecialBulletScene;
+  [Export] public PackedScene OrangeSpecialBulletScene;
   [Export] public PackedScene JetBulletScene;
   [Export] public PackedScene DefenseBulletScene;
   [Export] public PackedScene RelativisticBulletScene;
 
+  // 运行时状态
   private Phase _currentPhase = Phase.OrbiterWait;
   private float _timer;
   private float _orbiterAngle;
   private float _orbiterSpeed;
   private float _defenseTimer;
-  // --- 层状态 ---
+
+  // 层生成逻辑
   private int _currentPhaseLayerIndex = 0;
   private int _layersInCurrentColorPhase = 0;
-  // --- 颜色转换状态 ---
+
+  // 颜色转换逻辑
   private bool _isTransformingColor = false;
   private float _colorTransformTimer = 0f;
   private int _colorTransformRingIndex = -1;
   private PhaseStellarSmallBullet.BulletColor _colorTransformTarget;
 
+  // 特殊机制计时器
+  private float _greenTimer;
+  private float _yellowTimer;
+  private float _orangeTimer;
+  private float _orangeTimeAccumulator;
+
+  // 容器
   private readonly List<SimpleBullet> _orbiters = new();
   private readonly List<List<PhaseStellarSmallBullet>> _rings = new();
   private readonly Dictionary<int, int> _ringArrivalCounters = new();
@@ -78,15 +120,28 @@ public partial class PhaseStellar : BasePhase {
     _orbiterSpeed = InitialOrbiterSpeed;
 
     var rank = GameManager.Instance.EnemyRank;
+    float diffMult = (rank + 10) / 15f;
+
     TimeScaleSensitivity = 5f / (rank + 5);
     InitialOrbiterSpeed *= rank / 5f;
     SmallBulletSpeedMean *= (rank + 10) / 15f;
+
+    GreenChainSpeed *= diffMult;
+    GreenChainInterval /= diffMult;
+    YellowBulletSpeed *= diffMult;
+    YellowBulletInterval /= diffMult;
+    OrangeOscillationK *= diffMult;
 
     SpawnOrbiters();
     TransitionTo(Phase.OrbiterWait);
   }
 
   public override void UpdatePhase(float scaledDelta, float effectiveTimeScale) {
+    // 只有在非变色期间，且处于 Green~Red 阶段时才启用特殊机制
+    if (!_isTransformingColor && _currentPhase >= Phase.Green && _currentPhase < Phase.Supernova) {
+      UpdateSpecialMechanics(scaledDelta);
+    }
+
     if (_isTransformingColor) {
       ProcessColorTransformation(scaledDelta);
       return;
@@ -94,7 +149,7 @@ public partial class PhaseStellar : BasePhase {
 
     _timer -= scaledDelta;
     _defenseTimer -= scaledDelta;
-    float defenseRadius = _currentPhase < Phase.Supernova ? Radius0 + _rings.Count * DeltaR : 1.0f;
+    float defenseRadius = _currentPhase < Phase.Supernova ? Radius0 + _rings.Count * DeltaR - 0.1f : 1.0f;
     if (_defenseTimer <= 0 && PlayerNode.GlobalPosition.Length() <= defenseRadius) {
       FireDefensePattern();
       _defenseTimer = 0.2f;
@@ -111,48 +166,133 @@ public partial class PhaseStellar : BasePhase {
       case Phase.Yellow:
       case Phase.Orange:
       case Phase.Red:
-        ProcessAngularFiring();
-
-        bool currentLayerFired = _orbiters.All(orb =>
-          !_orbiterFireIndices.ContainsKey(orb) ||
-          _orbiterFireIndices[orb] >= _orbiterQueues[orb].Count
-        );
-
-        if (currentLayerFired) {
-          if (_currentPhaseLayerIndex >= _layersInCurrentColorPhase - 1) {
-            // 这是当前颜色阶段的最后一层, 等待所有子弹到达
-            int lastRingIndex = _rings.Count - 1;
-            if (lastRingIndex >= 0) {
-              bool allArrived = _ringArrivalCounters.ContainsKey(lastRingIndex) &&
-                                _ringArrivalCounters[lastRingIndex] >= _rings[lastRingIndex].Count;
-
-              if (allArrived) {
-                // 所有子弹都已到达, 开始颜色转换
-                StartColorTransformation();
-              }
-            }
-          } else {
-            // 当前层已发射完毕, 且不是最后一层, 立刻准备下一层
-            ++_currentPhaseLayerIndex;
-            PrepareNextLayer();
-          }
-        }
+        UpdateLayerGeneration();
         break;
       case Phase.Supernova:
-        bool allSupernovasDone = _rings.SelectMany(r => r)
-          .All(b => b.Type != PhaseStellarSmallBullet.BulletType.Supernova ||
-            b.CurrentState == PhaseStellarSmallBullet.State.SupernovaHoming ||
-            b.IsDestroyed);
-        if (allSupernovasDone) {
-          TransitionTo(Phase.BlackHole);
-        }
+        UpdateSupernova();
         break;
       case Phase.BlackHole:
-        if (_timer <= 0) {
-          FireJet();
-          _timer = 0.2f;
-        }
+        UpdateBlackHole();
         break;
+    }
+  }
+
+  private void UpdateSpecialMechanics(float delta) {
+    // 叠加机制
+    if (_currentPhase >= Phase.Green) UpdateGreenMechanic(delta);
+    if (_currentPhase >= Phase.Yellow) UpdateYellowMechanic(delta);
+    if (_currentPhase >= Phase.Orange) UpdateOrangeMechanic(delta);
+    if (_currentPhase >= Phase.Red) UpdateRedMechanic(delta);
+  }
+
+  private void UpdateGreenMechanic(float delta) {
+    _greenTimer -= delta;
+    if (_greenTimer <= 0) {
+      FireGreenChains();
+      _greenTimer = GreenChainInterval;
+    }
+  }
+
+  private void FireGreenChains() {
+    if (GreenSpecialBulletScene == null) return;
+
+    float angle = GD.Randf() * Mathf.Tau;
+    Vector3 dir = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+
+    for (int k = 0; k < GreenChainLength; ++k) {
+      var b = GreenSpecialBulletScene.Instantiate<SimpleBullet>();
+
+      // 通过位移起始点模拟链条效果
+      // pos = dir * (speed * t - distance_offset)
+      float distOffset = k * GreenChainBulletSpacing;
+
+      b.TimeScaleSensitivity = TimeScaleSensitivity;
+      b.UpdateFunc = (t) => {
+        var s = new SimpleBullet.UpdateState();
+        float effectiveDist = GreenChainSpeed * t - distOffset;
+        s.position = dir * effectiveDist;
+
+        // 如果还在原点后方，则隐藏
+        if (effectiveDist < 0) s.modulate.A = 0;
+        else s.modulate.A = 1;
+
+        return s;
+      };
+      GameRootProvider.CurrentGameRoot.AddChild(b);
+    }
+    SoundManager.Instance.Play(SoundEffect.FireSmall);
+  }
+
+  private void UpdateYellowMechanic(float delta) {
+    _yellowTimer -= delta;
+    if (_yellowTimer <= 0) {
+      FireYellowSpecial();
+      _yellowTimer = YellowBulletInterval;
+    }
+  }
+
+  private void FireYellowSpecial() {
+    if (YellowSpecialBulletScene == null) return;
+
+    Vector3 toPlayer = (PlayerNode.GlobalPosition - Vector3.Zero).Normalized();
+    float aimAngle = Mathf.Atan2(toPlayer.Z, toPlayer.X);
+    float angleStep = Mathf.Tau / YellowBulletCount;
+
+    for (int i = 0; i < YellowBulletCount; ++i) {
+      float angle = aimAngle + i * angleStep;
+      Vector3 dir = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+
+      var b = YellowSpecialBulletScene.Instantiate<PhaseStellarSpecialBullet>();
+      b.Direction = dir;
+      b.BaseSpeed = YellowBulletSpeed;
+      b.Acceleration = YellowBulletAccel;
+      b.TimeScaleSensitivity = TimeScaleSensitivity;
+      GameRootProvider.CurrentGameRoot.AddChild(b);
+    }
+    SoundManager.Instance.Play(SoundEffect.FireSmall);
+  }
+
+  private void UpdateOrangeMechanic(float delta) {
+    _orangeTimer -= delta;
+    _orangeTimeAccumulator += delta;
+
+    if (_orangeTimer <= 0) {
+      FireOrangeOscillating();
+      _orangeTimer = OrangeBulletInterval;
+    }
+  }
+
+  private void FireOrangeOscillating() {
+    if (OrangeSpecialBulletScene == null) return;
+
+    float oscillation = OrangeOscillationAmp * Mathf.Sin(OrangeOscillationK * _orangeTimeAccumulator);
+
+    for (int i = 0; i < OrangeBulletCount; ++i) {
+      float baseAngle = (float) i / OrangeBulletCount * Mathf.Tau;
+      float finalAngle = baseAngle + oscillation;
+      Vector3 dir = new Vector3(Mathf.Cos(finalAngle), 0, Mathf.Sin(finalAngle));
+
+      var b = OrangeSpecialBulletScene.Instantiate<SimpleBullet>();
+      b.TimeScaleSensitivity = TimeScaleSensitivity;
+      var player = PlayerNode;
+
+      b.UpdateFunc = (t) => {
+        var s = new SimpleBullet.UpdateState();
+        s.position = (dir * (OrangeBulletSpeed * t)) with { Y = player.GlobalPosition.Y };
+        return s;
+      };
+      GameRootProvider.CurrentGameRoot.AddChild(b);
+    }
+  }
+
+  private void UpdateRedMechanic(float delta) {
+    var player = GameRootProvider.CurrentGameRoot.GetNode<Player>("Player");
+    if (IsInstanceValid(player) && !player.IsPermanentlyDead) {
+      Vector3 pullDir = (Vector3.Zero - player.GlobalPosition).Normalized();
+      pullDir.Y = 0;
+      if (!pullDir.IsZeroApprox()) {
+        player.GlobalPosition += pullDir * RedPushSpeed * delta;
+      }
     }
   }
 
@@ -162,6 +302,12 @@ public partial class PhaseStellar : BasePhase {
 
     _currentPhase = nextPhase;
     UpdateTemperature();
+
+    // 每次切换阶段都重置特殊机制计时器
+    _greenTimer = GreenChainInterval;
+    _yellowTimer = YellowBulletInterval;
+    _orangeTimer = OrangeBulletInterval;
+    _orangeTimeAccumulator = 0f;
 
     switch (_currentPhase) {
       case Phase.OrbiterWait:
@@ -190,13 +336,57 @@ public partial class PhaseStellar : BasePhase {
         foreach (var ring in _rings) {
           foreach (var bullet in ring) {
             if (bullet.Type == PhaseStellarSmallBullet.BulletType.BlackHole) {
-              // 渐变回到 Y=0 平面
               bullet.TargetHeight = 0f;
               bullet.SwitchToBlackHole();
             }
           }
         }
         break;
+    }
+  }
+
+  private void UpdateLayerGeneration() {
+    ProcessAngularFiring();
+
+    bool currentLayerFired = _orbiters.All(orb =>
+      !_orbiterFireIndices.ContainsKey(orb) ||
+      _orbiterFireIndices[orb] >= _orbiterQueues[orb].Count
+    );
+
+    if (currentLayerFired) {
+      if (_currentPhaseLayerIndex >= _layersInCurrentColorPhase - 1) {
+        // 这是当前颜色阶段的最后一层, 等待所有子弹到位
+        int lastRingIndex = _rings.Count - 1;
+        if (lastRingIndex >= 0) {
+          bool allArrived = _ringArrivalCounters.ContainsKey(lastRingIndex) &&
+                            _ringArrivalCounters[lastRingIndex] >= _rings[lastRingIndex].Count;
+
+          if (allArrived) {
+            StartColorTransformation();
+          }
+        }
+      } else {
+        // 继续下一层
+        ++_currentPhaseLayerIndex;
+        PrepareNextLayer();
+      }
+    }
+  }
+
+  private void UpdateSupernova() {
+    bool allSupernovasDone = _rings.SelectMany(r => r)
+      .All(b => b.Type != PhaseStellarSmallBullet.BulletType.Supernova ||
+        b.CurrentState == PhaseStellarSmallBullet.State.SupernovaHoming ||
+        b.IsDestroyed);
+    if (allSupernovasDone) {
+      TransitionTo(Phase.BlackHole);
+    }
+  }
+
+  private void UpdateBlackHole() {
+    if (_timer <= 0) {
+      FireJet();
+      _timer = 0.2f;
     }
   }
 
@@ -289,22 +479,17 @@ public partial class PhaseStellar : BasePhase {
         _rotatingRingIndices.Add(ringIdx);
         foreach (var b in _rings[ringIdx]) b.StartRotation();
 
-        // 计算半球形态：当偶数环开始旋转时，通知所有已有环上升到对应半球高度
-        // 以当前最新环 (ringIdx) 的半径作为半球半径 R
         float maxRadius = Radius0 + ringIdx * DeltaR;
         // 计算顶部环（i=0）相对于 maxRadius 的角度范围
-        // i=0 对应顶部，i=ringIdx 对应底部（角度0）
+        // i=0 对应顶部，i=ringIdx 对应底部（角度 0）
         float topAngle = Mathf.Acos(Mathf.Clamp(Radius0 / maxRadius, -1f, 1f));
 
         for (int i = 0; i < ringIdx; ++i) {
           // 使用角度插值来计算高度，而不是直接投影半径
-          // 这样可以确保垂直方向上的环间距更均匀，避免底部出现大间隙
           // i=0 (ratio=1) -> topAngle
           // i=ringIdx (ratio=0) -> 0
           float ratio = (float) (ringIdx - i) / ringIdx;
           float angle = ratio * topAngle;
-
-          // 压缩一下避免太高当视野
           float h = maxRadius * Mathf.Sin(angle) * 0.5f;
 
           foreach (var b in _rings[i]) {
@@ -432,18 +617,13 @@ public partial class PhaseStellar : BasePhase {
     var ringsIds = new Godot.Collections.Array<Godot.Collections.Array<ulong>>();
     foreach (var r in _rings) {
       var ids = new Godot.Collections.Array<ulong>();
-      foreach (var b in r) {
-        ids.Add(b.GetInstanceId());
-      }
+      foreach (var b in r) ids.Add(b.GetInstanceId());
       ringsIds.Add(ids);
     }
     var queuesIds = new Godot.Collections.Dictionary<ulong, Godot.Collections.Array<ulong>>();
     foreach (var kv in _orbiterQueues) {
       var ids = new Godot.Collections.Array<ulong>();
-      foreach (var b in kv.Value) {
-        if (IsInstanceValid(b))
-          ids.Add(b.GetInstanceId());
-      }
+      foreach (var b in kv.Value) if (IsInstanceValid(b)) ids.Add(b.GetInstanceId());
       queuesIds[kv.Key.GetInstanceId()] = ids;
     }
     var fireIndices = new Godot.Collections.Dictionary<ulong, int>();
@@ -457,6 +637,10 @@ public partial class PhaseStellar : BasePhase {
       DefenseTimer = _defenseTimer,
       CurrentPhaseLayerIndex = _currentPhaseLayerIndex,
       LayersInCurrentColorPhase = _layersInCurrentColorPhase,
+      GreenTimer = _greenTimer,
+      YellowTimer = _yellowTimer,
+      OrangeTimer = _orangeTimer,
+      OrangeTimeAccumulator = _orangeTimeAccumulator,
       Rings = ringsIds,
       RingArrivalCounters = new Godot.Collections.Dictionary<int, int>(_ringArrivalCounters),
       RotatingRingIndices = new Godot.Collections.Array<int>(_rotatingRingIndices),
@@ -474,6 +658,11 @@ public partial class PhaseStellar : BasePhase {
     _defenseTimer = s.DefenseTimer;
     _currentPhaseLayerIndex = s.CurrentPhaseLayerIndex;
     _layersInCurrentColorPhase = s.LayersInCurrentColorPhase;
+
+    _greenTimer = s.GreenTimer;
+    _yellowTimer = s.YellowTimer;
+    _orangeTimer = s.OrangeTimer;
+    _orangeTimeAccumulator = s.OrangeTimeAccumulator;
 
     _rings.Clear();
     foreach (var idList in s.Rings) {

@@ -395,7 +395,7 @@ public partial class Player : CharacterBody3D, IRewindable {
     if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
       GD.Print("Player hit by bullet");
-      // Die();
+      Die();
       return;
     }
   }
