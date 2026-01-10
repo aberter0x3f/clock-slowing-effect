@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cej6b3gx7814j"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_qcbvg"]
-size = Vector3(0.32, 0.32, 0.32)
+size = Vector3(0.32, 1000, 0.32)
 
 [sub_resource type="BoxMesh" id="BoxMesh_qcbvg"]
 size = Vector3(0.32, 0.32, 0.32)

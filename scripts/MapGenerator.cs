@@ -139,7 +139,6 @@ public partial class MapGenerator : Node {
           var obstacle = ObstacleScene.Instantiate<Node3D>();
           if (x == 0 || x == MapWidth - 1 || y == 0 || y == MapHeight - 1) {
             obstacle.Visible = false;
-            obstacle.Scale = obstacle.Scale with { Y = 1000f };
           }
           AddChild(obstacle);
           obstacle.GlobalPosition = worldPos with { Y = FloorY + 0.5f * TileSize };

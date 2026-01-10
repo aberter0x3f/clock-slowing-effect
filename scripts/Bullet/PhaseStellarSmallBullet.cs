@@ -8,6 +8,7 @@ public class PhaseStellarSmallBulletState : BaseBulletState {
   public bool IsActive;
   public float SupernovaTimer;
   public PhaseStellarSmallBullet.BulletColor CurrentColor;
+  public float TargetHeight;
 }
 
 public partial class PhaseStellarSmallBullet : BaseBullet {
@@ -17,6 +18,8 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
   public enum BulletType { BlackHole, Supernova }
   public enum State { Inactive, MovingToTarget, WaitingForRingCompletion, Rotating, SupernovaSeeking, SupernovaHoming, BlackHoleAccretion }
 
+  [Export] public float VerticalSpeed { get; set; } = 2.0f;
+
   [ExportGroup("Sprites")]
   [Export] public SpriteFrames BlueSprite { get; set; }
   [Export] public SpriteFrames GreenSprite { get; set; }
@@ -24,16 +27,16 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
   [Export] public SpriteFrames OrangeSprite { get; set; }
   [Export] public SpriteFrames RedSprite { get; set; }
 
-  [Export] public BulletType Type { get; set; }
+  public BulletType Type { get; set; }
   public State CurrentState { get; private set; } = State.Inactive;
   public BulletColor CurrentColor { get; set; }
   public Vector3 TargetPosition { get; set; }
-  public bool DropWhenArrive { get; set; }
   public float MoveSpeed { get; set; }
   public int RingIndex { get; set; }
   public float RingRotationSpeed { get; set; }
   public float SupernovaDelay { get; set; }
   public float FireAngle { get; set; }
+  public float TargetHeight { get; set; } = 0f;
 
   private Vector3 _velocity;
   private float _supernovaTimer = 0f;
@@ -67,16 +70,18 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
         if (GlobalPosition.DistanceSquaredTo(TargetPosition) < 0.0001f) {
           GlobalPosition = TargetPosition;
           CurrentState = State.WaitingForRingCompletion;
-          if (DropWhenArrive)
-            Destroy();
-          else {
-            EmitSignal(SignalName.ReachedTarget, RingIndex);
-          }
+          EmitSignal(SignalName.ReachedTarget, RingIndex);
         }
+        MoveHeightTowardTarget(scaledDelta);
+        break;
+
+      case State.WaitingForRingCompletion:
+        MoveHeightTowardTarget(scaledDelta);
         break;
 
       case State.Rotating:
         GlobalPosition = GlobalPosition.Rotated(Vector3.Up, RingRotationSpeed * scaledDelta);
+        MoveHeightTowardTarget(scaledDelta);
         break;
 
       case State.SupernovaSeeking:
@@ -89,6 +94,9 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
 
       case State.SupernovaHoming:
         GlobalPosition += _velocity * scaledDelta;
+        if (GlobalPosition.Y <= 0) {
+          GlobalPosition = GlobalPosition with { Y = 0 };
+        }
         _supernovaTimer -= scaledDelta;
         if (_supernovaTimer <= 0) {
           Destroy();
@@ -97,10 +105,19 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
 
       case State.BlackHoleAccretion:
         GlobalPosition = GlobalPosition.Rotated(Vector3.Up, RingRotationSpeed * scaledDelta);
+        MoveHeightTowardTarget(scaledDelta);
         _sprite.Modulate = Colors.Black;
         break;
     }
   }
+
+  private void MoveHeightTowardTarget(float scaledDelta) {
+    if (!Mathf.IsEqualApprox(GlobalPosition.Y, TargetHeight)) {
+      float newY = Mathf.MoveToward(GlobalPosition.Y, TargetHeight, VerticalSpeed * scaledDelta);
+      GlobalPosition = GlobalPosition with { Y = newY };
+    }
+  }
+
 
   public void StartRotation() {
     if (CurrentState == State.WaitingForRingCompletion) {
@@ -168,6 +185,7 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
       IsActive = this.IsProcessing(),
       SupernovaTimer = this._supernovaTimer,
       CurrentColor = this.CurrentColor,
+      TargetHeight = this.TargetHeight,
     };
   }
 
@@ -176,6 +194,7 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
     if (state is not PhaseStellarSmallBulletState s) return;
     CurrentState = s.CurrentState;
     _supernovaTimer = s.SupernovaTimer;
+    TargetHeight = s.TargetHeight;
     SetProcess(s.IsActive);
     Visible = s.IsActive;
     if (this.CurrentColor != s.CurrentColor) SetColor(s.CurrentColor);

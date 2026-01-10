@@ -152,7 +152,7 @@ public partial class PhaseRain : BasePhase {
 
   private Vector3 GetRandomSidePosition(bool leftSide) {
     float x = leftSide ? -_moveHalfWidth : _moveHalfWidth;
-    float z = (float) GD.RandRange(-_moveHalfHeight * 1.2f, -_moveHalfHeight * 0.8f);
+    float z = (float) GD.RandRange(-_moveHalfHeight * 1.4f, -_moveHalfHeight * 0.8f);
     return new Vector3(x, FlightHeight, z);
   }
 
@@ -198,7 +198,7 @@ public partial class PhaseRain : BasePhase {
 
       // 在地图地面上随机选一个落点 P
       float px = _rng.RandfRange(-_moveHalfWidth, _moveHalfWidth);
-      float pz = _rng.RandfRange(-_moveHalfHeight, 0); // 假设 Boss 在 Z 轴负方向的顶部
+      float pz = _rng.RandfRange(-_moveHalfHeight * 1.2f, -_moveHalfHeight * 0.5f);
       Vector2 P = new Vector2(px, pz);
 
       // 随机选择雨的倾斜角度（向后发射）

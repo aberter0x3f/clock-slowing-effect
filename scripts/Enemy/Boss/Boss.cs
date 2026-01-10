@@ -122,11 +122,12 @@ public partial class Boss : BaseEnemy {
       _activePhaseInstance = null;
     }
 
-    // 清理场上所有子弹和掉落物
+    // 清理场上所有子弹和掉落物等临时物品
     ClearAllBullets();
     ClearAllPickups();
     // 将 Boss 移回中心
-    SetDeferred(PropertyName.GlobalPosition, _startPosition);
+    SetCollisionEnabled(false);
+    GlobalPosition = _startPosition;
 
     // 恢复玩家状态
     GD.Print("Restoring player state...");
@@ -208,6 +209,9 @@ public partial class Boss : BaseEnemy {
 
   private void ClearAllBullets() {
     foreach (IRewindable bullet in GetTree().GetNodesInGroup("bullets")) {
+      bullet.Destroy();
+    }
+    foreach (IRewindable bullet in GetTree().GetNodesInGroup("enemy_creations")) {
       bullet.Destroy();
     }
   }

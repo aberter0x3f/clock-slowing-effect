@@ -36,14 +36,13 @@ public partial class PhaseStellar : BasePhase {
   [Export] public float InitialOrbiterSpeed = 3.0f;
 
   [ExportGroup("Rings")]
-  [Export] public float Radius0 = 1.0f;
+  [Export] public float Radius0 = 0.4f;
   [Export] public float DeltaR = 0.05f;
   [Export] public float BulletSpacing = 0.15f;
-  [Export] public int BulletSkip = 3;
   [Export] public float SmallBulletSpeedMean = 4.0f;
   [Export] public float SmallBulletSpeedSigma = 0.3f;
   [Export] public float RingRotationSpeed = 1.5f;
-  [Export] public Godot.Collections.Array<int> LayerCounts { get; set; } = new() { 2, 4, 8, 12, 20 };
+  [Export] public Godot.Collections.Array<int> LayerCounts { get; set; } = new() { 6, 8, 10, 12, 20 };
 
   [ExportGroup("Scenes")]
   [Export] public PackedScene BigBulletScene;
@@ -95,7 +94,8 @@ public partial class PhaseStellar : BasePhase {
 
     _timer -= scaledDelta;
     _defenseTimer -= scaledDelta;
-    if (_defenseTimer <= 0 && PlayerNode.GlobalPosition.Length() <= 1.0f) {
+    float defenseRadius = _currentPhase < Phase.Supernova ? Radius0 + _rings.Count * DeltaR : 1.0f;
+    if (_defenseTimer <= 0 && PlayerNode.GlobalPosition.Length() <= defenseRadius) {
       FireDefensePattern();
       _defenseTimer = 0.2f;
     }
@@ -190,6 +190,8 @@ public partial class PhaseStellar : BasePhase {
         foreach (var ring in _rings) {
           foreach (var bullet in ring) {
             if (bullet.Type == PhaseStellarSmallBullet.BulletType.BlackHole) {
+              // 渐变回到 Y=0 平面
+              bullet.TargetHeight = 0f;
               bullet.SwitchToBlackHole();
             }
           }
@@ -227,7 +229,7 @@ public partial class PhaseStellar : BasePhase {
 
     int rIdx = _rings.Count;
     float radius = Radius0 + rIdx * DeltaR;
-    int count = Mathf.CeilToInt(Mathf.Tau * radius / BulletSpacing / BulletSkip) * BulletSkip;
+    int count = Mathf.CeilToInt(Mathf.Tau * radius / BulletSpacing);
     float theta0 = GD.Randf() * Mathf.Tau;
     var ring = new List<PhaseStellarSmallBullet>();
 
@@ -240,7 +242,6 @@ public partial class PhaseStellar : BasePhase {
       b.CurrentColor = bulletColor;
       b.Type = _currentPhase <= Phase.Yellow ? PhaseStellarSmallBullet.BulletType.BlackHole : PhaseStellarSmallBullet.BulletType.Supernova;
       b.TargetPosition = ParentBoss.GlobalPosition + new Vector3(Mathf.Cos(theta), 0, Mathf.Sin(theta)) * radius;
-      b.DropWhenArrive = j % BulletSkip != 0;
       b.RingIndex = rIdx;
       b.RingRotationSpeed = RingRotationSpeed * (rIdx % 2 == 0 ? 1 : -1);
       b.SupernovaDelay = GD.Randf() * 5.0f;
@@ -255,7 +256,7 @@ public partial class PhaseStellar : BasePhase {
         b.FireAngle = last.FireAngle + 0.02f;
       }
       b.ReachedTarget += OnSmallBulletArrived;
-      if (!b.DropWhenArrive) ring.Add(b);
+      ring.Add(b);
       _orbiterQueues[_orbiters[orbIdx]].Add(b);
       GameRootProvider.CurrentGameRoot.AddChild(b);
       last = b;
@@ -284,8 +285,36 @@ public partial class PhaseStellar : BasePhase {
     if (!_ringArrivalCounters.ContainsKey(ringIdx)) _ringArrivalCounters[ringIdx] = 0;
     ++_ringArrivalCounters[ringIdx];
     if (_ringArrivalCounters[ringIdx] >= _rings[ringIdx].Count) {
-      _rotatingRingIndices.Add(ringIdx);
-      foreach (var b in _rings[ringIdx]) b.StartRotation();
+      if (ringIdx % 2 == 0) {
+        _rotatingRingIndices.Add(ringIdx);
+        foreach (var b in _rings[ringIdx]) b.StartRotation();
+
+        // 计算半球形态：当偶数环开始旋转时，通知所有已有环上升到对应半球高度
+        // 以当前最新环 (ringIdx) 的半径作为半球半径 R
+        float maxRadius = Radius0 + ringIdx * DeltaR;
+        // 计算顶部环（i=0）相对于 maxRadius 的角度范围
+        // i=0 对应顶部，i=ringIdx 对应底部（角度0）
+        float topAngle = Mathf.Acos(Mathf.Clamp(Radius0 / maxRadius, -1f, 1f));
+
+        for (int i = 0; i < ringIdx; ++i) {
+          // 使用角度插值来计算高度，而不是直接投影半径
+          // 这样可以确保垂直方向上的环间距更均匀，避免底部出现大间隙
+          // i=0 (ratio=1) -> topAngle
+          // i=ringIdx (ratio=0) -> 0
+          float ratio = (float) (ringIdx - i) / ringIdx;
+          float angle = ratio * topAngle;
+
+          // 压缩一下避免太高当视野
+          float h = maxRadius * Mathf.Sin(angle) * 0.5f;
+
+          foreach (var b in _rings[i]) {
+            b.TargetHeight = h;
+          }
+        }
+      } else {
+        foreach (var b in _rings[ringIdx]) b.Destroy();
+        _rings[ringIdx].Clear();
+      }
     }
   }
 
@@ -356,14 +385,17 @@ public partial class PhaseStellar : BasePhase {
   }
 
   private void FireDefensePattern() {
-    if (DefenseBulletScene == null) return;
-    int count = 36;
     Vector3 bossPos = ParentBoss.GlobalPosition;
     float speed = 5.0f;
-    for (int i = 0; i < count; ++i) {
+    var baseDir = PlayerNode.GlobalPosition - bossPos;
+    if (baseDir.IsZeroApprox())
+      baseDir = Vector3.Right;
+    else
+      baseDir = baseDir.Normalized();
+    for (int i = 0; i < 36; ++i) {
       var b = DefenseBulletScene.Instantiate<SimpleBullet>();
       float angle = Mathf.DegToRad(i * 10f);
-      Vector3 dir = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+      var dir = baseDir.Rotated(Vector3.Up, angle);
       b.TimeScaleSensitivity = TimeScaleSensitivity;
       b.UpdateFunc = (t) => new SimpleBullet.UpdateState { position = bossPos + dir * (speed * t) };
       GameRootProvider.CurrentGameRoot.AddChild(b);
