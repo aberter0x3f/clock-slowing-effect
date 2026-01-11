@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://cv1uxq5wwtkgn"]
+[gd_scene load_steps=6 format=3 uid="uid://cv1uxq5wwtkgn"]
 
 [ext_resource type="Script" uid="uid://cww4by18jvchh" path="res://scripts/UI/InterLevelMenu.cs" id="1_ogdmf"]
 [ext_resource type="PackedScene" uid="uid://bto53p17w4ixu" path="res://ui/map_menu.tscn" id="2_v0ajj"]
 [ext_resource type="PackedScene" uid="uid://wiugu0n1ahmr" path="res://ui/upgrade_overview_menu.tscn" id="3_q47ah"]
 [ext_resource type="PackedScene" uid="uid://bn20ly7ngq5ky" path="res://ui/curio_overview_menu.tscn" id="4_v0ajj"]
+[ext_resource type="PackedScene" uid="uid://b8nlgrb5uv4wx" path="res://ui/save_game_menu.tscn" id="5_q47ah"]
 
 [node name="InterLevelMenu" type="Control"]
 layout_mode = 3
@@ -21,6 +22,9 @@ layout_mode = 1
 layout_mode = 1
 
 [node name="CurioOverviewMenu" parent="." instance=ExtResource("4_v0ajj")]
+layout_mode = 1
+
+[node name="SaveGameMenu" parent="." instance=ExtResource("5_q47ah")]
 layout_mode = 1
 
 [node name="Label" type="RichTextLabel" parent="."]

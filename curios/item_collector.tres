@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="ItemCollectorCurio" load_steps=2 format=3 uid="uid://by48tvstju4hs"]
+
+[ext_resource type="Script" uid="uid://bjpnsi7dtunwy" path="res://scripts/Curio/ItemCollectorCurio.cs" id="1_60bbi"]
+
+[resource]
+script = ExtResource("1_60bbi")
+metadata/_custom_type_script = "uid://bjpnsi7dtunwy"

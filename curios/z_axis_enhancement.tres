@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="ZAxisEnhancementCurio" load_steps=2 format=3 uid="uid://dycservwcwqt5"]
+
+[ext_resource type="Script" uid="uid://44d0768eggb4" path="res://scripts/Curio/ZAxisEnhancementCurio.cs" id="1_n6rsl"]
+
+[resource]
+script = ExtResource("1_n6rsl")
+metadata/_custom_type_script = "uid://44d0768eggb4"

@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://beuhcmhxmr3cu"]
+
+[ext_resource type="Script" uid="uid://7ncb8genbc0w" path="res://scripts/UI/SaveGameDialog.cs" id="1_dfygv"]
+
+[node name="SaveGameDialog" type="FileDialog"]
+process_mode = 3
+display_mode = 1
+access = 2
+filters = PackedStringArray("*.json ; Save Files")
+use_native_dialog = true
+script = ExtResource("1_dfygv")
+
+[connection signal="file_selected" from="." to="." method="OnSelected"]

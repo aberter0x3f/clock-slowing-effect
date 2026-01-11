@@ -23,9 +23,9 @@ public partial class GameManager : Node {
   public HexMap GameMap { get; private set; }
   public Vector2I SelectedMapPosition { get; set; }
   public Vector2I? PlayerMapPosition { get; private set; }
-  public int LevelsCleared { get; private set; }
-  public float DifficultyMultiplier { get; private set; } = 1.0f;
-  public float EnemyRank { get; private set; } = -1;
+  public int LevelsCleared { get; set; }
+  public float DifficultyMultiplier { get; set; } = 1.0f;
+  public float EnemyRank { get; set; } = -1;
   public int CurrentPlane => GameMap?.Plane ?? -1;
 
   // 玩家状态和强化系统属性
@@ -56,7 +56,7 @@ public partial class GameManager : Node {
   public bool HadMissThisLevel { get; set; }
 
   // 事件和子战斗系统
-  private List<Event.GameEvent> _currentEventSequence = new();
+  public List<Event.GameEvent> CurrentEventSequence { get; private set; }
   public string ReturnScenePath { get; private set; }
   public bool InSubCombat { get; private set; } = false;
   public Event.GameEvent ActiveEvent { get; set; }
@@ -69,6 +69,14 @@ public partial class GameManager : Node {
   public bool IsInBossPractice { get; private set; } = false;
   public int PracticePlane { get; private set; } = 1;
   public int PracticePhaseIndex { get; private set; } = 0;
+
+
+  // 加载状态标记
+  public bool IsLoadingFromSave { get; set; } = false;
+  public int PendingBossPhaseIndex { get; set; } = -1;
+  public float PendingPhaseStartHealth { get; set; }
+  public float PendingPhaseStartBond { get; set; }
+
 
   public override void _Ready() {
     Instance = this;
@@ -131,7 +139,7 @@ public partial class GameManager : Node {
   private void ShuffleEventSequence() {
     var list = new Godot.Collections.Array<Event.GameEvent>(AllEvents);
     list.Shuffle();
-    _currentEventSequence = list.ToList();
+    CurrentEventSequence = list.ToList();
   }
 
   /// <summary>
@@ -515,11 +523,11 @@ public partial class GameManager : Node {
   /// 从事件序列中获取下一个事件．
   /// </summary>
   public Event.GameEvent GetNextEvent() {
-    if (_currentEventSequence.Count == 0) {
+    if (CurrentEventSequence.Count == 0) {
       ShuffleEventSequence();
     }
-    var nextEvent = _currentEventSequence.Last();
-    _currentEventSequence.RemoveAt(_currentEventSequence.Count - 1);
+    var nextEvent = CurrentEventSequence.Last();
+    CurrentEventSequence.RemoveAt(CurrentEventSequence.Count - 1);
     return nextEvent;
   }
 
@@ -538,5 +546,48 @@ public partial class GameManager : Node {
     }
 
     return (appliedToBond, appliedToHealth);
+  }
+
+  /// <summary>
+  /// 从存档数据重建地图状态。
+  /// </summary>
+  public void RestoreMapFromSave(SaveData data) {
+    GameMap = new HexMap();
+    GameMap.Nodes.Clear();
+
+    GameMap.Plane = data.CurrentPlane;
+
+    foreach (var nodeData in data.MapNodes) {
+      var pos = new Vector2I(nodeData.Q, nodeData.R);
+      var node = new HexMap.MapNode(pos);
+      node.Type = (HexMap.NodeType) nodeData.Type;
+      node.Score = (HexMap.ClearScore) nodeData.Score;
+      GameMap.Nodes.Add(pos, node);
+    }
+
+    // 恢复玩家位置
+    if (data.HasPlayerPos) {
+      PlayerMapPosition = new Vector2I(data.PlayerPosQ, data.PlayerPosR);
+    } else {
+      PlayerMapPosition = null;
+    }
+
+    // 恢复计数器
+    LevelsCleared = data.LevelsCleared;
+    DifficultyMultiplier = data.DifficultyMultiplier;
+    EnemyRank = data.EnemyRank;
+  }
+
+  /// <summary>
+  /// 从存档恢复事件池。
+  /// </summary>
+  public void RestoreEventDeck(List<string> eventPaths) {
+    CurrentEventSequence.Clear();
+    foreach (var path in eventPaths) {
+      if (ResourceLoader.Exists(path)) {
+        var evt = GD.Load<Event.GameEvent>(path);
+        CurrentEventSequence.Add(evt);
+      }
+    }
   }
 }

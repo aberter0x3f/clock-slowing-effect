@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3 uid="uid://b2ducq4wcnpjh"]
+[gd_scene load_steps=33 format=3 uid="uid://b2ducq4wcnpjh"]
 
 [ext_resource type="Script" uid="uid://d3blju4s11jnk" path="res://scripts/GameManager.cs" id="1_smx3j"]
 [ext_resource type="Resource" uid="uid://c3l74pxsuanrb" path="res://events/aha_stuffed_toy.tres" id="2_d246e"]
@@ -18,49 +18,21 @@
 [ext_resource type="Resource" uid="uid://dx66ydggfgef5" path="res://events/tavern.tres" id="14_3uuvb"]
 [ext_resource type="Resource" uid="uid://dwqep4nnlx6a0" path="res://events/temporal_investment_firm.tres" id="15_brv2v"]
 [ext_resource type="Resource" uid="uid://nlwasguy0882" path="res://events/the_chrono_librarian.tres" id="16_0viau"]
-[ext_resource type="Script" uid="uid://b1v03boys5l6n" path="res://scripts/Curio/TAxisEnhancementCurio.cs" id="20_2x3uj"]
-[ext_resource type="Script" uid="uid://sk5fmplop8pk" path="res://scripts/Curio/XAxisEnhancementCurio.cs" id="21_jy3no"]
-[ext_resource type="Script" uid="uid://44d0768eggb4" path="res://scripts/Curio/ZAxisEnhancementCurio.cs" id="22_v8q4t"]
-[ext_resource type="Script" uid="uid://dek8obixnot4y" path="res://scripts/Curio/DecoyTargetCurio.cs" id="23_otlv6"]
-[ext_resource type="Script" uid="uid://bjpnsi7dtunwy" path="res://scripts/Curio/ItemCollectorCurio.cs" id="24_3uuvb"]
-[ext_resource type="Script" uid="uid://cwxhc0a1wg0fj" path="res://scripts/Curio/GoldenBodyCurio.cs" id="25_brv2v"]
-[ext_resource type="Script" uid="uid://ds27iebpfy0pb" path="res://scripts/Curio/TotemOfUndyingCurio.cs" id="26_0viau"]
+[ext_resource type="Resource" uid="uid://dk3k7r6wd6mau" path="res://curios/t_axis_enhancement.tres" id="18_jy3no"]
+[ext_resource type="Resource" uid="uid://uya7py6nfrrg" path="res://curios/x_axis_enhancement.tres" id="19_jy3no"]
+[ext_resource type="Resource" uid="uid://dycservwcwqt5" path="res://curios/z_axis_enhancement.tres" id="20_jy3no"]
+[ext_resource type="Resource" uid="uid://tty1w0oax4ci" path="res://curios/decoy_target.tres" id="21_jy3no"]
+[ext_resource type="Resource" uid="uid://by48tvstju4hs" path="res://curios/item_collector.tres" id="22_jy3no"]
+[ext_resource type="Resource" uid="uid://d3q86ey6liiuq" path="res://curios/golden_body.tres" id="23_v8q4t"]
+[ext_resource type="Resource" uid="uid://nrfv5xmy3q3y" path="res://curios/totem_of_undying.tres" id="24_otlv6"]
 [ext_resource type="Resource" uid="uid://bao7580lnxuqu" path="res://weapons/guitar.tres" id="26_jy3no"]
 [ext_resource type="Script" uid="uid://cde1oxnxiq4pd" path="res://scripts/Curio/CurioDatabase.cs" id="27_fv0ai"]
 [ext_resource type="Resource" uid="uid://dcihb2s8uhdjb" path="res://weapons/violin.tres" id="27_v8q4t"]
 [ext_resource type="Script" uid="uid://ieexwsougw3r" path="res://scripts/Weapon/WeaponDatabase.cs" id="28_otlv6"]
 
-[sub_resource type="Resource" id="Resource_2nf76"]
-script = ExtResource("20_2x3uj")
-metadata/_custom_type_script = "uid://b1v03boys5l6n"
-
-[sub_resource type="Resource" id="Resource_r0uba"]
-script = ExtResource("21_jy3no")
-metadata/_custom_type_script = "uid://sk5fmplop8pk"
-
-[sub_resource type="Resource" id="Resource_gw0af"]
-script = ExtResource("22_v8q4t")
-metadata/_custom_type_script = "uid://44d0768eggb4"
-
-[sub_resource type="Resource" id="Resource_lsbd3"]
-script = ExtResource("23_otlv6")
-metadata/_custom_type_script = "uid://dek8obixnot4y"
-
-[sub_resource type="Resource" id="Resource_3dbmy"]
-script = ExtResource("24_3uuvb")
-metadata/_custom_type_script = "uid://bjpnsi7dtunwy"
-
-[sub_resource type="Resource" id="Resource_mk1fk"]
-script = ExtResource("25_brv2v")
-metadata/_custom_type_script = "uid://cwxhc0a1wg0fj"
-
-[sub_resource type="Resource" id="Resource_7l0rn"]
-script = ExtResource("26_0viau")
-metadata/_custom_type_script = "uid://ds27iebpfy0pb"
-
 [sub_resource type="Resource" id="Resource_s6qd3"]
 script = ExtResource("27_fv0ai")
-AllCurios = Array[Resource]([SubResource("Resource_2nf76"), SubResource("Resource_r0uba"), SubResource("Resource_gw0af"), SubResource("Resource_lsbd3"), SubResource("Resource_3dbmy"), SubResource("Resource_mk1fk"), SubResource("Resource_7l0rn")])
+AllCurios = Array[Resource]([ExtResource("18_jy3no"), ExtResource("19_jy3no"), ExtResource("20_jy3no"), ExtResource("21_jy3no"), ExtResource("22_jy3no"), ExtResource("23_v8q4t"), ExtResource("24_otlv6")])
 metadata/_custom_type_script = "uid://cde1oxnxiq4pd"
 
 [sub_resource type="Resource" id="Resource_3uuvb"]

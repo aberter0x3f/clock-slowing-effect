@@ -21,6 +21,7 @@ TimeManager="*res://scripts/TimeManager.cs"
 GameManager="*res://game_manager.tscn"
 SoundManager="*res://sound_manager.tscn"
 SceneTransitionManager="*res://scene_transition_manager.tscn"
+SaveManager="*res://scripts/SaveManager.cs"
 
 [debug]
 

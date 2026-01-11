@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://bqtbfjrfe5x52"]
+[gd_scene load_steps=22 format=3 uid="uid://bqtbfjrfe5x52"]
 
 [ext_resource type="Script" uid="uid://vn61cc2q0j34" path="res://scripts/Rewind/RewindManager.cs" id="1_7vrkn"]
 [ext_resource type="Script" uid="uid://bvjdkwu2pid2q" path="res://scripts/Room/Title.cs" id="1_8qtwp"]
@@ -19,6 +19,8 @@
 [ext_resource type="Resource" uid="uid://jogkufq70a76" path="res://enemies/boss/phase_data.tres" id="5_uwgf0"]
 [ext_resource type="PackedScene" uid="uid://jppmfh2mxeel" path="res://title_menu_interactable/exit_game.tscn" id="6_dy7ct"]
 [ext_resource type="PackedScene" uid="uid://dy40gqwd8fmqo" path="res://floor_tile_2.tscn" id="6_w44g7"]
+[ext_resource type="PackedScene" uid="uid://bsexufng57p1o" path="res://title_menu_interactable/load_game.tscn" id="16_xjact"]
+[ext_resource type="PackedScene" uid="uid://c21fqxgwnxn5u" path="res://ui/load_game_dialog.tscn" id="21_bsj2p"]
 
 [node name="GameRoot" type="Node3D"]
 script = ExtResource("1_8qtwp")
@@ -58,15 +60,20 @@ metadata/_custom_type_script = "uid://vn61cc2q0j34"
 [node name="Player" parent="." instance=ExtResource("2_fu7sn")]
 
 [node name="StartGame" parent="." instance=ExtResource("3_nlkkf")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -2)
+
+[node name="LoadGame" parent="." instance=ExtResource("16_xjact")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -2)
 
 [node name="BossPractice" parent="." instance=ExtResource("4_qe12f")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2)
 
 [node name="SelectWeapon" parent="." instance=ExtResource("5_8qtwp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -2)
 
 [node name="ExitGame" parent="." instance=ExtResource("6_dy7ct")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -2)
 
 [node name="WorldEnvironment" parent="." instance=ExtResource("3_bn480")]
+
+[node name="LoadGameDialog" parent="." instance=ExtResource("21_bsj2p")]

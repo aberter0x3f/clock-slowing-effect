@@ -25,6 +25,10 @@ public partial class ShopDevice : Area3D, IInteractable {
       return;
     }
 
+    if (_purchasesMade >= MaxPurchases) {
+      return;
+    }
+
     if (!IsInstanceValid(_shopMenuInstance)) {
       _shopMenuInstance = ShopMenuScene.Instantiate<ShopMenu>();
       GetTree().Root.AddChild(_shopMenuInstance);

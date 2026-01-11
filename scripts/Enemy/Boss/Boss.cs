@@ -43,11 +43,11 @@ public partial class Boss : BaseEnemy {
   [Export]
   public float RestDuration { get; set; } = 5f; // 阶段间的休息时间
 
-  private int _currentPhaseIndex = 0;
+  public int CurrentPhaseIndex { get; private set; } = 0;
   private BasePhase _activePhaseInstance;
   private float _restTimerLeft;
-  private PlayerState _playerPhaseStartState;
-  private RewindState _weaponPhaseStartState;
+  public PlayerState PlayerPhaseStartState { get; private set; }
+  public RewindState WeaponPhaseStartState { get; private set; }
   private CollisionShape3D _collisionShape;
   private Vector3 _startPosition;
   private Godot.Collections.Array<PackedScene> _activePhaseSet;
@@ -56,9 +56,29 @@ public partial class Boss : BaseEnemy {
     base._Ready();
     _startPosition = GlobalPosition;
     _collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
-    _restTimerLeft = RestDuration / 2; // 首次休息时间
+    _restTimerLeft = RestDuration; // 首次休息时间
 
     SetCollisionEnabled(false);
+  }
+
+  public void StartAtPhaseWithState(int phaseIndex, float startHealth, float startBond) {
+    if (_activePhaseSet == null || phaseIndex < 0) {
+      GD.PrintErr($"Cannot start specific phase: Invalid index {phaseIndex} or phase set not configured.");
+      return;
+    }
+
+    if (phaseIndex >= _activePhaseSet.Count) {
+      InternalState = BossInternalState.Finished;
+      Die();
+      return;
+    }
+
+    CurrentPhaseIndex = phaseIndex;
+
+    GameManager.Instance.CurrentPlayerHealth = startHealth;
+    GameManager.Instance.TimeBond = startBond;
+    _player.Health = startHealth;
+    OnPhaseStarted();
   }
 
   /// <summary>
@@ -76,7 +96,7 @@ public partial class Boss : BaseEnemy {
       GD.PrintErr($"Cannot start specific phase: Invalid index {phaseIndex} or phase set not configured.");
       return;
     }
-    _currentPhaseIndex = phaseIndex;
+    CurrentPhaseIndex = phaseIndex;
   }
 
   public override void _Process(double delta) {
@@ -110,12 +130,12 @@ public partial class Boss : BaseEnemy {
       return;
     }
 
-    if (_playerPhaseStartState == null) {
+    if (PlayerPhaseStartState == null) {
       GD.PrintErr("Cannot restart from phase: No saved state found.");
       return;
     }
 
-    GD.Print($"Restarting from phase {_currentPhaseIndex}.");
+    GD.Print($"Restarting from phase {CurrentPhaseIndex}.");
 
     // 清理当前阶段
     if (IsInstanceValid(_activePhaseInstance)) {
@@ -132,14 +152,14 @@ public partial class Boss : BaseEnemy {
 
     // 恢复玩家状态
     GD.Print("Restoring player state...");
-    _player.RestoreState(_playerPhaseStartState);
-    GameManager.Instance.CurrentPlayerHealth = _playerPhaseStartState.Health;
-    GameManager.Instance.TimeBond = _playerPhaseStartState.TimeBond;
+    _player.RestoreState(PlayerPhaseStartState);
+    GameManager.Instance.CurrentPlayerHealth = PlayerPhaseStartState.Health;
+    GameManager.Instance.TimeBond = PlayerPhaseStartState.TimeBond;
     _player.IsPermanentlyDead = false;
 
     // 恢复武器状态
-    if (_player.CurrentWeapon != null && _weaponPhaseStartState != null) {
-      _player.CurrentWeapon.RestoreState(_weaponPhaseStartState);
+    if (_player.CurrentWeapon != null && WeaponPhaseStartState != null) {
+      _player.CurrentWeapon.RestoreState(WeaponPhaseStartState);
     }
 
     // 重新开始当前阶段的准备流程
@@ -154,7 +174,7 @@ public partial class Boss : BaseEnemy {
       return;
     }
 
-    GD.Print($"Starting boss phase {_currentPhaseIndex}.");
+    GD.Print($"Starting boss phase {CurrentPhaseIndex}.");
 
     SoundManager.Instance.Play(SoundEffect.PowerUp);
 
@@ -162,7 +182,7 @@ public partial class Boss : BaseEnemy {
     SetCollisionEnabled(true);
 
     // 实例化并启动新阶段
-    var phaseScene = _activePhaseSet[_currentPhaseIndex];
+    var phaseScene = _activePhaseSet[CurrentPhaseIndex];
     _activePhaseInstance = phaseScene.Instantiate<BasePhase>();
     AddChild(_activePhaseInstance);
     _activePhaseInstance.PhaseCompleted += OnPhaseEnded;
@@ -174,18 +194,18 @@ public partial class Boss : BaseEnemy {
     InternalState = BossInternalState.Fighting;
 
     // 保存玩家状态
-    _playerPhaseStartState = (PlayerState) _player.CaptureState();
+    PlayerPhaseStartState = (PlayerState) _player.CaptureState();
 
     // 保存武器状态
     if (_player.CurrentWeapon != null) {
-      _weaponPhaseStartState = _player.CurrentWeapon.CaptureState();
+      WeaponPhaseStartState = _player.CurrentWeapon.CaptureState();
     }
 
     EmitSignal(SignalName.FightingPhaseStarted);
   }
 
   private void OnPhaseEnded() {
-    GD.Print($"Boss Phase {_currentPhaseIndex} completed!");
+    GD.Print($"Boss Phase {CurrentPhaseIndex} completed!");
 
     SoundManager.Instance.Play(SoundEffect.BossDeath);
 
@@ -202,7 +222,7 @@ public partial class Boss : BaseEnemy {
     // 重置回溯历史，防止跨阶段回溯引起状态混乱
     RewindManager.Instance.ResetHistory();
 
-    ++_currentPhaseIndex;
+    ++CurrentPhaseIndex;
 
     GlobalPosition = _startPosition;
     InternalState = BossInternalState.Resting;
@@ -210,7 +230,7 @@ public partial class Boss : BaseEnemy {
 
     EmitSignal(SignalName.FightingPhaseEnded);
 
-    if (_currentPhaseIndex >= _activePhaseSet.Count) {
+    if (CurrentPhaseIndex >= _activePhaseSet.Count) {
       GD.Print("Boss defeated!");
       InternalState = BossInternalState.Finished;
       // 调用基类的 Die，这会触发 Died 信号，让 BossRoom 生成传送门

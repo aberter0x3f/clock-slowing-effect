@@ -4,12 +4,14 @@ using Godot;
 public partial class TitleMenuInteractable : Area3D, IInteractable {
   public enum ActionType {
     StartGame,
+    LoadGame,
     BossPractice,
     SelectWeapon,
     ExitGame
   }
 
   [Signal] public delegate void StartGameRequestedEventHandler();
+  [Signal] public delegate void LoadGameRequestedEventHandler();
   [Signal] public delegate void BossPracticeRequestedEventHandler();
   [Signal] public delegate void WeaponSelectionRequestedEventHandler();
 
@@ -35,6 +37,9 @@ public partial class TitleMenuInteractable : Area3D, IInteractable {
     switch (Action) {
       case ActionType.StartGame:
         EmitSignal(SignalName.StartGameRequested);
+        break;
+      case ActionType.LoadGame:
+        EmitSignal(SignalName.LoadGameRequested);
         break;
       case ActionType.BossPractice:
         EmitSignal(SignalName.BossPracticeRequested);

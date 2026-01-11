@@ -13,7 +13,9 @@ public partial class PauseMenu : CanvasLayer {
   private Button _continueButton;
   private Button _restartFromPhaseButton;
   private Button _restartButton;
+  private Button _saveGameButton;
   private Button _returnToTitleButton;
+  private SaveGameDialog _saveGameDialog;
 
   private readonly List<Button> _buttons = new();
   private int _selectedIndex = 0;
@@ -37,11 +39,14 @@ public partial class PauseMenu : CanvasLayer {
     _continueButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/ContinueButton");
     _restartFromPhaseButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/RestartFromPhaseButton");
     _restartButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/RestartButton");
+    _saveGameButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/SaveGameButton");
     _returnToTitleButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/ReturnToTitleButton");
+    _saveGameDialog = GetNode<SaveGameDialog>("SaveGameDialog");
 
     _continueButton.Pressed += OnContinuePressed;
     _restartFromPhaseButton.Pressed += OnRestartFromPhasePressed;
     _restartButton.Pressed += OnRestartPressed;
+    _saveGameButton.Pressed += () => _saveGameDialog.PopupCentered();
     _returnToTitleButton.Pressed += OnReturnToTitlePressed;
 
     Visible = false; // 初始时隐藏
@@ -130,6 +135,17 @@ public partial class PauseMenu : CanvasLayer {
       _buttons.Add(_restartFromPhaseButton);
     }
     _buttons.Add(_restartButton);
+
+    var currentScene = GetTree().CurrentScene;
+    var gm = GameManager.Instance;
+    bool canSave = !gm.IsInBossPractice && !gm.InSubCombat && (currentScene is Room.Combat || currentScene is Room.BossCombat);
+
+    if (canSave) {
+      _buttons.Add(_saveGameButton);
+    } else {
+      _saveGameButton.Visible = false;
+    }
+
     _buttons.Add(_returnToTitleButton);
 
     UpdateSelection();

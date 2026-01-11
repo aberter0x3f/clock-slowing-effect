@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="DecoyTargetCurio" load_steps=2 format=3 uid="uid://tty1w0oax4ci"]
+
+[ext_resource type="Script" uid="uid://dek8obixnot4y" path="res://scripts/Curio/DecoyTargetCurio.cs" id="1_4k0jf"]
+
+[resource]
+script = ExtResource("1_4k0jf")
+metadata/_custom_type_script = "uid://dek8obixnot4y"

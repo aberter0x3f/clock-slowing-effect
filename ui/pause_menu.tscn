@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://da40nomxihqtm"]
+[gd_scene load_steps=3 format=3 uid="uid://da40nomxihqtm"]
 
 [ext_resource type="Script" uid="uid://ce3p6krk58nbi" path="res://scripts/UI/PauseMenu.cs" id="1_hdmo1"]
+[ext_resource type="PackedScene" uid="uid://beuhcmhxmr3cu" path="res://ui/save_game_dialog.tscn" id="2_ejwgg"]
 
 [node name="PauseMenu" type="CanvasLayer"]
 script = ExtResource("1_hdmo1")
@@ -46,7 +47,14 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Restart"
 
+[node name="SaveGameButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Save game"
+
 [node name="ReturnToTitleButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Return to title"
+
+[node name="SaveGameDialog" parent="." instance=ExtResource("2_ejwgg")]

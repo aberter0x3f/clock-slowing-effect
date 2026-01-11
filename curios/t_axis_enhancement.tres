@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="TAxisEnhancementCurio" load_steps=2 format=3 uid="uid://dk3k7r6wd6mau"]
+
+[ext_resource type="Script" uid="uid://b1v03boys5l6n" path="res://scripts/Curio/TAxisEnhancementCurio.cs" id="1_wjisp"]
+
+[resource]
+script = ExtResource("1_wjisp")
+metadata/_custom_type_script = "uid://b1v03boys5l6n"

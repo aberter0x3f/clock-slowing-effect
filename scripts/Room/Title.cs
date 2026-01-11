@@ -1,3 +1,4 @@
+using System;
 using Curio;
 using Enemy.Boss;
 using Godot;
@@ -17,6 +18,7 @@ public partial class Title : Node {
   private WeaponSelectionMenu _weaponMenu;
   private DifficultySetting _selectedBossPracticeDifficulty;
   private bool _isStartingBossPractice = false;
+  private LoadGameDialog _loadGameDialog;
 
   [Export]
   public PackedScene DifficultyMenuScene { get; set; }
@@ -53,6 +55,12 @@ public partial class Title : Node {
     var startGameButton = GetNode<TitleMenuInteractable>("StartGame");
     startGameButton.StartGameRequested += OnStartGameRequested;
 
+    _loadGameDialog = GetNode<LoadGameDialog>("LoadGameDialog");
+    _loadGameDialog.Confirmed += OnLoadGameDialogClosed;
+    _loadGameDialog.Canceled += OnLoadGameDialogClosed;
+    var loadGameButton = GetNode<TitleMenuInteractable>("LoadGame");
+    loadGameButton.LoadGameRequested += OnLoadGameRequested;
+
     var bossPracticeButton = GetNode<TitleMenuInteractable>("BossPractice");
     bossPracticeButton.BossPracticeRequested += OnBossPracticeRequested;
 
@@ -68,6 +76,15 @@ public partial class Title : Node {
   private void OnStartGameRequested() {
     _isStartingBossPractice = false;
     _difficultyMenu?.ShowMenu();
+  }
+
+  private void OnLoadGameRequested() {
+    GetTree().Paused = true;
+    _loadGameDialog.PopupCentered();
+  }
+
+  private void OnLoadGameDialogClosed() {
+    GetTree().Paused = false;
   }
 
   private void OnBossPracticeRequested() {

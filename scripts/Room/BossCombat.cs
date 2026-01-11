@@ -62,8 +62,19 @@ public partial class BossCombat : Node {
 
     InitializeBoss();
 
-    if (GameManager.Instance.IsInBossPractice) {
-      _boss.StartSpecificPhase(GameManager.Instance.PracticePhaseIndex);
+    var gm = GameManager.Instance;
+    if (gm.IsLoadingFromSave) {
+      if (gm.PendingBossPhaseIndex >= 0) {
+        GD.Print($"Loading Boss Fight from Phase {gm.PendingBossPhaseIndex}");
+        gm.CurrentPlayerHealth = gm.PendingPhaseStartHealth;
+        gm.TimeBond = gm.PendingPhaseStartBond;
+        _player.ResetState();
+        _boss.StartAtPhaseWithState(gm.PendingBossPhaseIndex, gm.PendingPhaseStartHealth, gm.PendingPhaseStartBond);
+      }
+      gm.IsLoadingFromSave = false;
+      gm.PendingBossPhaseIndex = -1;
+    } else if (gm.IsInBossPractice) {
+      _boss.StartSpecificPhase(gm.PracticePhaseIndex);
     }
 
     SceneTransitionManager.Instance.PlayIntro(_player.GlobalPosition);

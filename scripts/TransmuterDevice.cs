@@ -20,6 +20,10 @@ public partial class TransmuterDevice : Area3D, IInteractable {
       return;
     }
 
+    if (_hasBeenUsed) {
+      return;
+    }
+
     if (!IsInstanceValid(_transmuterMenuInstance)) {
       _transmuterMenuInstance = TransmuterMenuScene.Instantiate<TransmuterMenu>();
       GetTree().Root.AddChild(_transmuterMenuInstance);

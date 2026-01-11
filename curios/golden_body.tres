@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="GoldenBodyCurio" load_steps=2 format=3 uid="uid://d3q86ey6liiuq"]
+
+[ext_resource type="Script" uid="uid://cwxhc0a1wg0fj" path="res://scripts/Curio/GoldenBodyCurio.cs" id="1_gaqp8"]
+
+[resource]
+script = ExtResource("1_gaqp8")
+metadata/_custom_type_script = "uid://cwxhc0a1wg0fj"

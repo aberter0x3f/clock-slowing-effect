@@ -199,10 +199,8 @@ public partial class TransmuterMenu : CanvasLayer {
     CloseMenu();
   }
 
-  public async void CloseMenu() {
+  public void CloseMenu() {
     Visible = false;
-    await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-    await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     GetTree().Paused = false;
   }
 }

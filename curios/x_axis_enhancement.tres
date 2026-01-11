@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="XAxisEnhancementCurio" load_steps=2 format=3 uid="uid://uya7py6nfrrg"]
+
+[ext_resource type="Script" uid="uid://sk5fmplop8pk" path="res://scripts/Curio/XAxisEnhancementCurio.cs" id="1_mnmgd"]
+
+[resource]
+script = ExtResource("1_mnmgd")
+metadata/_custom_type_script = "uid://sk5fmplop8pk"

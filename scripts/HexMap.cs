@@ -33,7 +33,7 @@ public class HexMap {
   public Dictionary<Vector2I, MapNode> Nodes { get; } = new();
   public Vector2I StartPosition { get; private set; }
   public Vector2I TargetPosition { get; private set; }
-  public int Plane { get; private set; } = 1;
+  public int Plane { get; set; } = 1;
 
   /*
    * 方向向量

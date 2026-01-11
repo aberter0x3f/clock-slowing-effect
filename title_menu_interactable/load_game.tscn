@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://bsexufng57p1o"]
+
+[ext_resource type="Script" uid="uid://djctb5wya2kvg" path="res://scripts/TitleMenuInteractable.cs" id="1_54v1o"]
+[ext_resource type="Texture2D" uid="uid://doggk6m7epmqo" path="res://images/Icons_Essential/FloppyDisk.png" id="2_54v1o"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_nolr0"]
+
+[node name="LoadGame" type="Area3D"]
+script = ExtResource("1_54v1o")
+Action = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CylinderShape3D_nolr0")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0.2, 0)
+alpha_cut = 1
+texture_filter = 0
+texture = ExtResource("2_54v1o")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+text = "Load Game"

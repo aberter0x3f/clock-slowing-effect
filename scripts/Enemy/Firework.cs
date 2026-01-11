@@ -8,7 +8,7 @@ public partial class Firework : SimpleEnemy {
   [Export] public PackedScene BulletScene { get; set; }
   [Export] public float ShootInterval { get; set; } = 5.0f;
   [Export] public int ExplosionBulletCount { get; set; } = 40;
-  [Export] public float ExplosionHeight { get; set; } = 3.0f;
+  [Export] public float ExplosionHeight { get; set; } = 2.0f;
 
   private readonly RandomNumberGenerator _rnd = new();
 

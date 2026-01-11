@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3 uid="uid://c21fqxgwnxn5u"]
+
+[ext_resource type="Script" uid="uid://bmcpxki0yshem" path="res://scripts/UI/LoadGameDialog.cs" id="1_aefix"]
+
+[node name="LoadGameDialog" type="FileDialog"]
+process_mode = 3
+title = "Open a File"
+file_mode = 0
+display_mode = 1
+access = 2
+filters = PackedStringArray("*.json ; Save Files")
+use_native_dialog = true
+script = ExtResource("1_aefix")
+
+[connection signal="file_selected" from="." to="." method="OnSelected"]
