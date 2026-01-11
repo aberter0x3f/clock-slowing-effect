@@ -1,21 +1,17 @@
 using Godot;
 
-/// <summary>
-/// 一个可交互的菜单选项，用于主菜单场景．
-/// </summary>
 [GlobalClass]
 public partial class TitleMenuInteractable : Area3D, IInteractable {
   public enum ActionType {
     StartGame,
     BossPractice,
-    Settings,
+    SelectWeapon,
     ExitGame
   }
 
-  [Signal]
-  public delegate void StartGameRequestedEventHandler();
-  [Signal]
-  public delegate void BossPracticeRequestedEventHandler();
+  [Signal] public delegate void StartGameRequestedEventHandler();
+  [Signal] public delegate void BossPracticeRequestedEventHandler();
+  [Signal] public delegate void WeaponSelectionRequestedEventHandler();
 
   [Export]
   public ActionType Action { get; set; } = ActionType.StartGame;
@@ -28,11 +24,10 @@ public partial class TitleMenuInteractable : Area3D, IInteractable {
 
   public void SetHighlight(bool highlighted) {
     if (_label == null) return;
-
     if (highlighted) {
-      _label.Modulate = new Color(1.0f, 1.0f, 0.5f); // 高亮时变为黄色
+      _label.Modulate = new Color(1.0f, 1.0f, 0.5f);
     } else {
-      _label.Modulate = new Color(1.0f, 1.0f, 1.0f); // 恢复白色
+      _label.Modulate = new Color(1.0f, 1.0f, 1.0f);
     }
   }
 
@@ -41,15 +36,12 @@ public partial class TitleMenuInteractable : Area3D, IInteractable {
       case ActionType.StartGame:
         EmitSignal(SignalName.StartGameRequested);
         break;
-
       case ActionType.BossPractice:
         EmitSignal(SignalName.BossPracticeRequested);
         break;
-
-      case ActionType.Settings:
-        GD.Print("Action: Settings (Not Implemented)");
+      case ActionType.SelectWeapon:
+        EmitSignal(SignalName.WeaponSelectionRequested);
         break;
-
       case ActionType.ExitGame:
         GetTree().Quit();
         break;

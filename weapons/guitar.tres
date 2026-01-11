@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponDefinition" load_steps=3 format=3 uid="uid://bao7580lnxuqu"]
+
+[ext_resource type="PackedScene" uid="uid://cd28317cqk7ow" path="res://weapons/guitar.tscn" id="1_sm5d1"]
+[ext_resource type="Script" uid="uid://pdog85j4sd5g" path="res://scripts/Weapon/WeaponDefinition.cs" id="2_8yh7c"]
+
+[resource]
+script = ExtResource("2_8yh7c")
+Name = "Guitar"
+Description = "A heavy axe for those who want to make some noise. Fires high-impact rounds dealing [color=orange]3.0[/color] damage per shot.
+
+Max Ammo: [color=orange]5[/color]
+Reload Time: [color=orange]3.0s[/color]
+
+Special: Hold [color=orange]Time Slow[/color] to immobilize yourself and channel a power chord. This narrows your spread over time. Release the fire button to unload [b]ALL[/b] remaining ammo in a devastating burst."
+WeaponScene = ExtResource("1_sm5d1")
+metadata/_custom_type_script = "uid://pdog85j4sd5g"

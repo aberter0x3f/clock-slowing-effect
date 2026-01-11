@@ -13,10 +13,9 @@ public partial class PauseMenu : CanvasLayer {
   private Button _continueButton;
   private Button _restartFromPhaseButton;
   private Button _restartButton;
-  private Button _settingsButton;
   private Button _returnToTitleButton;
 
-  private readonly List<Button> _activeButtons = new();
+  private readonly List<Button> _buttons = new();
   private int _selectedIndex = 0;
 
   private float _continueCooldownTimer;
@@ -38,13 +37,11 @@ public partial class PauseMenu : CanvasLayer {
     _continueButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/ContinueButton");
     _restartFromPhaseButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/RestartFromPhaseButton");
     _restartButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/RestartButton");
-    _settingsButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/SettingsButton");
     _returnToTitleButton = GetNode<Button>("Panel/CenterContainer/VBoxContainer/ReturnToTitleButton");
 
     _continueButton.Pressed += OnContinuePressed;
     _restartFromPhaseButton.Pressed += OnRestartFromPhasePressed;
     _restartButton.Pressed += OnRestartPressed;
-    // 「Settings」按钮是禁用的，所以不需要连接信号．
     _returnToTitleButton.Pressed += OnReturnToTitlePressed;
 
     Visible = false; // 初始时隐藏
@@ -64,7 +61,7 @@ public partial class PauseMenu : CanvasLayer {
       _continueButton.Disabled = false;
       _continueButton.Text = "Continue";
       // 冷却结束后，如果玩家的焦点还在这个按钮上，则重新聚焦以确保视觉效果正确
-      if (_selectedIndex == _activeButtons.IndexOf(_continueButton)) {
+      if (_selectedIndex == _buttons.IndexOf(_continueButton)) {
         _continueButton.GrabFocus();
       }
     }
@@ -80,13 +77,13 @@ public partial class PauseMenu : CanvasLayer {
     GetViewport().SetInputAsHandled();
 
     if (@event.IsActionPressed("ui_down")) {
-      _selectedIndex = (_selectedIndex + 1) % _activeButtons.Count;
+      _selectedIndex = (_selectedIndex + 1) % _buttons.Count;
       UpdateSelection();
     } else if (@event.IsActionPressed("ui_up")) {
-      _selectedIndex = (_selectedIndex - 1 + _activeButtons.Count) % _activeButtons.Count;
+      _selectedIndex = (_selectedIndex - 1 + _buttons.Count) % _buttons.Count;
       UpdateSelection();
     } else if (@event.IsActionPressed("ui_accept")) {
-      _activeButtons[_selectedIndex].EmitSignal(Button.SignalName.Pressed);
+      _buttons[_selectedIndex].EmitSignal(Button.SignalName.Pressed);
     } else if (@event.IsActionPressed("ui_cancel")) {
       // 只有在「继续」按钮可见且不在冷却中时，才允许通过快捷键关闭菜单
       if (_continueButton.Visible) {
@@ -109,7 +106,7 @@ public partial class PauseMenu : CanvasLayer {
     Visible = true;
     GetTree().Paused = true;
 
-    _activeButtons.Clear();
+    _buttons.Clear();
     _restartFromPhaseButton.Visible = EnablePhaseRestart;
 
     if (isDeathMenu) {
@@ -120,7 +117,7 @@ public partial class PauseMenu : CanvasLayer {
     } else {
       _titleLabel.Text = "PAUSED";
       _continueButton.Visible = true;
-      _activeButtons.Add(_continueButton);
+      _buttons.Add(_continueButton);
       _selectedIndex = 0; // 默认选择「继续」
 
       // 启动继续按钮的冷却
@@ -130,11 +127,10 @@ public partial class PauseMenu : CanvasLayer {
     }
 
     if (EnablePhaseRestart) {
-      _activeButtons.Add(_restartFromPhaseButton);
+      _buttons.Add(_restartFromPhaseButton);
     }
-    _activeButtons.Add(_restartButton);
-    _activeButtons.Add(_settingsButton);
-    _activeButtons.Add(_returnToTitleButton);
+    _buttons.Add(_restartButton);
+    _buttons.Add(_returnToTitleButton);
 
     UpdateSelection();
   }
@@ -145,9 +141,10 @@ public partial class PauseMenu : CanvasLayer {
   }
 
   private void UpdateSelection() {
-    if (_selectedIndex >= 0 && _selectedIndex < _activeButtons.Count) {
-      _activeButtons[_selectedIndex].GrabFocus();
-    }
+    if (_buttons.Count == 0) return;
+    if (_selectedIndex < 0) _selectedIndex = 0;
+    if (_selectedIndex >= _buttons.Count) _selectedIndex = _buttons.Count - 1;
+    _buttons[_selectedIndex].GrabFocus();
   }
 
   private void OnContinuePressed() {

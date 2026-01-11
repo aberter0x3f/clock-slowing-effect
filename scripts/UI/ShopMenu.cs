@@ -167,8 +167,10 @@ public partial class ShopMenu : CanvasLayer {
     CloseMenu();
   }
 
-  public void CloseMenu() {
+  public async void CloseMenu() {
     Visible = false;
+    await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+    await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     GetTree().Paused = false;
   }
 }

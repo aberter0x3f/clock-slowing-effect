@@ -189,7 +189,7 @@ theme_override_font_sizes/font_size = 8
 text = "s"
 vertical_alignment = 2
 
-[node name="TextureRect" type="TextureRect" parent="TopRightContainer/AmmoContainer"]
+[node name="WeaponIcon" type="TextureRect" parent="TopRightContainer/AmmoContainer"]
 custom_minimum_size = Vector2(35, 33)
 layout_mode = 2
 size_flags_horizontal = 0

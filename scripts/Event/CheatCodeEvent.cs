@@ -108,7 +108,6 @@ public partial class CheatCodeEvent : GameEvent {
       return new FinishEvent();
     }
 
-
     GD.PrintErr("Unexpected state reached in CheatCodeEvent");
     return new FinishEvent();
   }

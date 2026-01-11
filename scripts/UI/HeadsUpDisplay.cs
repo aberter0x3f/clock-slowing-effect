@@ -5,12 +5,9 @@ using Rewind;
 namespace UI;
 
 public partial class HeadsUpDisplay : CanvasLayer {
-  [Export]
-  public CompressedTexture2D RecordIcon { get; set; }
-  [Export]
-  public CompressedTexture2D RewindIcon { get; set; }
+  [Export] public CompressedTexture2D RecordIcon { get; set; }
+  [Export] public CompressedTexture2D RewindIcon { get; set; }
 
-  // 左上角
   private TextureRect _statusIcon;
   private Label _rewindTimeLabel;
   private Label _maxRewindTimeLabel;
@@ -20,7 +17,7 @@ public partial class HeadsUpDisplay : CanvasLayer {
   private Label _timeBondLabel;
   private ProgressBar _hyperBar;
 
-  // 右上角
+  private TextureRect _weaponIcon;
   private Label _ammoLabel;
   private Label _maxAmmoLabel;
   private Label _ammoLabelS;
@@ -29,13 +26,11 @@ public partial class HeadsUpDisplay : CanvasLayer {
   private Label _skillLabels;
   private Label _curioNameLabel;
 
-  // 游戏对象引用
   private Player _player;
   private GameManager _gameManager;
   private RewindManager _rewindManager;
 
   public override void _Ready() {
-    // 取节点引用
     _statusIcon = GetNode<TextureRect>("TopLeftContainer/RewindTimeContainer/StatusIcon");
     _rewindTimeLabel = GetNode<Label>("TopLeftContainer/RewindTimeContainer/RewindTimeLabel");
     _maxRewindTimeLabel = GetNode<Label>("TopLeftContainer/RewindTimeContainer/MaxRewindTimeLabel");
@@ -44,6 +39,7 @@ public partial class HeadsUpDisplay : CanvasLayer {
     _timeBondContainer = GetNode<Control>("TopLeftContainer/HealthContainer/TimeBondContainer");
     _timeBondLabel = _timeBondContainer.GetNode<Label>("TimeBondLabel");
     _hyperBar = GetNode<ProgressBar>("TopLeftContainer/HyperContainer/HyperBar");
+    _weaponIcon = GetNode<TextureRect>("TopRightContainer/AmmoContainer/WeaponIcon");
     _ammoLabel = GetNode<Label>("TopRightContainer/AmmoContainer/AmmoLabel");
     _maxAmmoLabel = GetNode<Label>("TopRightContainer/AmmoContainer/MaxAmmoLabel");
     _ammoLabelS = GetNode<Label>("TopRightContainer/AmmoContainer/LabelS");
@@ -55,9 +51,6 @@ public partial class HeadsUpDisplay : CanvasLayer {
     CallDeferred(nameof(FetchGameReferences));
   }
 
-  /// <summary>
-  /// 延迟获取游戏核心对象的引用，以避免 _Ready 中的时序问题．
-  /// </summary>
   private void FetchGameReferences() {
     _gameManager = GameManager.Instance;
     _rewindManager = RewindManager.Instance;
@@ -65,6 +58,7 @@ public partial class HeadsUpDisplay : CanvasLayer {
   }
 
   public override void _Process(double delta) {
+    if (_player == null) return;
     UpdateRewindTime();
     UpdateHealth();
     UpdateHyper();
@@ -72,9 +66,6 @@ public partial class HeadsUpDisplay : CanvasLayer {
     UpdateCurio();
   }
 
-  /// <summary>
-  /// 更新生命值显示．
-  /// </summary>
   private void UpdateHealth() {
     _healthLabel.Text = _player.Health.ToString("F1");
     _maxHealthLabel.Text = "/" + _gameManager.PlayerStats.MaxHealth.ToString("F1");
@@ -86,46 +77,39 @@ public partial class HeadsUpDisplay : CanvasLayer {
     }
   }
 
-  /// <summary>
-  /// 更新 Hyper 条显示．
-  /// </summary>
   private void UpdateHyper() {
     _hyperBar.Value = _gameManager.HyperGauge * _hyperBar.MaxValue;
   }
 
-  /// <summary>
-  /// 更新回溯时间显示．
-  /// </summary>
   private void UpdateRewindTime() {
     _statusIcon.Texture = (_rewindManager.IsPreviewing || _rewindManager.IsRewinding) ? RewindIcon : RecordIcon;
     _rewindTimeLabel.Text = _rewindManager.AvailableRewindTime.ToString("F1");
     _maxRewindTimeLabel.Text = "/" + _rewindManager.MaxRecordTime.ToString("F1");
   }
 
-  /// <summary>
-  /// 更新弹药或换弹状态显示．
-  /// </summary>
   private void UpdateAmmo() {
-    if (_player.IsReloading) {
+    // 从 Player 的 CurrentWeapon 获取弹药信息
+    var weapon = _player.CurrentWeapon;
+    if (weapon == null) return;
+
+    _weaponIcon.Texture = weapon.Texture;
+
+    if (weapon.IsReloading) {
       _ammoLabel.Text = "RLD";
-      _maxAmmoLabel.Text = _player.TimeToReloaded.ToString("F1");
+      _maxAmmoLabel.Text = weapon.TimeToReloaded.ToString("F1");
       _ammoLabelS.Visible = true;
     } else {
-      _ammoLabel.Text = _player.CurrentAmmo.ToString();
-      _maxAmmoLabel.Text = "/" + _gameManager.PlayerStats.MaxAmmoInt.ToString();
+      _ammoLabel.Text = weapon.CurrentAmmo.ToString();
+      _maxAmmoLabel.Text = "/" + weapon.MaxAmmoCalculated.ToString();
       _ammoLabelS.Visible = false;
     }
   }
 
-  /// <summary>
-  /// 更新当前奇物（技能）的状态显示．
-  /// </summary>
   private void UpdateCurio() {
     BaseCurio activeCurio = _gameManager.GetCurrentActiveCurio();
 
     if (activeCurio != null) {
       _skillContainer.Visible = true;
-      // 截取名字的首字母作为图标文字
       _curioNameLabel.Text = activeCurio.Name.Length > 0 ? activeCurio.Name.Substring(0, 1) : "?";
 
       if (activeCurio.CurrentCooldown > 0) {

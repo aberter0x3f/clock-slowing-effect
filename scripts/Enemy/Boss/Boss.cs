@@ -47,6 +47,7 @@ public partial class Boss : BaseEnemy {
   private BasePhase _activePhaseInstance;
   private float _restTimerLeft;
   private PlayerState _playerPhaseStartState;
+  private RewindState _weaponPhaseStartState;
   private CollisionShape3D _collisionShape;
   private Vector3 _startPosition;
   private Godot.Collections.Array<PackedScene> _activePhaseSet;
@@ -136,6 +137,11 @@ public partial class Boss : BaseEnemy {
     GameManager.Instance.TimeBond = _playerPhaseStartState.TimeBond;
     _player.IsPermanentlyDead = false;
 
+    // 恢复武器状态
+    if (_player.CurrentWeapon != null && _weaponPhaseStartState != null) {
+      _player.CurrentWeapon.RestoreState(_weaponPhaseStartState);
+    }
+
     // 重新开始当前阶段的准备流程
     OnPhaseStarted();
   }
@@ -167,8 +173,13 @@ public partial class Boss : BaseEnemy {
 
     InternalState = BossInternalState.Fighting;
 
-    // 保存玩家状态，用于「从当前阶段重来」
+    // 保存玩家状态
     _playerPhaseStartState = (PlayerState) _player.CaptureState();
+
+    // 保存武器状态
+    if (_player.CurrentWeapon != null) {
+      _weaponPhaseStartState = _player.CurrentWeapon.CaptureState();
+    }
 
     EmitSignal(SignalName.FightingPhaseStarted);
   }

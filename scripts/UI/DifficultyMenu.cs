@@ -85,11 +85,9 @@ public partial class DifficultyMenu : CanvasLayer { // 继承 CanvasLayer
 
   private void UpdateSelection() {
     if (_buttons.Count == 0) return;
-    for (int i = 0; i < _buttons.Count; ++i) {
-      if (i == _selectedIndex) {
-        _buttons[i].GrabFocus();
-      }
-    }
+    if (_selectedIndex < 0) _selectedIndex = 0;
+    if (_selectedIndex >= _buttons.Count) _selectedIndex = _buttons.Count - 1;
+    _buttons[_selectedIndex].GrabFocus();
     UpdateDescription();
   }
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3 uid="uid://b2ducq4wcnpjh"]
+[gd_scene load_steps=40 format=3 uid="uid://b2ducq4wcnpjh"]
 
 [ext_resource type="Script" uid="uid://d3blju4s11jnk" path="res://scripts/GameManager.cs" id="1_smx3j"]
 [ext_resource type="Resource" uid="uid://c3l74pxsuanrb" path="res://events/aha_stuffed_toy.tres" id="2_d246e"]
@@ -25,7 +25,10 @@
 [ext_resource type="Script" uid="uid://bjpnsi7dtunwy" path="res://scripts/Curio/ItemCollectorCurio.cs" id="24_3uuvb"]
 [ext_resource type="Script" uid="uid://cwxhc0a1wg0fj" path="res://scripts/Curio/GoldenBodyCurio.cs" id="25_brv2v"]
 [ext_resource type="Script" uid="uid://ds27iebpfy0pb" path="res://scripts/Curio/TotemOfUndyingCurio.cs" id="26_0viau"]
+[ext_resource type="Resource" uid="uid://bao7580lnxuqu" path="res://weapons/guitar.tres" id="26_jy3no"]
 [ext_resource type="Script" uid="uid://cde1oxnxiq4pd" path="res://scripts/Curio/CurioDatabase.cs" id="27_fv0ai"]
+[ext_resource type="Resource" uid="uid://dcihb2s8uhdjb" path="res://weapons/violin.tres" id="27_v8q4t"]
+[ext_resource type="Script" uid="uid://ieexwsougw3r" path="res://scripts/Weapon/WeaponDatabase.cs" id="28_otlv6"]
 
 [sub_resource type="Resource" id="Resource_2nf76"]
 script = ExtResource("20_2x3uj")
@@ -60,6 +63,11 @@ script = ExtResource("27_fv0ai")
 AllCurios = Array[Resource]([SubResource("Resource_2nf76"), SubResource("Resource_r0uba"), SubResource("Resource_gw0af"), SubResource("Resource_lsbd3"), SubResource("Resource_3dbmy"), SubResource("Resource_mk1fk"), SubResource("Resource_7l0rn")])
 metadata/_custom_type_script = "uid://cde1oxnxiq4pd"
 
+[sub_resource type="Resource" id="Resource_3uuvb"]
+script = ExtResource("28_otlv6")
+AllWeapons = Array[Object]([ExtResource("27_v8q4t"), ExtResource("26_jy3no")])
+metadata/_custom_type_script = "uid://ieexwsougw3r"
+
 [sub_resource type="Resource" id="Resource_d246e"]
 script = ExtResource("3_o2178")
 metadata/_custom_type_script = "uid://btsh8o314e538"
@@ -69,4 +77,5 @@ script = ExtResource("1_smx3j")
 AllEvents = Array[Object]([ExtResource("2_d246e"), ExtResource("3_nvy02"), ExtResource("4_7bexq"), ExtResource("5_424ju"), ExtResource("6_agblk"), ExtResource("7_3alj7"), ExtResource("8_qmmi4"), ExtResource("9_oslct"), ExtResource("10_2x3uj"), ExtResource("11_jy3no"), ExtResource("12_v8q4t"), ExtResource("13_otlv6"), ExtResource("14_3uuvb"), ExtResource("15_brv2v"), ExtResource("16_0viau")])
 UpgradeDb = ExtResource("2_o2178")
 CurioDb = SubResource("Resource_s6qd3")
+WeaponDb = SubResource("Resource_3uuvb")
 PlayerBaseStats = SubResource("Resource_d246e")

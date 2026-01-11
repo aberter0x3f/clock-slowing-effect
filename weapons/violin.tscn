@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://cn1jqciwemajr"]
+
+[ext_resource type="Script" uid="uid://bk21y8hi2smbm" path="res://scripts/Weapon/Violin.cs" id="1_wygu8"]
+[ext_resource type="PackedScene" uid="uid://clk8144n4xb8u" path="res://player_bullet.tscn" id="2_tfmrf"]
+[ext_resource type="Texture2D" uid="uid://14b4y8nh1vpb" path="res://images/violin.png" id="3_fxmp4"]
+
+[node name="Violin" type="Node3D"]
+script = ExtResource("1_wygu8")
+BulletScene = ExtResource("2_tfmrf")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+sorting_offset = 61.0
+billboard = 1
+texture_filter = 0
+texture = ExtResource("3_fxmp4")

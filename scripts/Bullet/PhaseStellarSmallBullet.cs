@@ -118,7 +118,6 @@ public partial class PhaseStellarSmallBullet : BaseBullet {
     }
   }
 
-
   public void StartRotation() {
     if (CurrentState == State.WaitingForRingCompletion) {
       CurrentState = State.Rotating;

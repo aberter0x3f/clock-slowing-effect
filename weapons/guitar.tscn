@@ -1,0 +1,37 @@
+[gd_scene load_steps=7 format=4 uid="uid://cd28317cqk7ow"]
+
+[ext_resource type="Script" uid="uid://vrd3oblwlijh" path="res://scripts/Weapon/Guitar.cs" id="1_rrru1"]
+[ext_resource type="PackedScene" uid="uid://clk8144n4xb8u" path="res://player_bullet.tscn" id="2_d8ynw"]
+[ext_resource type="Texture2D" uid="uid://cqvbjyc2km26j" path="res://images/guitar.png" id="3_d8ynw"]
+[ext_resource type="Script" uid="uid://d2n2lcv6tgxq3" path="res://scripts/Weapon/AimingCone.cs" id="4_d8ynw"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fjb8e"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 0)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_81rbu"]
+_surfaces = [{
+"aabb": AABB(-1.2940953, 0, -5, 2.5881906, 1e-05, 5),
+"format": 34359738375,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 18,
+"vertex_data": PackedByteArray("AAAAAAAAAAAAAAAA6qSlvwAAAABSjJrACUVevwAAAAC6kZ3AAAAAAAAAAAAAAAAACUVevwAAAAC6kZ3AYh7fvgAAAAAjZJ/AAAAAAAAAAAAAAAAAYh7fvgAAAAAjZJ/AAAAAgAAAAAAAAKDAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAKDAZR7fPgAAAAAjZJ/AAAAAAAAAAAAAAAAAZR7fPgAAAAAjZJ/ACUVePwAAAAC6kZ3AAAAAAAAAAAAAAAAACUVePwAAAAC6kZ3A6qSlPwAAAABSjJrA/3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+/")
+}]
+
+[node name="Guitar" type="Node3D"]
+script = ExtResource("1_rrru1")
+BulletScene = ExtResource("2_d8ynw")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+sorting_offset = 61.0
+billboard = 1
+texture_filter = 0
+texture = ExtResource("3_d8ynw")
+
+[node name="AimingCone" type="MeshInstance3D" parent="."]
+material_override = SubResource("StandardMaterial3D_fjb8e")
+mesh = SubResource("ArrayMesh_81rbu")
+script = ExtResource("4_d8ynw")

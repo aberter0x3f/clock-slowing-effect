@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Curio;
 using Godot;
+using Weapon;
 
 public partial class GameManager : Node {
   public static GameManager Instance { get; private set; }
@@ -12,6 +13,11 @@ public partial class GameManager : Node {
   public UpgradeDatabase UpgradeDb { get; set; }
   [Export]
   public CurioDatabase CurioDb { get; set; }
+  [Export]
+  public WeaponDatabase WeaponDb { get; set; }
+
+  // 仅存储定义，实际的 Weapon 实例由 Player 创建
+  public WeaponDefinition SelectedWeaponDefinition { get; set; }
 
   public DifficultySetting CurrentDifficulty { get; private set; }
   public HexMap GameMap { get; private set; }
@@ -66,6 +72,9 @@ public partial class GameManager : Node {
 
   public override void _Ready() {
     Instance = this;
+    if (SelectedWeaponDefinition == null && WeaponDb != null && WeaponDb.AllWeapons.Count > 0) {
+      SelectedWeaponDefinition = WeaponDb.AllWeapons[0];
+    }
     ResetPlayerStats();
   }
 

@@ -46,12 +46,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Restart"
 
-[node name="SettingsButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-disabled = true
-text = "Settings"
-
 [node name="ReturnToTitleButton" type="Button" parent="Panel/CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Godot;
 
-
 public enum SoundEffect {
   EnemyDeath,
   BossDeath,

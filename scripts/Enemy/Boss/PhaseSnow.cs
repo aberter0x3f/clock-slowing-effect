@@ -67,7 +67,6 @@ public partial class PhaseSnow : BasePhase {
   [Export] public float JumperSnowflakeFormationRotationSpeed { get; set; } = 0.3f; // rad/s
   [Export] public float JumperWaitTime { get; set; } = 3.0f;
 
-
   public override void PhaseStart(Boss parent) {
     base.PhaseStart(parent);
 

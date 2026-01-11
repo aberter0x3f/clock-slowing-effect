@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3 uid="uid://biiob6hj5cg5e"]
+
+[ext_resource type="Script" uid="uid://b1q2fdoajxip5" path="res://scripts/UI/WeaponSelectionMenu.cs" id="1_imvvm"]
+[ext_resource type="PackedScene" uid="uid://dcdsxdo5eej1y" path="res://ui/weapon_selection_menu_button.tscn" id="2_re0wl"]
+
+[node name="WeaponSelectionMenu" type="CanvasLayer"]
+script = ExtResource("1_imvvm")
+WeaponButtonScene = ExtResource("2_re0wl")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ListContainer" type="VBoxContainer" parent="Panel/CenterContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="DetailsContainer" type="VBoxContainer" parent="Panel/CenterContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Panel/CenterContainer/HBoxContainer/DetailsContainer"]
+layout_mode = 2
+text = "Weapon Name"
+
+[node name="DescLabel" type="RichTextLabel" parent="Panel/CenterContainer/HBoxContainer/DetailsContainer"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+bbcode_enabled = true
+text = "Weapon Description"
+fit_content = true
+tab_size = 2

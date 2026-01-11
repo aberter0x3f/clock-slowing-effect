@@ -5,7 +5,7 @@
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_s10m8"]
 
-[node name="Settings" type="Area3D"]
+[node name="SelectWeapon" type="Area3D"]
 script = ExtResource("1_4ajto")
 Action = 2
 
@@ -20,4 +20,4 @@ texture = ExtResource("2_4ajto")
 
 [node name="Label3D" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
-text = "Settings"
+text = "Select Weapon"

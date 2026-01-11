@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Bullet;
 using Curio;
-using Enemy;
 using Godot;
 using Rewind;
 
@@ -9,10 +8,6 @@ public class PlayerState : RewindState {
   public Vector3 GlobalPosition;
   public Vector3 Velocity;
   public bool FlipSprite;
-  public int CurrentAmmo;
-  public bool IsReloading;
-  public float TimeToReloaded;
-  public float ShootTimer;
   public bool IsInvincible;
   public Dictionary<CurioType, float> CurioCooldowns = new();
   public bool DecoyActive;
@@ -34,14 +29,11 @@ public partial class Player : CharacterBody3D, IRewindable {
 
   private AnimatedSprite3D _sprite;
   private bool _flipSprite = false;
-  private Node3D _currentTarget = null;
-  private Area3D _grazeArea; // 擦弹区域的引用
+  private Area3D _grazeArea;
   private CollisionShape3D _grazeAreaShape;
   private AnimatedSprite3D _hitPointSprite;
   private CollisionShape3D _hitPointShape;
   private Node3D _landingIndicator;
-  private bool _timeSlowPressed = false;
-  private RandomNumberGenerator _rnd = new RandomNumberGenerator();
   private MapGenerator _mapGenerator;
   private Area3D _interactionArea;
   private readonly List<IInteractable> _nearbyInteractables = new();
@@ -51,7 +43,7 @@ public partial class Player : CharacterBody3D, IRewindable {
   private float _beginningHyperGauge;
   private Camera3D _camera;
 
-  // 奇物系统状态
+  private bool _timeSlowPressed = false;
   private bool _curioUsePressed = false;
   public bool IsGoldenBody { get; set; } = false;
   public Node3D DecoyTarget { get; private set; }
@@ -62,13 +54,15 @@ public partial class Player : CharacterBody3D, IRewindable {
   private float _hyperTimer = 0f;
   private float _hyperInvincibilityTimer = 0f;
 
+  public Weapon.Weapon CurrentWeapon { get; private set; }
+
   public PlayerStats Stats => GameManager.Instance.PlayerStats;
 
   public float Health {
     get => GameManager.Instance.CurrentPlayerHealth;
     set {
       if (value <= 0) {
-        GameManager.Instance.CurrentPlayerHealth = 0; // 确保不会变成负数
+        GameManager.Instance.CurrentPlayerHealth = 0;
         IsPermanentlyDead = true;
         EmitSignal(SignalName.DiedPermanently);
       } else {
@@ -77,39 +71,22 @@ public partial class Player : CharacterBody3D, IRewindable {
     }
   }
 
-  [Export]
-  public float SpriteBasePositionX { get; set; }
-
-  [Export]
-  public PackedScene BulletScene { get; set; }
-  [Export]
-  public PackedScene DecoyTargetScene { get; set; }
-  [Export]
-  public PackedScene GrazeTimeShard { get; set; }
-  [Export]
-  public float AutoRewindOnHitDuration { get; set; } = 3.0f;  // 被击中时自动回溯的时长
-
-  [Export]
-  public float Gravity { get; set; } = 12.8f;
+  [Export] public float SpriteBasePositionX { get; set; }
+  [Export] public PackedScene DecoyTargetScene { get; set; }
+  [Export] public PackedScene GrazeTimeShard { get; set; }
+  [Export] public float AutoRewindOnHitDuration { get; set; } = 3.0f;
+  [Export] public float Gravity { get; set; } = 12.8f;
 
   [ExportGroup("Camera")]
-  [Export]
-  private Vector3 _normalCameraPosition = new Vector3(0, 2.5f, 3.0f);
+  [Export] private Vector3 _normalCameraPosition = new Vector3(0, 2.5f, 3.0f);
   private Vector3 _normalCameraRotationDegrees = new Vector3(-45f, 0, 0);
-  [Export]
-  private Vector3 _slowCameraPosition = new Vector3(0, 2f, 1.5f);
+  [Export] private Vector3 _slowCameraPosition = new Vector3(0, 2f, 1.5f);
   private Vector3 _slowCameraRotationDegrees = new Vector3(-60f, 0, 0);
-  [Export(PropertyHint.Range, "0.1, 20.0, 0.1")]
-  private float _cameraSmoothingSpeed = 10.0f;
+  [Export(PropertyHint.Range, "0.1, 20.0, 0.1")] private float _cameraSmoothingSpeed = 10.0f;
 
   [ExportGroup("Death Effects")]
-  [Export]
-  public PackedScene DeathRingEffectScene { get; set; }
+  [Export] public PackedScene DeathRingEffectScene { get; set; }
 
-  public float ShootTimer { get; set; } = 0.0f;
-  public int CurrentAmmo { get; private set; }
-  public bool IsReloading { get; private set; } = false;
-  public float TimeToReloaded { get; private set; } // 当前还有多长时间换完子弹
   public Vector3 SpawnPosition { get; set; }
   public bool IsPermanentlyDead = false;
 
@@ -133,7 +110,6 @@ public partial class Player : CharacterBody3D, IRewindable {
     }
 
     var gm = GameManager.Instance;
-
     _beginningHealth = Health;
     _beginningTimeBond = gm.TimeBond;
     _beginningHyperGauge = gm.HyperGauge;
@@ -141,11 +117,35 @@ public partial class Player : CharacterBody3D, IRewindable {
     _sprite.Play();
     _hitPointSprite.Play();
 
+    InitializeWeapon();
     UpdateVisualizer();
-
     ResetState();
 
     RewindManager.Instance.Register(this);
+  }
+
+  private void InitializeWeapon() {
+    var gm = GameManager.Instance;
+    if (gm.SelectedWeaponDefinition == null) {
+      GD.PrintErr("Player: No weapon definition selected.");
+      return;
+    }
+
+    if (gm.SelectedWeaponDefinition.WeaponScene != null) {
+      var weaponInstance = gm.SelectedWeaponDefinition.WeaponScene.Instantiate<Weapon.Weapon>();
+      CurrentWeapon = weaponInstance;
+      AddChild(CurrentWeapon);
+      CurrentWeapon.Initialize(this);
+    } else {
+      GD.PrintErr($"Weapon definition '{gm.SelectedWeaponDefinition.Name}' has no scene assigned.");
+    }
+  }
+
+  public void RefreshWeapon() {
+    if (IsInstanceValid(CurrentWeapon)) {
+      CurrentWeapon.QueueFree();
+    }
+    InitializeWeapon();
   }
 
   public override void _Process(double delta) {
@@ -175,33 +175,7 @@ public partial class Player : CharacterBody3D, IRewindable {
     UpdateCurios(scaledDelta);
     UpdateHyperState(scaledDelta);
 
-
-    if (IsReloading) {
-      TimeToReloaded -= (float) delta * TimeManager.Instance.TimeScale; // 换弹时间不受时间缩放影响
-      if (TimeToReloaded <= 0.0f) {
-        FinishReload();
-      }
-    }
-
-    if (Input.IsActionJustPressed("weapon_reload")) {
-      if (CurrentAmmo < Stats.MaxAmmo && !IsReloading) {
-        StartReload();
-      }
-    }
-
-    FindAndAimTarget();
     HandleMovement(scaledDelta);
-
-    if (Input.IsActionPressed("shoot")) {
-      if (!IsReloading && CurrentAmmo <= 0) {
-        StartReload(); // 没子弹时自动换弹
-      }
-      if (!IsReloading && ShootTimer <= 0.0f) {
-        Shoot();
-      }
-    }
-
-    ShootTimer -= (float) delta;
 
     if (IsInstanceValid(DecoyTarget)) {
       _decoyRemoveTimer -= scaledDelta;
@@ -337,19 +311,6 @@ public partial class Player : CharacterBody3D, IRewindable {
       _sprite.Modulate = Colors.White;
   }
 
-  private void StartReload() {
-    if (IsReloading) return;
-    IsReloading = true;
-    TimeToReloaded = Stats.ReloadTime;
-  }
-
-  private void FinishReload() {
-    SoundManager.Instance.Play(SoundEffect.PlayerReloadComplete);
-    IsReloading = false;
-    CurrentAmmo = Stats.MaxAmmoInt;
-    TimeToReloaded = 0.0f;
-  }
-
   private void OnGrazeAreaBodyEntered(Node3D body) {
     if (body is BaseBullet bullet) {
       if (bullet.IsPlayerBullet) return;
@@ -367,7 +328,6 @@ public partial class Player : CharacterBody3D, IRewindable {
         // 非 Hyper 期间：填充 Hyper 条
         gm.HyperGauge = Mathf.Min(1.0f, gm.HyperGauge + Stats.HyperGrazeFillAmount);
       }
-
 
       var shard = GrazeTimeShard.Instantiate<TimeShard>();
       shard.TimeBonus = Stats.GrazeTimeBonus;
@@ -454,73 +414,10 @@ public partial class Player : CharacterBody3D, IRewindable {
     }
   }
 
-  private void FindAndAimTarget() {
-    _currentTarget = null;
-    float closestDistance = float.MaxValue;
-
-    var tree = GetTree();
-    if (tree == null) return;
-
-    var enemies = tree.GetNodesInGroup("enemies");
-    foreach (BaseEnemy enemy in enemies) {
-      if (enemy.IsDestroyed) {
-        continue;
-      }
-      if (enemy.IsDestroyed) {
-        continue;
-      }
-      var collider = enemy.GetNodeOrNull<CollisionShape3D>("CollisionShape3D");
-      if (collider == null || collider.Disabled) {
-        continue;
-      }
-      float distance = GlobalPosition.DistanceSquaredTo(enemy.GlobalPosition);
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        _currentTarget = enemy;
-      }
-    }
-  }
-
-  private void Shoot() {
-    if (CurrentAmmo <= 0) return;
-
-    --CurrentAmmo;
-    ShootTimer = Stats.ShootCooldown;
-
-    SoundManager.Instance.Play(SoundEffect.PlayerShoot);
-
-    var bullet = BulletScene.Instantiate<SimpleBullet>();
-    bullet.IsPlayerBullet = true;
-    bullet.Damage = Stats.BulletDamage;
-
-    var randomRotationSigma = _timeSlowPressed ? Stats.BulletSpreadSlow : Stats.BulletSpreadNormal;
-    var randomRotation = _rnd.Randfn(0, randomRotationSigma);
-
-    Vector3 direction;
-    if (_currentTarget != null) {
-      direction = (_currentTarget.GlobalPosition - GlobalPosition).Normalized().Rotated(Vector3.Up, randomRotation);
-    } else {
-      direction = Vector3.Right.Rotated(Vector3.Up, randomRotation);
-    }
-
-    var startPos = GlobalPosition;
-    bullet.UpdateFunc = (time) => {
-      SimpleBullet.UpdateState state = new();
-      state.position = startPos + direction * (time * 10f);
-      Vector3 upVector = Vector3.Up;
-      if (direction.Cross(upVector).IsZeroApprox()) {
-        upVector = Vector3.Forward;
-      }
-      state.rotation = Basis.LookingAt(direction, upVector).GetEuler();
-      state.modulate = new Color(1, 1, 1, 0.5f);
-      return state;
-    };
-
-    GameRootProvider.CurrentGameRoot.AddChild(bullet);
-  }
-
   private void HandleMovement(float scaledDelta) {
-    if (IsGoldenBody) {
+    bool weaponRestrictsMove = (CurrentWeapon != null && CurrentWeapon.IsImmobilizingPlayer);
+
+    if (IsGoldenBody || weaponRestrictsMove) {
       Velocity = Vector3.Zero;
       MoveAndSlide();
       return;
@@ -553,10 +450,7 @@ public partial class Player : CharacterBody3D, IRewindable {
     gm.TimeBond = _beginningTimeBond;
     Stats.RecalculateStats(gm.GetCurrentAndPendingUpgrades(), Health);
     (_grazeAreaShape.Shape as SphereShape3D).Radius = Stats.GrazeRadius;
-    IsReloading = false;
-    TimeToReloaded = 0.0f;
-    ShootTimer = 0.0f;
-    CurrentAmmo = Stats.MaxAmmoInt;
+
     IsPermanentlyDead = false;
     IsGoldenBody = false;
     gm.HyperGauge = _beginningHyperGauge;
@@ -568,6 +462,7 @@ public partial class Player : CharacterBody3D, IRewindable {
     }
     RemoveDecoyTarget();
     _hitPointShape.Disabled = false;
+    CurrentWeapon?.ResetState();
     UpdateVisualizer();
   }
 
@@ -603,7 +498,6 @@ public partial class Player : CharacterBody3D, IRewindable {
     DecoyTarget.GlobalPosition = this.GlobalPosition;
     GameRootProvider.CurrentGameRoot.AddChild(DecoyTarget);
 
-    // 创建一个计时器来移除诱饵
     _decoyRemoveTimer = duration;
   }
 
@@ -625,10 +519,6 @@ public partial class Player : CharacterBody3D, IRewindable {
       GlobalPosition = this.GlobalPosition,
       Velocity = this.Velocity,
       FlipSprite = this._flipSprite,
-      CurrentAmmo = this.CurrentAmmo,
-      IsReloading = this.IsReloading,
-      TimeToReloaded = this.TimeToReloaded,
-      ShootTimer = this.ShootTimer,
       IsInvincible = this.IsGoldenBody,
       CurioCooldowns = curioCooldowns,
       DecoyActive = IsInstanceValid(DecoyTarget),
@@ -638,7 +528,6 @@ public partial class Player : CharacterBody3D, IRewindable {
       IsHyperActive = this.IsHyperActive,
       HyperTimer = this._hyperTimer,
       HyperInvincibilityTimer = this._hyperInvincibilityTimer,
-      // Health 和 TimeBond 仅用于阶段重启，回溯系统不会使用它们
       Health = this.Health,
       TimeBond = GameManager.Instance.TimeBond
     };
@@ -650,10 +539,6 @@ public partial class Player : CharacterBody3D, IRewindable {
     this.GlobalPosition = ps.GlobalPosition;
     this.Velocity = ps.Velocity;
     this._flipSprite = ps.FlipSprite;
-    this.CurrentAmmo = ps.CurrentAmmo;
-    this.IsReloading = ps.IsReloading;
-    this.TimeToReloaded = ps.TimeToReloaded;
-    this.ShootTimer = ps.ShootTimer;
     this.IsGoldenBody = ps.IsInvincible;
     foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
       if (ps.CurioCooldowns.TryGetValue(curio.Type, out var cd)) {
@@ -661,13 +546,13 @@ public partial class Player : CharacterBody3D, IRewindable {
       }
     }
 
-    // --- Hyper 状态恢复 ---
+    // Hyper 状态恢复
     GameManager.Instance.HyperGauge = ps.HyperGauge;
     this.IsHyperActive = ps.IsHyperActive;
     this._hyperTimer = ps.HyperTimer;
     this._hyperInvincibilityTimer = ps.HyperInvincibilityTimer;
 
-    // --- 诱饵状态恢复 ---
+    // 诱饵状态恢复
     _decoyRemoveTimer = ps.DecoyRemoveTimer;
 
     bool shouldBeActive = ps.DecoyActive;

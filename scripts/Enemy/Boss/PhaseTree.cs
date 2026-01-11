@@ -421,7 +421,6 @@ public partial class PhaseTree : BasePhase {
     Vector3 dir = (targetPos - origin).Normalized();
     float speed = SniperSpeed;
 
-
     var b = SniperBulletScene.Instantiate<SimpleBullet>();
 
     b.UpdateFunc = (t) => new SimpleBullet.UpdateState {

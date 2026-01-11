@@ -121,8 +121,8 @@ script = ExtResource("1_w5vlj")
 Type = 4
 Name = "Fire Rate Increase 1"
 ShortName = "Fr₁"
-Description = "Increases fire rate by [color=orange]15%.[/color]"
-Value1 = 0.15
+Description = "Increases fire rate by [color=orange]20%.[/color]"
+Value1 = 0.2
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_c2h3j"]
@@ -131,8 +131,8 @@ Type = 4
 Level = 2
 Name = "Fire Rate Increase 2"
 ShortName = "Fr₂"
-Description = "Increases fire rate by [color=orange]25%.[/color]"
-Value1 = 0.25
+Description = "Increases fire rate by [color=orange]30%.[/color]"
+Value1 = 0.3
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_n5k4l"]
@@ -141,8 +141,8 @@ Type = 4
 Level = 3
 Name = "Fire Rate Increase 3"
 ShortName = "Fr₃"
-Description = "Increases fire rate by [color=orange]50%.[/color]"
-Value1 = 0.5
+Description = "Increases fire rate by [color=orange]60%.[/color]"
+Value1 = 0.6
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_a1b2c"]

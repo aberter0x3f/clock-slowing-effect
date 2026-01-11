@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponDefinition" load_steps=3 format=3 uid="uid://dcihb2s8uhdjb"]
+
+[ext_resource type="PackedScene" uid="uid://cn1jqciwemajr" path="res://weapons/violin.tscn" id="1_0ti6u"]
+[ext_resource type="Script" uid="uid://pdog85j4sd5g" path="res://scripts/Weapon/WeaponDefinition.cs" id="1_fqk33"]
+
+[resource]
+script = ExtResource("1_fqk33")
+Name = "Violin"
+Description = "A classical instrument. Unleashes a rapid stream of projectiles, each dealing [color=orange]0.5[/color] damage with a remarkably fast fire rate of [color=orange]0.05s[/color].
+
+Max Ammo: [color=orange]20[/color]
+Reload Time: [color=orange]3.0s[/color]
+
+Holding [color=orange]Time Slow[/color] key significantly tightens the projectile spread, allowing for precision performance against distant targets."
+WeaponScene = ExtResource("1_0ti6u")
+metadata/_custom_type_script = "uid://pdog85j4sd5g"

@@ -14,6 +14,7 @@ public partial class Title : Node {
   private DifficultyMenu _difficultyMenu;
   private CurioSelectionMenu _curioSelectionMenu;
   private BossPracticeSelectionMenu _bossPracticeMenu;
+  private WeaponSelectionMenu _weaponMenu;
   private DifficultySetting _selectedBossPracticeDifficulty;
   private bool _isStartingBossPractice = false;
 
@@ -23,6 +24,9 @@ public partial class Title : Node {
   public PackedScene CurioSelectionMenuScene { get; set; }
   [Export]
   public PackedScene BossPracticeMenuScene { get; set; }
+  [Export]
+  public PackedScene WeaponMenuScene { get; set; }
+
   [Export]
   public BossPhaseData BossPhaseDataResource { get; set; } // Boss 阶段数据资源
   [Export(PropertyHint.File, "*.tscn")]
@@ -38,30 +42,22 @@ public partial class Title : Node {
     _mapGenerator = GetNode<MapGenerator>("MapGenerator");
     _rewindManager = GetNode<RewindManager>("RewindManager");
 
-    // 实例化并设置难度菜单
-    if (DifficultyMenuScene != null) {
-      _difficultyMenu = DifficultyMenuScene.Instantiate<DifficultyMenu>();
-      AddChild(_difficultyMenu);
-      _difficultyMenu.DifficultySelected += OnDifficultySelected;
-    } else {
-      GD.PrintErr("Title scene is missing the DifficultyMenuScene reference.");
-    }
+    _difficultyMenu = DifficultyMenuScene.Instantiate<DifficultyMenu>();
+    AddChild(_difficultyMenu);
+    _difficultyMenu.DifficultySelected += OnDifficultySelected;
 
-    // 找到「开始游戏」按钮并连接其信号
+    _weaponMenu = WeaponMenuScene.Instantiate<WeaponSelectionMenu>();
+    AddChild(_weaponMenu);
+    _weaponMenu.WeaponChanged += OnWeaponChanged;
+
     var startGameButton = GetNode<TitleMenuInteractable>("StartGame");
-    if (startGameButton != null) {
-      startGameButton.StartGameRequested += OnStartGameRequested;
-    } else {
-      GD.PrintErr("Could not find 'StartGame' interactable node in Title scene.");
-    }
+    startGameButton.StartGameRequested += OnStartGameRequested;
 
-    // 找到「Boss 练习」按钮并连接其信号
     var bossPracticeButton = GetNode<TitleMenuInteractable>("BossPractice");
-    if (bossPracticeButton != null) {
-      bossPracticeButton.BossPracticeRequested += OnBossPracticeRequested;
-    } else {
-      GD.PrintErr("Could not find 'BossPractice' interactable node in Title scene.");
-    }
+    bossPracticeButton.BossPracticeRequested += OnBossPracticeRequested;
+
+    var weaponButton = GetNode<TitleMenuInteractable>("SelectWeapon");
+    weaponButton.WeaponSelectionRequested += OnWeaponMenuRequested;
 
     _playerSpawnPosition = _mapGenerator.GenerateMap();
     _player.GlobalPosition = _playerSpawnPosition;
@@ -77,37 +73,34 @@ public partial class Title : Node {
     _difficultyMenu?.ShowMenu();
   }
 
+  private void OnWeaponMenuRequested() {
+    _weaponMenu?.ShowMenu();
+  }
+
+  private void OnWeaponChanged() {
+    _player.RefreshWeapon();
+    _rewindManager.ResetHistory();
+  }
+
   private void OnDifficultySelected(DifficultySetting difficulty) {
     if (_isStartingBossPractice) {
       _selectedBossPracticeDifficulty = difficulty;
       _isStartingBossPractice = false;
 
-      if (BossPracticeMenuScene != null && BossPhaseDataResource != null) {
-        _bossPracticeMenu = BossPracticeMenuScene.Instantiate<BossPracticeSelectionMenu>();
-        AddChild(_bossPracticeMenu);
-        _bossPracticeMenu.PhaseSelected += OnBossPhaseSelected;
-        _bossPracticeMenu.MenuCancelled += () => { _selectedBossPracticeDifficulty = null; };
-        _bossPracticeMenu.ShowMenu(BossPhaseDataResource);
-      } else {
-        GD.PrintErr("BossPracticeMenuScene or BossPhaseDataResource is not set in Title scene.");
-      }
+      _bossPracticeMenu = BossPracticeMenuScene.Instantiate<BossPracticeSelectionMenu>();
+      AddChild(_bossPracticeMenu);
+      _bossPracticeMenu.PhaseSelected += OnBossPhaseSelected;
+      _bossPracticeMenu.MenuCancelled += () => { _selectedBossPracticeDifficulty = null; };
+      _bossPracticeMenu.ShowMenu(BossPhaseDataResource);
     } else {
-      // 正常游戏开始流程
       GameManager.Instance.InitializeNewRun(difficulty);
 
-      // 显示初始奇物选择菜单
-      if (CurioSelectionMenuScene != null) {
-        _curioSelectionMenu = CurioSelectionMenuScene.Instantiate<CurioSelectionMenu>();
-        AddChild(_curioSelectionMenu);
-        _curioSelectionMenu.CurioSelectionFinished += OnStartingCurioSelected;
-        // 从数据库中获取所有可作为开局的奇物
-        var startingCurios = new Godot.Collections.Array<BaseCurio>(GameManager.Instance.CurioDb.AllCurios)
-          .Slice(0, GameManager.Instance.CurioDb.StartingCurioCount);
-        _curioSelectionMenu.StartCurioSelection(startingCurios, new RandomNumberGenerator());
-      } else {
-        GD.PrintErr("CurioSelectionMenuScene is not set. Skipping starting curio selection.");
-        StartGame();
-      }
+      _curioSelectionMenu = CurioSelectionMenuScene.Instantiate<CurioSelectionMenu>();
+      AddChild(_curioSelectionMenu);
+      _curioSelectionMenu.CurioSelectionFinished += OnStartingCurioSelected;
+      var startingCurios = new Godot.Collections.Array<BaseCurio>(GameManager.Instance.CurioDb.AllCurios)
+        .Slice(0, GameManager.Instance.CurioDb.StartingCurioCount);
+      _curioSelectionMenu.StartCurioSelection(startingCurios, new RandomNumberGenerator());
     }
   }
 
