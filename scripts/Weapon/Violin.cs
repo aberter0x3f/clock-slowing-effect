@@ -39,7 +39,7 @@ public partial class Violin : Weapon {
     float cooldown = BaseShootCooldown / (1.0f + _player.Stats.FireRate);
     ShootTimer = cooldown;
 
-    SoundManager.Instance.Play(SoundEffect.PlayerShoot);
+    SoundManager.Instance.Play(SoundEffect.ViolinShoot);
 
     // 计算散布
     float baseSpread = isSlow ? BaseSpreadSlow : BaseSpreadNormal;

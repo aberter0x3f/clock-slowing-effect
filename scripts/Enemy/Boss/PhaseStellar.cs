@@ -66,7 +66,7 @@ public partial class PhaseStellar : BasePhase {
   [ExportGroup("Special: Orange")]
   [Export] public float OrangeBulletInterval = 0.02f;
   [Export] public int OrangeBulletCount = 6;
-  [Export] public float OrangeBulletSpeed = 10.0f;
+  [Export] public float OrangeBulletSpeed = 8.0f;
   [Export] public float OrangeOscillationK = 0.8f;
   [Export] public float OrangeOscillationAmp = 0.52f; // PI/6
 

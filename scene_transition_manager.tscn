@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://bie8rdexnoqwc"]
+
+[ext_resource type="Script" uid="uid://fvep8kle2t0x" path="res://scripts/SceneTransitionManager.cs" id="1_btfel"]
+[ext_resource type="Shader" uid="uid://bl610jga6pc3w" path="res://shaders/iris_transition.gdshader" id="2_sh0me"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jhrq5"]
+shader = ExtResource("2_sh0me")
+shader_parameter/center = Vector2(0.5, 0.5)
+shader_parameter/radius = 1.0
+shader_parameter/aspect_ratio = 1.0
+shader_parameter/color = Color(0, 0, 0, 1)
+
+[node name="SceneTransitionManager" type="CanvasLayer"]
+process_mode = 3
+layer = 100
+script = ExtResource("1_btfel")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_jhrq5")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

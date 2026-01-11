@@ -1,0 +1,82 @@
+[gd_scene load_steps=3 format=3 uid="uid://bn20ly7ngq5ky"]
+
+[ext_resource type="Script" uid="uid://gah5ptxluhns" path="res://scripts/UI/CurioOverviewMenu.cs" id="1_r8bdp"]
+[ext_resource type="PackedScene" uid="uid://frigianmcvfh" path="res://ui/curio_icon.tscn" id="2_r8bdp"]
+
+[node name="CurioOverviewMenu" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_r8bdp")
+CurioIconScene = ExtResource("2_r8bdp")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Curio Overview"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.3
+
+[node name="Grid" type="GridContainer" parent="HBoxContainer/ScrollContainer"]
+layout_mode = 2
+columns = 4
+
+[node name="CurioIcon" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon2" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon3" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon4" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon5" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon6" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon7" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon8" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon9" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon10" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon11" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="CurioIcon12" parent="HBoxContainer/ScrollContainer/Grid" instance=ExtResource("2_r8bdp")]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Some Curio One Two Three Four Five"
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "Long long long long long long long long long long long description"
+fit_content = true

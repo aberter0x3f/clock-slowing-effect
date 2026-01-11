@@ -72,7 +72,7 @@ public partial class AimingCone : MeshInstance3D {
     int segments = Mathf.Max(1, Mathf.CeilToInt(_angleDeg / 5.0f));
 
     // 生成顶点
-    // 顶点顺序：中心点 -> 弧上点1 -> 弧上点2
+    // 顶点顺序：中心点 -> 弧上点 1 -> 弧上点 2
     // 在 XZ 平面上绘制 (Y=0)
 
     // 起始向量 (旋转 +halfAngle)

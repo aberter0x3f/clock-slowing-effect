@@ -65,6 +65,8 @@ public partial class BossCombat : Node {
     if (GameManager.Instance.IsInBossPractice) {
       _boss.StartSpecificPhase(GameManager.Instance.PracticePhaseIndex);
     }
+
+    SceneTransitionManager.Instance.PlayIntro(_player.GlobalPosition);
   }
 
   private void InitializeBoss() {
@@ -149,7 +151,7 @@ public partial class BossCombat : Node {
   private void OnCurioSelectionFinished() {
     // Boss 战固定为标准通关
     GameManager.Instance.CompleteLevel(HexMap.ClearScore.StandardClear);
-    GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
+    SceneTransitionManager.Instance.TransitionToScene(InterLevelMenuScenePath, _player.GlobalPosition);
   }
 
   private void OnPlayerDiedPermanently() {

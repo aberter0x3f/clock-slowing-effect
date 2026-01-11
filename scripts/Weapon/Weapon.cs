@@ -161,6 +161,7 @@ public abstract partial class Weapon : Node3D, IRewindable {
     TimeToReloaded = ws.TimeToReloaded;
     ShootTimer = ws.ShootTimer;
     _orbitAngle = ws.OrbitAngle;
+    Position = new Vector3(Mathf.Cos(_orbitAngle), 0, Mathf.Sin(_orbitAngle)) * OrbitRadius;
   }
 
   public void Destroy() { QueueFree(); }

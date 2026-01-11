@@ -11,11 +11,12 @@ public enum SoundEffect {
   CurioUse,
   CurioWrong,
   CurioSwitch,
+  GuitarShoot,
   ItemGet,
   PlayerSkillAvailable,
-  PlayerShoot,
   PlayerReloadComplete,
   PowerUp,
+  ViolinShoot,
 }
 
 public partial class SoundManager : Node {

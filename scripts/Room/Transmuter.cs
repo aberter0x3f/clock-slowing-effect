@@ -51,6 +51,7 @@ public partial class Transmuter : Node {
 
     SpawnTransmuterDevice();
     SpawnPortal();
+    SceneTransitionManager.Instance.PlayIntro(_player.GlobalPosition);
   }
 
   private void SpawnTransmuterDevice() {
@@ -81,7 +82,7 @@ public partial class Transmuter : Node {
 
   private void OnLevelCompleted(HexMap.ClearScore score) {
     GameManager.Instance.CompleteLevel(HexMap.ClearScore.StandardClear);
-    GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
+    SceneTransitionManager.Instance.TransitionToScene(InterLevelMenuScenePath, _player.GlobalPosition);
   }
 
   private void OnPlayerDiedPermanently() {

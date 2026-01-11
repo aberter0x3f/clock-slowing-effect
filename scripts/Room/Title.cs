@@ -61,6 +61,8 @@ public partial class Title : Node {
 
     _playerSpawnPosition = _mapGenerator.GenerateMap();
     _player.GlobalPosition = _playerSpawnPosition;
+
+    SceneTransitionManager.Instance.PlayIntro(_player.GlobalPosition);
   }
 
   private void OnStartGameRequested() {
@@ -110,7 +112,7 @@ public partial class Title : Node {
       return;
     }
     GameManager.Instance.InitializeBossPractice(_selectedBossPracticeDifficulty, plane, phaseIndex);
-    GetTree().ChangeSceneToFile(BossScenePath);
+    SceneTransitionManager.Instance.TransitionToScene(BossScenePath, _player.GlobalPosition);
   }
 
   private void OnStartingCurioSelected() {
@@ -123,6 +125,6 @@ public partial class Title : Node {
       GD.PrintErr("MapMenuScenePath is not set in the Title scene inspector.");
       return;
     }
-    GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
+    SceneTransitionManager.Instance.TransitionToScene(InterLevelMenuScenePath, _player.GlobalPosition);
   }
 }

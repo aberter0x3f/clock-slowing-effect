@@ -66,6 +66,7 @@ public partial class Shop : Node {
     GenerateShopInventory();
     SpawnShopDevice();
     SpawnPortal();
+    SceneTransitionManager.Instance.PlayIntro(_player.GlobalPosition);
   }
 
   private void GenerateShopInventory() {
@@ -133,7 +134,7 @@ public partial class Shop : Node {
   private void OnLevelCompleted(HexMap.ClearScore score) {
     // 商店和交换器房间总是以 StandardClear 完成
     GameManager.Instance.CompleteLevel(HexMap.ClearScore.StandardClear);
-    GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
+    SceneTransitionManager.Instance.TransitionToScene(InterLevelMenuScenePath, _player.GlobalPosition);
   }
 
   private void OnPlayerDiedPermanently() {

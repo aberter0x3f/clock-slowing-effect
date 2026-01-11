@@ -162,7 +162,7 @@ public partial class Guitar : Weapon {
     --CurrentAmmo;
     float cooldown = BaseShootCooldown / (1.0f + _player.Stats.FireRate);
     ShootTimer = cooldown;
-    SoundManager.Instance.Play(SoundEffect.PlayerShoot);
+    SoundManager.Instance.Play(SoundEffect.GuitarShoot);
 
     // 高速模式：正态分布 (Gaussian/Normal distribution)
     float baseSpread = BaseSpreadNormal;
@@ -239,7 +239,7 @@ public partial class Guitar : Weapon {
     --_burstShotsRemaining;
     CurrentAmmo = _burstShotsRemaining;
 
-    SoundManager.Instance.Play(SoundEffect.PlayerShoot);
+    SoundManager.Instance.Play(SoundEffect.GuitarShoot);
 
     // 均匀随机分布 (Uniform distribution)
     // 范围 [-cachedSpread, +cachedSpread]

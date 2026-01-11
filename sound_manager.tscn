@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://ngmhst45d630"]
+[gd_scene load_steps=33 format=3 uid="uid://ngmhst45d630"]
 
 [ext_resource type="Script" uid="uid://dqtowxk2vgcys" path="res://scripts/SoundManager.cs" id="1_g5net"]
 [ext_resource type="Script" uid="uid://cftmt8fk41r7q" path="res://scripts/SoundResource.cs" id="2_22ksp"]
@@ -16,6 +16,7 @@
 [ext_resource type="AudioStream" uid="uid://i7822ekvsgsr" path="res://sounds/effects/reload_complete.wav" id="12_70tky"]
 [ext_resource type="AudioStream" uid="uid://do01bwefxyb4c" path="res://sounds/effects/item_get.wav" id="12_xrcvc"]
 [ext_resource type="AudioStream" uid="uid://dypy6j3yd7nfw" path="res://sounds/effects/up.wav" id="16_e8map"]
+[ext_resource type="AudioStream" uid="uid://c0sqmj2lgb5be" path="res://sounds/effects/guitar.wav" id="17_26nrr"]
 
 [sub_resource type="Resource" id="Resource_7jwsb"]
 script = ExtResource("2_22ksp")
@@ -81,12 +82,6 @@ Stream = ExtResource("12_70tky")
 Cooldown = 0.2
 metadata/_custom_type_script = "uid://cftmt8fk41r7q"
 
-[sub_resource type="Resource" id="Resource_e8map"]
-script = ExtResource("2_22ksp")
-Stream = ExtResource("8_m3oho")
-VolumeDb = -5.0
-metadata/_custom_type_script = "uid://cftmt8fk41r7q"
-
 [sub_resource type="Resource" id="Resource_h42hm"]
 script = ExtResource("2_22ksp")
 Stream = ExtResource("6_7jwsb")
@@ -100,6 +95,18 @@ VolumeDb = 5.0
 Cooldown = 0.2
 metadata/_custom_type_script = "uid://cftmt8fk41r7q"
 
+[sub_resource type="Resource" id="Resource_e8map"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("8_m3oho")
+VolumeDb = -5.0
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
+[sub_resource type="Resource" id="Resource_mye2s"]
+script = ExtResource("2_22ksp")
+Stream = ExtResource("17_26nrr")
+VolumeDb = -5.0
+metadata/_custom_type_script = "uid://cftmt8fk41r7q"
+
 [node name="SoundManager" type="ResourcePreloader"]
 script = ExtResource("1_g5net")
 _library = Dictionary[String, ExtResource("2_22ksp")]({
@@ -111,10 +118,11 @@ _library = Dictionary[String, ExtResource("2_22ksp")]({
 "FireBig": SubResource("Resource_rt03n"),
 "FireSmall": SubResource("Resource_m3oho"),
 "Graze": SubResource("Resource_vgaxf"),
+"GuitarShoot": SubResource("Resource_mye2s"),
 "ItemGet": SubResource("Resource_j1tqm"),
 "PlayerDeath": SubResource("Resource_lxsk3"),
 "PlayerReloadComplete": SubResource("Resource_26nrr"),
-"PlayerShoot": SubResource("Resource_e8map"),
 "PlayerSkillAvailable": SubResource("Resource_h42hm"),
-"PowerUp": SubResource("Resource_1ekrc")
+"PowerUp": SubResource("Resource_1ekrc"),
+"ViolinShoot": SubResource("Resource_e8map")
 })

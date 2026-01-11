@@ -61,7 +61,19 @@ public partial class Combat : Node {
 
     GameManager.Instance?.StartLevel();
     ConfigureEnemySpawner();
-    _enemySpawner.StartSpawning(_mapGenerator, _player);
+    PlayEntryTransitionAndStart();
+  }
+
+  private async void PlayEntryTransitionAndStart() {
+    // 播放入场动画
+    SceneTransitionManager.Instance.PlayIntro(_player.GlobalPosition);
+
+    // 等待动画结束
+    await ToSignal(SceneTransitionManager.Instance, SceneTransitionManager.SignalName.IntroFinished);
+
+    if (IsInstanceValid(_enemySpawner)) {
+      _enemySpawner.StartSpawning(_mapGenerator, _player);
+    }
   }
 
   private void ConfigureEnemySpawner() {
@@ -151,7 +163,7 @@ public partial class Combat : Node {
   /// </summary>
   private void OnUpgradeSelectionFinished(HexMap.ClearScore score) {
     GameManager.Instance.CompleteLevel(score);
-    GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
+    SceneTransitionManager.Instance.TransitionToScene(InterLevelMenuScenePath, _player.GlobalPosition);
   }
 
   private void OnPlayerDiedPermanently() {

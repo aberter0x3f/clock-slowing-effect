@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://qxto5y31fg8d"]
 
 [ext_resource type="Script" uid="uid://cdnwkne4jyi3e" path="res://scripts/InvertRingEffect.cs" id="1_316th"]
-[ext_resource type="Shader" uid="uid://b6pmue3c3qoeb" path="res://invert_ring.gdshader" id="1_in7cr"]
+[ext_resource type="Shader" uid="uid://b6pmue3c3qoeb" path="res://shaders/invert_ring.gdshader" id="1_in7cr"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_316th"]
 shader = ExtResource("1_in7cr")

@@ -53,6 +53,8 @@ public partial class Event : Node {
 
     SpawnEventDevice();
     // 传送门在事件解决后生成
+
+    SceneTransitionManager.Instance.PlayIntro(_player.GlobalPosition);
   }
 
   private void SpawnEventDevice() {
@@ -90,7 +92,7 @@ public partial class Event : Node {
 
   private void OnLevelCompleted(HexMap.ClearScore score) {
     GameManager.Instance.CompleteLevel(HexMap.ClearScore.StandardClear);
-    GetTree().ChangeSceneToFile(InterLevelMenuScenePath);
+    SceneTransitionManager.Instance.TransitionToScene(InterLevelMenuScenePath, _player.GlobalPosition);
   }
 
   private void OnPlayerDiedPermanently() {
