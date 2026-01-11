@@ -7,7 +7,7 @@
 
 [node name="BossPractice" type="Area3D"]
 script = ExtResource("1_wrvvp")
-Action = 1
+Action = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CylinderShape3D_o7qlk")

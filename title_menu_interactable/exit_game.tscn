@@ -7,7 +7,7 @@
 
 [node name="ExitGame" type="Area3D"]
 script = ExtResource("1_2wmwl")
-Action = 3
+Action = 4
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CylinderShape3D_rlfpt")

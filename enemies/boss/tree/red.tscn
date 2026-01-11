@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://crgakn0yt3a4p"]
 
 [ext_resource type="Script" uid="uid://dcxlsev0as10k" path="res://scripts/Bullet/SimpleBullet.cs" id="1_lsjoj"]
-[ext_resource type="Texture2D" uid="uid://dfd5f6i0nm7t5" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 7A Free.png" id="2_lsjoj"]
+[ext_resource type="Texture2D" uid="uid://cyp6tcbpnvu3s" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Part 6A Free.png" id="2_lsjoj"]
 [ext_resource type="Texture2D" uid="uid://b6hhoregxb7ns" path="res://images/500 Bullet 24x24 Free/Bullet 24x24 Free Part 4A.png" id="3_wvybl"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_m4wpm"]
@@ -17,12 +17,13 @@ MaxLifetime = 20.0
 shape = SubResource("SphereShape3D_m4wpm")
 
 [node name="Sprite" type="Sprite3D" parent="."]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 sorting_offset = 80.0
 billboard = 1
 texture_filter = 0
 texture = ExtResource("2_lsjoj")
 region_enabled = true
-region_rect = Rect2(195, 219, 19, 19)
+region_rect = Rect2(390, 222, 12, 12)
 
 [node name="LandingIndicator" type="Node3D" parent="."]
 

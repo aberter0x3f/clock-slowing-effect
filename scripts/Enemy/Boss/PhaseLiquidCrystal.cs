@@ -120,7 +120,7 @@ public partial class PhaseLiquidCrystal : BasePhase {
     Vector3 currentPos = PlayerNode.GlobalPosition;
     if (currentPos.DistanceTo(_lastPlayerPosition) > TrailMinDistance) {
       var trail = TrailBulletScene.Instantiate<BaseBullet>();
-      trail.Position = _lastPlayerPosition;
+      trail.Position = _lastPlayerPosition with { Y = 0 };
       GameRootProvider.CurrentGameRoot.AddChild(trail);
       _trailBullets.Add(trail);
       _lastPlayerPosition = currentPos;

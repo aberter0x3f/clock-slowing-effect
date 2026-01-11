@@ -26,10 +26,10 @@ public abstract partial class BasePhase : Node {
   public virtual float DamageReduction {
     get {
       // 满足：
-      // EnemyRank = 5 时为 0.6
+      // EnemyRank = 5 时为 0.7
       // EnemyRank -> +inf 时 -> 1.0
       float x = (float) GameManager.Instance.EnemyRank / 5f;
-      return 0.6f + 0.4f * (x - 1) / (x + 1);
+      return 0.7f + 0.3f * (x - 1) / (x + 1);
     }
   }
   public virtual int TimeShardsOnCompletion { get; protected set; } = 50;

@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_8yh7c")
 Name = "Guitar"
-Description = "A heavy axe for those who want to make some noise. Fires high-impact rounds dealing [color=orange]3.0[/color] damage per shot.
+Description = "A heavy axe for those who want to make some noise. Fires high-impact rounds dealing [color=orange]2.5[/color] damage per shot.
 
 Max Ammo: [color=orange]5[/color]
 Reload Time: [color=orange]3.0s[/color]

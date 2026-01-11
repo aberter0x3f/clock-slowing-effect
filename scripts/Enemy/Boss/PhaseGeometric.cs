@@ -76,6 +76,8 @@ public partial class PhaseGeometric : BasePhase {
     float restartTime = (id * 18f + 65f) / 60f;
     float speedReturn = BulletSpeed * 1.5f;
 
+    var target = PlayerNode;
+
     for (int i = 0; i < BulletsPerVolley; ++i) {
       var bullet = BulletScene.Instantiate<SimpleBullet>();
       bullet.TimeScaleSensitivity = TimeScaleSensitivity;
@@ -109,7 +111,7 @@ public partial class PhaseGeometric : BasePhase {
           pos = stopPoint - direction * (speedReturn * dt);
         }
 
-        s.position = pos;
+        s.position = pos with { Y = target.GlobalPosition.Y };
         // 旋转：始终朝向当前移动轴（返回时 180 度翻转）
         float visualAngle = (t < restartTime) ? finalAngleRad : finalAngleRad + Mathf.Pi;
         s.rotation = new Vector3(0, -visualAngle, 0); // 对应 3D 坐标系

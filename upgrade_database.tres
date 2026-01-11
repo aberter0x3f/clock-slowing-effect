@@ -7,8 +7,8 @@
 script = ExtResource("1_w5vlj")
 Name = "Damage Increase 1"
 ShortName = "Da₁"
-Description = "Increases player's bullet damage by [color=orange]10%.[/color]"
-Value1 = 0.1
+Description = "Increases player's bullet damage by [color=orange]5%.[/color]"
+Value1 = 0.05
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_p25qj"]
@@ -16,8 +16,8 @@ script = ExtResource("1_w5vlj")
 Level = 2
 Name = "Damage Increase 2"
 ShortName = "Da₂"
-Description = "Increases player's bullet damage by [color=orange]20%.[/color]"
-Value1 = 0.2
+Description = "Increases player's bullet damage by [color=orange]15%.[/color]"
+Value1 = 0.15
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_8g2fn"]
@@ -92,8 +92,8 @@ script = ExtResource("1_w5vlj")
 Type = 3
 Name = "Ammunition Expansion 1"
 ShortName = "Am₁"
-Description = "Increases magazine capacity by [color=orange]15%.[/color]"
-Value1 = 0.15
+Description = "Increases magazine capacity by [color=orange]5%.[/color]"
+Value1 = 0.05
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_3a3b1"]
@@ -102,8 +102,8 @@ Type = 3
 Level = 2
 Name = "Ammunition Expansion 2"
 ShortName = "Am₂"
-Description = "Increases magazine capacity by [color=orange]25%.[/color]"
-Value1 = 0.25
+Description = "Increases magazine capacity by [color=orange]15%.[/color]"
+Value1 = 0.15
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_s5q1f"]
@@ -112,8 +112,8 @@ Type = 3
 Level = 3
 Name = "Ammunition Expansion 3"
 ShortName = "Am₃"
-Description = "Increases magazine capacity by [color=orange]50%.[/color]"
-Value1 = 0.5
+Description = "Increases magazine capacity by [color=orange]30%.[/color]"
+Value1 = 0.3
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_x6y8g"]
@@ -121,8 +121,8 @@ script = ExtResource("1_w5vlj")
 Type = 4
 Name = "Fire Rate Increase 1"
 ShortName = "Fr₁"
-Description = "Increases fire rate by [color=orange]20%.[/color]"
-Value1 = 0.2
+Description = "Increases fire rate by [color=orange]10%.[/color]"
+Value1 = 0.1
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_c2h3j"]
@@ -131,8 +131,8 @@ Type = 4
 Level = 2
 Name = "Fire Rate Increase 2"
 ShortName = "Fr₂"
-Description = "Increases fire rate by [color=orange]30%.[/color]"
-Value1 = 0.3
+Description = "Increases fire rate by [color=orange]20%.[/color]"
+Value1 = 0.2
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_n5k4l"]
@@ -141,8 +141,8 @@ Type = 4
 Level = 3
 Name = "Fire Rate Increase 3"
 ShortName = "Fr₃"
-Description = "Increases fire rate by [color=orange]60%.[/color]"
-Value1 = 0.6
+Description = "Increases fire rate by [color=orange]35%.[/color]"
+Value1 = 0.35
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_a1b2c"]
@@ -150,8 +150,8 @@ script = ExtResource("1_w5vlj")
 Type = 5
 Name = "Reload Speed Increase 1"
 ShortName = "Rs₁"
-Description = "Increases reload speed by [color=orange]20%.[/color]"
-Value1 = 0.2
+Description = "Increases reload speed by [color=orange]10%.[/color]"
+Value1 = 0.1
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_d3e4f"]
@@ -160,8 +160,8 @@ Type = 5
 Level = 2
 Name = "Reload Speed Increase 2"
 ShortName = "Rs₂"
-Description = "Increases reload speed by [color=orange]40%.[/color]"
-Value1 = 0.4
+Description = "Increases reload speed by [color=orange]20%.[/color]"
+Value1 = 0.2
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_g5h6i"]
@@ -170,7 +170,8 @@ Type = 5
 Level = 3
 Name = "Reload Speed Increase 3"
 ShortName = "Rs₃"
-Description = "Increases reload speed by [color=orange]100%.[/color]"
+Description = "Increases reload speed by [color=orange]40%.[/color]"
+Value1 = 0.4
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_j7k8l"]
@@ -180,6 +181,7 @@ Name = "Mobile Firearm Specialist 1"
 ShortName = "Mf₁"
 Description = "Increases accuracy by up to [color=orange]20%[/color] at high speed, but decreases it by up to [color=orange]10%[/color] at low speed."
 Value1 = 0.2
+Value2 = 0.1
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_m9n0o"]
@@ -190,6 +192,7 @@ Name = "Mobile Firearm Specialist 2"
 ShortName = "Mf₂"
 Description = "Increases accuracy by up to [color=orange]40%[/color] at high speed, but decreases it by up to [color=orange]20%[/color] at low speed."
 Value1 = 0.4
+Value2 = 0.2
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_p1q2r"]
@@ -199,6 +202,7 @@ Level = 3
 Name = "Mobile Firearm Specialist 3"
 ShortName = "Mf₃"
 Description = "Increases accuracy by up to [color=orange]100%[/color] at high speed, but decreases it by up to [color=orange]40%[/color] at low speed."
+Value1 = 1.0
 Value2 = 0.4
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
@@ -207,8 +211,8 @@ script = ExtResource("1_w5vlj")
 Type = 7
 Name = "Grazing Area Radius Increase 1"
 ShortName = "Ga₁"
-Description = "Increases the bullet grazing detection radius by [color=orange]15%.[/color]"
-Value1 = 0.15
+Description = "Increases the bullet grazing detection radius by [color=orange]10%.[/color]"
+Value1 = 0.1
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_v5w6x"]
@@ -217,8 +221,8 @@ Type = 7
 Level = 2
 Name = "Grazing Area Radius Increase 2"
 ShortName = "Ga₂"
-Description = "Increases the bullet grazing detection radius by [color=orange]25%.[/color]"
-Value1 = 0.25
+Description = "Increases the bullet grazing detection radius by [color=orange]20%.[/color]"
+Value1 = 0.2
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_y7z8a"]
@@ -227,8 +231,8 @@ Type = 7
 Level = 3
 Name = "Grazing Area Radius Increase 3"
 ShortName = "Ga₃"
-Description = "Increases the bullet grazing detection radius by [color=orange]50%.[/color]"
-Value1 = 0.5
+Description = "Increases the bullet grazing detection radius by [color=orange]40%.[/color]"
+Value1 = 0.4
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_b9c0d"]
@@ -275,8 +279,8 @@ Type = 9
 Level = 2
 Name = "Adrenaline 2"
 ShortName = "Ad₂"
-Description = "Increases damage by [color=orange](0.5 * x^2 * 100)%[/color], where x is the ratio of missing health to max health (0 <= x <= 1)."
-Value1 = 0.5
+Description = "Increases damage by [color=orange](0.4 * x^2 * 100)%[/color], where x is the ratio of missing health to max health (0 <= x <= 1)."
+Value1 = 0.4
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_q9r0s"]
@@ -285,8 +289,8 @@ Type = 9
 Level = 3
 Name = "Adrenaline 3"
 ShortName = "Ad₃"
-Description = "Increases damage by [color=orange](x^2 * 100)%[/color], where x is the ratio of missing health to max health (0 <= x <= 1)."
-Value1 = 1.0
+Description = "Increases damage by [color=orange](0.8 * x^2 * 100)%[/color], where x is the ratio of missing health to max health (0 <= x <= 1)."
+Value1 = 0.8
 metadata/_custom_type_script = "uid://be0eq177yq1as"
 
 [sub_resource type="Resource" id="Resource_w5vlj"]

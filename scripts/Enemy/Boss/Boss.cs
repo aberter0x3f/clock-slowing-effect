@@ -56,7 +56,7 @@ public partial class Boss : BaseEnemy {
     base._Ready();
     _startPosition = GlobalPosition;
     _collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
-    _restTimerLeft = RestDuration; // 首次休息时间
+    _restTimerLeft = RestDuration / 2; // 首次休息时间
 
     SetCollisionEnabled(false);
   }

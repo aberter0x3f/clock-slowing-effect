@@ -204,7 +204,6 @@ public partial class PhaseLoop : BasePhase {
   }
 
   private void FireDefenseBullet() {
-    if (DefenseBulletScene == null) return;
     foreach (var orbiter in _aBullets.Concat(_bBullets)) {
       if (!IsInstanceValid(orbiter) || orbiter.IsDestroyed) continue;
 
@@ -215,7 +214,7 @@ public partial class PhaseLoop : BasePhase {
 
       defenseBullet.UpdateFunc = (t) => {
         SimpleBullet.UpdateState s = new();
-        s.position = startPos + direction * (speed * t);
+        s.position = (startPos + direction * (speed * t)) with { Y = PlayerNode.GlobalPosition.Y };
         return s;
       };
       GameRootProvider.CurrentGameRoot.AddChild(defenseBullet);

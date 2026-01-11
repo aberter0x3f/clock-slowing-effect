@@ -7,7 +7,7 @@
 
 [node name="SelectWeapon" type="Area3D"]
 script = ExtResource("1_4ajto")
-Action = 2
+Action = 3
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CylinderShape3D_s10m8")

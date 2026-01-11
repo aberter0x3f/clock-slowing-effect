@@ -9,6 +9,7 @@ public class PlayerState : RewindState {
   public Vector3 Velocity;
   public bool FlipSprite;
   public bool IsInvincible;
+  public float GoldenBodyTimer;
   public Dictionary<CurioType, float> CurioCooldowns = new();
   public bool DecoyActive;
   public Vector3 DecoyPosition;
@@ -45,7 +46,10 @@ public partial class Player : CharacterBody3D, IRewindable {
 
   private bool _timeSlowPressed = false;
   private bool _curioUsePressed = false;
+
   public bool IsGoldenBody { get; set; } = false;
+  public float GoldenBodyTimer { get; set; } = 0f;
+
   public Node3D DecoyTarget { get; private set; }
   private float _decoyRemoveTimer = 0;
 
@@ -167,6 +171,14 @@ public partial class Player : CharacterBody3D, IRewindable {
     // 每帧更新动态属性
     Stats.RecalculateStats(GameManager.Instance.GetCurrentAndPendingUpgrades(), Health);
     (_grazeAreaShape.Shape as SphereShape3D).Radius = Stats.GrazeRadius;
+
+    if (GoldenBodyTimer > 0) {
+      GoldenBodyTimer -= scaledDelta;
+      if (GoldenBodyTimer <= 0) {
+        IsGoldenBody = false;
+        GoldenBodyTimer = 0;
+      }
+    }
 
     UpdateInteractionTarget();
     HandleInteractionInput();
@@ -453,6 +465,7 @@ public partial class Player : CharacterBody3D, IRewindable {
 
     IsPermanentlyDead = false;
     IsGoldenBody = false;
+    GoldenBodyTimer = 0f;
     gm.HyperGauge = _beginningHyperGauge;
     IsHyperActive = false;
     _hyperTimer = 0f;
@@ -520,6 +533,7 @@ public partial class Player : CharacterBody3D, IRewindable {
       Velocity = this.Velocity,
       FlipSprite = this._flipSprite,
       IsInvincible = this.IsGoldenBody,
+      GoldenBodyTimer = this.GoldenBodyTimer,
       CurioCooldowns = curioCooldowns,
       DecoyActive = IsInstanceValid(DecoyTarget),
       DecoyPosition = IsInstanceValid(DecoyTarget) ? DecoyTarget.GlobalPosition : Vector3.Zero,
@@ -540,6 +554,7 @@ public partial class Player : CharacterBody3D, IRewindable {
     this.Velocity = ps.Velocity;
     this._flipSprite = ps.FlipSprite;
     this.IsGoldenBody = ps.IsInvincible;
+    this.GoldenBodyTimer = ps.GoldenBodyTimer;
     foreach (var curio in GameManager.Instance.GetCurrentAndPendingCurios()) {
       if (ps.CurioCooldowns.TryGetValue(curio.Type, out var cd)) {
         curio.CurrentCooldown = cd;

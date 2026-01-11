@@ -19,7 +19,7 @@ public partial class Guitar : Weapon {
   [Export] public PackedScene BulletScene { get; set; }
 
   public override float BaseShootCooldown { get; } = 1f;
-  public override float BaseDamage { get; } = 3f;
+  public override float BaseDamage { get; } = 2.5f;
   public override float BaseMaxAmmo { get; } = 5f;
   public override float BaseReloadTime { get; } = 3f;
   public override float BaseSpreadNormal { get; } = Mathf.Pi / 12;
